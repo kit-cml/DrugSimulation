@@ -1,0 +1,3 @@
+This job has allocated 1 nodes
+/opt/intel/oneapi/mkl/2022.0.2/lib/intel64:/opt/intel/oneapi/compiler/2022.0.2/linux/lib:/opt/intel/oneapi/compiler/2022.0.2/linux/lib/x64:/opt/intel/oneapi/compiler/2022.0.2/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/tbb/2021.5.1/lib/intel64/gcc4.8:/opt/intel/oneapi/mpi/2021.5.1/libfabric/lib:/opt/intel/oneapi/mpi/2021.5.1/lib/release:/opt/intel/oneapi/mpi/2021.5.1/lib:/opt/prog/sundial/lib64:/usr/local/lib64:/usr/lib64
+/opt/intel/oneapi/compiler/2022.0.2/linux/bin/intel64:/opt/intel/oneapi/mpi/2021.5.1/libfabric/bin:/opt/intel/oneapi/mpi/2021.5.1/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/cml/.local/bin:/home/cml/bin

@@ -1,0 +1,389 @@
+User Name -- marcell
+Hill File -- ./chantest_hill/quinidine/IC50_optimal.csv
+hERG File -- ./chantest_herg/quinidine/pars.txt
+Celltype -- 0
+Solver_Type -- 1
+Is_Print_Graph -- true
+Basic_Cycle_Length -- 2000.000000
+Number_of_Pacing -- 1000
+Last_Drug_Check_Pace -- 250
+Time_Step -- 0.500000
+Time_Step_Min -- 0.500000
+Time_Step_Max -- 2.000000
+dVm/dt_Min -- 0.200000
+dVm/dt_Max -- 0.800000
+Inet_Vm_Threshold -- -88.000000
+Writing_Step -- 2.000000
+GKs_Scale -- 1.000000
+GKr_Scale -- 1.000000
+GK1_Scale -- 1.000000
+Gto_Scale -- 1.000000
+PCa_Scale -- 1.000000
+GNa_Scale -- 1.000000
+GNaL_Scale -- 1.000000
+GNab_Scale -- 1.000000
+GCab_Scale -- 1.000000
+Gncx_Scale -- 1.000000
+Tau_h_Scale -- 1.000000
+Mutation_Type -- CTL
+Drug_Name -- quinidine
+Prior_Risk -- 2
+Concentrations -- 3237,6474,9711,12948marcell
+Running control in-silico simulation...
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 0.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using CVode Solver.
+Running control postprocessing simulation...
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 0.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+Last steady-state file: result/quinidine/0/quinidine_0_last_states_smp0_marcell.csv
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 0.000000 1.000000 1.000000 1.000000 1.000000 1.000000 0.000000 1.000000 1.000000 0.000000 
+STATES from last_states vector:
+-87.962843 0.003287 0.000073 6.424839 6.424898 145.241306 145.241289 1.379144 1.379547 0.000075 0.007373 0.696753 0.696753 0.696752 0.453423 0.696752 0.000190 0.511658 0.305825 0.001004 
+Using last state from the in-silico simulation.
+STATES after:
+-87.962843 0.003287 0.000073 6.424839 6.424898 145.241306 145.241289 1.379144 1.379547 0.000075 
+Using CVode Solver.
+Before INaL at rank 0: -89.944757
+Before ICaL at rank 0: -105.706334
+After INaL at rank 0: -89.944757
+After ICaL at rank 0: -105.706334
+Running sample# 0 in Processor 0
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 3237.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000100 
+GK1:0.299605 
+GKs:0.006097 
+GNa:67.866346 
+GNaL:0.008567 
+Gto:0.016560 
+GKr:0.009381
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using CVode Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 3237.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000100 
+GK1:0.299605 
+GKs:0.006097 
+GNa:67.866346 
+GNaL:0.008567 
+Gto:0.016560 
+GKr:0.009381
+Last steady-state file: result/quinidine/3237/quinidine_3237_last_states_smp0_marcell.csv
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 0.000000 1.000000 1.000000 1.000000 1.000000 1.000000 0.000000 1.000000 1.000000 0.000000 
+STATES from last_states vector:
+-87.987177 0.003974 0.000073 6.130458 6.130515 145.532495 145.532481 1.395151 1.395101 0.000075 0.007355 0.697597 0.697597 0.697596 0.454414 0.697595 0.000189 0.512219 0.297449 0.001002 
+Using last state from the in-silico simulation.
+STATES after:
+-87.987177 0.003974 0.000073 6.130458 6.130515 145.532495 145.532481 1.395151 1.395101 0.000075 
+Using CVode Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 6474.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000096 
+GK1:0.290447 
+GKs:0.005922 
+GNa:58.915561 
+GNaL:0.005733 
+Gto:0.014991 
+GKr:0.005283
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using CVode Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 6474.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000096 
+GK1:0.290447 
+GKs:0.005922 
+GNa:58.915561 
+GNaL:0.005733 
+Gto:0.014991 
+GKr:0.005283
+Last steady-state file: result/quinidine/6474/quinidine_6474_last_states_smp0_marcell.csv
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 0.000000 1.000000 1.000000 1.000000 1.000000 1.000000 0.000000 1.000000 1.000000 0.000000 
+STATES from last_states vector:
+-87.995661 0.004252 0.000073 6.056965 6.057021 145.607704 145.607691 1.387168 1.386675 0.000074 0.007349 0.697891 0.697891 0.697890 0.454759 0.697889 0.000188 0.512318 0.293532 0.001002 
+Using last state from the in-silico simulation.
+STATES after:
+-87.995661 0.004252 0.000073 6.056965 6.057021 145.607704 145.607691 1.387168 1.386675 0.000074 
+Using CVode Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 9711.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000091 
+GK1:0.283773 
+GKs:0.005773 
+GNa:50.773501 
+GNaL:0.004363 
+Gto:0.013876 
+GKr:0.003690
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using CVode Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 9711.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000091 
+GK1:0.283773 
+GKs:0.005773 
+GNa:50.773501 
+GNaL:0.004363 
+Gto:0.013876 
+GKr:0.003690
+Last steady-state file: result/quinidine/9711/quinidine_9711_last_states_smp0_marcell.csv
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 0.000000 1.000000 1.000000 1.000000 1.000000 1.000000 0.000000 1.000000 1.000000 0.000000 
+STATES from last_states vector:
+-88.001148 0.004427 0.000072 6.015981 6.016035 145.650349 145.650337 1.379376 1.378509 0.000074 0.007345 0.698081 0.698081 0.698079 0.454983 0.698078 0.000188 0.512335 0.290638 0.001001 
+Using last state from the in-silico simulation.
+STATES after:
+-88.001148 0.004427 0.000072 6.015981 6.016035 145.650349 145.650337 1.379376 1.378509 0.000074 
+Using CVode Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 12948.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000085 
+GK1:0.278371 
+GKs:0.005642 
+GNa:43.883303 
+GNaL:0.003544 
+Gto:0.013008 
+GKr:0.002839
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using CVode Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 12948.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000085 
+GK1:0.278371 
+GKs:0.005642 
+GNa:43.883303 
+GNaL:0.003544 
+Gto:0.013008 
+GKr:0.002839
+Last steady-state file: result/quinidine/12948/quinidine_12948_last_states_smp0_marcell.csv
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 0.000000 1.000000 1.000000 1.000000 1.000000 1.000000 0.000000 1.000000 1.000000 0.000000 
+STATES from last_states vector:
+-88.005834 0.004509 0.000072 5.982597 5.982650 145.685578 145.685565 1.370590 1.369418 0.000073 0.007341 0.698243 0.698243 0.698241 0.455174 0.698240 0.000188 0.512345 0.288449 0.001001 
+Using last state from the in-silico simulation.
+STATES after:
+-88.005834 0.004509 0.000072 5.982597 5.982650 145.685578 145.685565 1.370590 1.369418 0.000073 
+Using CVode Solver.
+Simulation finished at: 7.774073 minutes.

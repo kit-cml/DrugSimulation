@@ -1,0 +1,122 @@
+User Name -- marcell
+Hill File -- ./chantest_hill/bepridil/IC50_optimal.csv
+hERG File -- ./chantest_herg/bepridil/pars.txt
+Celltype -- 0
+Solver_Type -- 0
+Is_Print_Graph -- true
+Basic_Cycle_Length -- 2000.000000
+Number_of_Pacing -- 1000
+Last_Drug_Check_Pace -- 250
+Time_Step -- 0.003000
+Time_Step_Min -- 0.003000
+Time_Step_Max -- 2.000000
+dVm/dt_Min -- 0.200000
+dVm/dt_Max -- 0.800000
+Inet_Vm_Threshold -- -88.000000
+Writing_Step -- 2.000000
+GKs_Scale -- 1.000000
+GKr_Scale -- 1.000000
+GK1_Scale -- 1.000000
+Gto_Scale -- 1.000000
+PCa_Scale -- 1.000000
+GNa_Scale -- 1.000000
+GNaL_Scale -- 1.000000
+GNab_Scale -- 1.000000
+GCab_Scale -- 1.000000
+Gncx_Scale -- 1.000000
+Tau_h_Scale -- 1.000000
+Mutation_Type -- CTL
+Drug_Name -- bepridil
+Prior_Risk -- 2
+Concentrations -- 33,66,99,132
+Running control in-silico simulation...
+Using Tomek 2019 cell model
+Celltype: 0.000000
+Concentration: 0.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+Last steady-state file: last_states_1000paces_tomek.dat
+STATES before:
+-88.763800 0.011100 0.000070 12.102500 12.102900 142.300200 142.300200 1.521100 1.521400 0.000082 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.967363 0.003189 0.000062 10.588050 10.588326 139.347583 139.347563 1.347339 1.350138 0.000071 
+Using Euler Solver.
+Running control postprocessing simulation...
+Using Tomek 2019 cell model
+Celltype: 0.000000
+Concentration: 0.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+Last steady-state file: result/bepridil/0/bepridil_0_last_states_smp0_marcell.plt
+STATES before:
+-88.763800 0.011100 0.000070 12.102500 12.102900 142.300200 142.300200 1.521100 1.521400 0.000082 
+Using last state from the in-silico simulation.
+STATES after:
+-87.271362 0.003195 0.000062 10.391828 10.392103 135.670888 135.670868 1.349701 1.352524 0.000071 
+Using Euler Solver.
+Before INaL at rank 0: -117.385629
+Before ICaL at rank 0: -336.301586
+After INaL at rank 0: -117.385629
+After ICaL at rank 0: -336.301586
+Running sample# 0 in Processor 0
+Using Tomek 2019 cell model
+Celltype: 0.000000
+Concentration: 33.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000081 
+GK1:0.695592 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.030465
+Last steady-state file: last_states_1000paces_tomek.dat
+STATES before:
+-88.763800 0.011100 0.000070 12.102500 12.102900 142.300200 142.300200 1.521100 1.521400 0.000082 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.967363 0.003189 0.000062 10.588050 10.588326 139.347583 139.347563 1.347339 1.350138 0.000071 
+Using Euler Solver.
+
+===================================================================================
+=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES
+=   RANK 0 PID 62426 RUNNING AT node01
+=   KILLED BY SIGNAL: 15 (Terminated)
+===================================================================================

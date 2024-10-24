@@ -1,0 +1,379 @@
+User Name -- marcell
+Hill File -- ./chantest_hill/bepridil/IC50_optimal.csv
+hERG File -- ./chantest_herg/bepridil/pars.txt
+Celltype -- 0
+Solver_Type -- 0
+Is_Print_Graph -- true
+Basic_Cycle_Length -- 2000.000000
+Number_of_Pacing -- 1000
+Last_Drug_Check_Pace -- 250
+Time_Step -- 0.005000
+Time_Step_Min -- 0.005000
+Time_Step_Max -- 2.000000
+dVm/dt_Min -- 0.200000
+dVm/dt_Max -- 0.800000
+Inet_Vm_Threshold -- -88.000000
+Writing_Step -- 2.000000
+GKs_Scale -- 1.000000
+GKr_Scale -- 1.000000
+GK1_Scale -- 1.000000
+Gto_Scale -- 1.000000
+PCa_Scale -- 1.000000
+GNa_Scale -- 1.000000
+GNaL_Scale -- 1.000000
+GNab_Scale -- 1.000000
+GCab_Scale -- 1.000000
+Gncx_Scale -- 1.000000
+Tau_h_Scale -- 1.000000
+Mutation_Type -- CTL
+Drug_Name -- bepridil
+Prior_Risk -- 2
+Concentrations -- 33,66,99,132
+Running control in-silico simulation...
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 0.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using Euler Solver.
+Running control postprocessing simulation...
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 0.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+Last steady-state file: result/bepridil/0/bepridil_0_last_states_smp0_marcell.plt
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using last state from the in-silico simulation.
+STATES after:
+-87.960140 0.003277 0.000073 6.421960 6.422020 145.227098 145.227081 1.377387 1.377780 0.000074 
+Using Euler Solver.
+Before INaL at rank 0: -90.085370
+Before ICaL at rank 0: -106.035666
+After INaL at rank 0: -90.085370
+After ICaL at rank 0: -106.035666
+Running sample# 0 in Processor 0
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 33.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000097 
+GK1:0.322307 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.044225
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using Euler Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 33.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000097 
+GK1:0.322307 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.044225
+Last steady-state file: result/bepridil/33/bepridil_33_last_states_smp0_marcell.plt
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using last state from the in-silico simulation.
+STATES after:
+-87.962457 0.003240 0.000073 6.407519 6.407578 145.244057 145.244041 1.370623 1.370972 0.000074 
+Using Euler Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 66.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000096 
+GK1:0.318536 
+GKs:0.006357 
+GNa:74.999999 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.040757
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using Euler Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 66.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000096 
+GK1:0.318536 
+GKs:0.006357 
+GNa:74.999999 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.040757
+Last steady-state file: result/bepridil/66/bepridil_66_last_states_smp0_marcell.plt
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using last state from the in-silico simulation.
+STATES after:
+-87.963542 0.003260 0.000073 6.397372 6.397431 145.254318 145.254301 1.371065 1.371398 0.000074 
+Using Euler Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 99.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000094 
+GK1:0.313229 
+GKs:0.006357 
+GNa:74.999999 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.037143
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using Euler Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 99.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000094 
+GK1:0.313229 
+GKs:0.006357 
+GNa:74.999999 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.037143
+Last steady-state file: result/bepridil/99/bepridil_99_last_states_smp0_marcell.plt
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using last state from the in-silico simulation.
+STATES after:
+-87.964577 0.003291 0.000073 6.387301 6.387360 145.264170 145.264154 1.372503 1.372821 0.000074 
+Using Euler Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 132.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000094 
+GK1:0.306714 
+GKs:0.006357 
+GNa:74.999999 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.033701
+Last steady-state file: last_states_1000paces_ord_static.dat
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using initial condition from 1000 paces steady-state!
+STATES after:
+-87.990625 0.003094 0.000071 6.199323 6.199379 145.473771 145.473757 1.345364 1.345638 0.000073 
+Using Euler Solver.
+Using ORd2011 cell model
+Celltype: 0.000000
+Concentration: 132.000000
+Control: 
+PCa:0.000100 
+GK1:0.190800 
+GKs:0.003400 
+GNa:75.000000 
+GNaL:0.007500 
+Gto:0.020000 
+GKr:0.046000
+After Dutta optimization: 
+PCa:0.000101 
+GK1:0.323978 
+GKs:0.006358 
+GNa:75.000000 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.046598
+After drug: 
+PCa:0.000094 
+GK1:0.306714 
+GKs:0.006357 
+GNa:74.999999 
+GNaL:0.019957 
+Gto:0.020000 
+GKr:0.033701
+Last steady-state file: result/bepridil/132/bepridil_132_last_states_smp0_marcell.plt
+STATES before:
+-87.000000 0.000000 0.000100 7.000000 7.000000 145.000000 145.000000 1.200000 1.200000 0.000100 
+Using last state from the in-silico simulation.
+STATES after:
+-87.965652 0.003327 0.000073 6.377409 6.377468 145.273795 145.273778 1.374030 1.374329 0.000074 
+Using Euler Solver.
+Simulation finished at: 159.605215 minutes.
