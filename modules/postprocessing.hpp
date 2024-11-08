@@ -23,7 +23,7 @@ const Parameter *p_param, Cipa_Features &p_features, short sample_id, short grou
 
 // load last states from the 1000 paces steady-state control simulation.
 // If error occured, keep using the initial condition from the model.
-void set_initial_condition_postprocessing(Cellmodel *p_cell, char *ic_file_name);
+short set_initial_condition_postprocessing(Cellmodel *p_cell, const char *ic_file_name);
 
 
 // functions related to the features retrieval

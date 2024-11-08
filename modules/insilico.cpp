@@ -194,9 +194,8 @@ const Parameter *p_param, Cipa_Features &p_features, short sample_id)
   
   // write the last states into a file for further usage.
   for(short idx = 0; idx < p_cell->states_size; idx++){
-    fprintf(fp_last_states, "%.4lf,", p_features.last_states[idx]);
+    fprintf(fp_last_states, "%.16lf\n", p_features.last_states[idx]);
   }
-  fprintf(fp_last_states, "\n");
 
   fprintf(fp_vmdebug,"Selected final pace: %hd\n", p_features.pace_target);
   fprintf(fp_vmdebug,"Features saved: \n%s,%s,%s,%s,%s,%s,%s,%s\n",
@@ -207,9 +206,8 @@ const Parameter *p_param, Cipa_Features &p_features, short sample_id)
           p_features.dvmdt_repol_max);
   fprintf(fp_vmdebug,"Last states:\n");
   for(short idx = 0; idx < p_cell->states_size; idx++){
-    fprintf(fp_vmdebug, "%lf,", p_features.last_states[idx]);
+    fprintf(fp_vmdebug, "%.16lf\n", p_features.last_states[idx]);
   }
-  fprintf(fp_vmdebug, "\n");
 
   fclose(fp_last_ten_paces);
   fclose(fp_last_states);
