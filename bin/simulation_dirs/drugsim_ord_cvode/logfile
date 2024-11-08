@@ -9,7 +9,7 @@ Is_Using_Steady_State_Init_Values -- false
 Is_Postprocessing -- false
 Basic_Cycle_Length -- 2000.000000
 Number_of_Pacing -- 1000
-Time_Step -- 0.005000
+Time_Step -- 0.500000
 Time_Step_Min -- 0.500000
 Time_Step_Max -- 2.000000
 dVm/dt_Min -- 0.200000
@@ -118,18 +118,13 @@ STATES before:
 STATES from last_states vector:
 -88.014487 0.003268 0.000073 6.469721 6.469781 145.501442 145.501425 1.379039 1.379463 0.000075 0.007335 0.698543 0.698543 0.698542 0.455527 0.698542 0.000188 0.513391 0.307794 0.001000 
 Using last state from the in-silico simulation.
-STATES before:
--88.001905 0.012584 0.000085 7.268004 7.268090 144.655592 144.655565 1.619575 1.571234 0.000086 
-Using initial condition from 1000 paces steady-state!
-STATES after:
--88.014487 0.003268 0.000073 6.469721 6.469781 145.501442 145.501425 1.379039 1.379463 0.000075 
+Size:
+Vector: 49 Array: 49
 STATES after:
 -88.014487 0.003268 0.000073 6.469721 6.469781 145.501442 145.501425 1.379039 1.379463 0.000075 
 Using CVode Solver.
-Before INaL at rank 0: -89.262299
-Before ICaL at rank 0: -108.745163
-Before INaL at rank 1: 0.000000
-Before ICaL at rank 1: 0.000000
+Before INaL at rank 0: -89.251056
+Before ICaL at rank 0: -108.787966
 Before INaL at rank 2: 0.000000
 Before ICaL at rank 2: 0.000000
 Before INaL at rank 3: 0.000000
@@ -140,43 +135,45 @@ Before INaL at rank 5: 0.000000
 Before ICaL at rank 5: 0.000000
 Before INaL at rank 6: 0.000000
 Before ICaL at rank 6: 0.000000
+Before INaL at rank 9: 0.000000
+Before ICaL at rank 9: 0.000000
+Before INaL at rank 1: 0.000000
+Before ICaL at rank 1: 0.000000
 Before INaL at rank 7: 0.000000
 Before ICaL at rank 7: 0.000000
 Before INaL at rank 8: 0.000000
 Before ICaL at rank 8: 0.000000
-Before INaL at rank 9: 0.000000
-Before ICaL at rank 9: 0.000000
-After INaL at rank 0: -89.262299
-After INaL at rank 1: -89.262299
-After ICaL at rank 1: -108.745163
-Running sample# 1 in Processor 1
-After INaL at rank 2: -89.262299
-After ICaL at rank 2: -108.745163
-Running sample# 2 in Processor 2
-After INaL at rank 3: -89.262299
-After ICaL at rank 3: -108.745163
-Running sample# 3 in Processor 3
-After INaL at rank 4: -89.262299
-After ICaL at rank 4: -108.745163
-Running sample# 4 in Processor 4
-After INaL at rank 5: -89.262299
-After ICaL at rank 5: -108.745163
-Running sample# 5 in Processor 5
-After INaL at rank 6: -89.262299
-After ICaL at rank 6: -108.745163
-Running sample# 6 in Processor 6
-After INaL at rank 7: -89.262299
-After ICaL at rank 7: -108.745163
-Running sample# 7 in Processor 7
-After INaL at rank 8: -89.262299
-After ICaL at rank 8: -108.745163
-Running sample# 8 in Processor 8
-After INaL at rank 9: -89.262299
-After ICaL at rank 9: -108.745163
-Running sample# 9 in Processor 9
-After ICaL at rank 0: -108.745163
+After INaL at rank 0: -89.251056
+After ICaL at rank 0: -108.787966
 Running sample# 0 in Processor 0
 Using ORd-dyn 2017 cell model
+After INaL at rank 1: -89.251056
+After ICaL at rank 1: -108.787966
+Running sample# 1 in Processor 1
+After INaL at rank 2: -89.251056
+After ICaL at rank 2: -108.787966
+Running sample# 2 in Processor 2
+After INaL at rank 3: -89.251056
+After ICaL at rank 3: -108.787966
+Running sample# 3 in Processor 3
+After INaL at rank 4: -89.251056
+After ICaL at rank 4: -108.787966
+Running sample# 4 in Processor 4
+After INaL at rank 5: -89.251056
+After ICaL at rank 5: -108.787966
+Running sample# 5 in Processor 5
+After INaL at rank 6: -89.251056
+After ICaL at rank 6: -108.787966
+Running sample# 6 in Processor 6
+After INaL at rank 7: -89.251056
+After ICaL at rank 7: -108.787966
+Running sample# 7 in Processor 7
+After INaL at rank 8: -89.251056
+After ICaL at rank 8: -108.787966
+Running sample# 8 in Processor 8
+After INaL at rank 9: -89.251056
+After ICaL at rank 9: -108.787966
+Running sample# 9 in Processor 9
 Celltype: 0.000000
 Concentration: 3237.000000
 Control: 
@@ -262,11 +259,8 @@ STATES before:
 STATES from last_states vector:
 -88.031181 0.004118 0.000074 6.236100 6.236159 145.727532 145.727517 1.416060 1.416175 0.000076 0.007323 0.699120 0.699120 0.699119 0.456207 0.699119 0.000187 0.513705 0.299077 0.000999 
 Using last state from the in-silico simulation.
-STATES before:
--88.001905 0.012584 0.000085 7.268004 7.268090 144.655592 144.655565 1.619575 1.571234 0.000086 
-Using initial condition from 1000 paces steady-state!
-STATES after:
--88.031181 0.004118 0.000074 6.236100 6.236159 145.727532 145.727517 1.416060 1.416175 0.000076 
+Size:
+Vector: 49 Array: 49
 STATES after:
 -88.031181 0.004118 0.000074 6.236100 6.236159 145.727532 145.727517 1.416060 1.416175 0.000076 
 Using CVode Solver.
@@ -356,11 +350,8 @@ STATES before:
 STATES from last_states vector:
 -88.039214 0.004428 0.000074 6.159156 6.159214 145.804531 145.804518 1.416553 1.416363 0.000075 0.007317 0.699398 0.699398 0.699397 0.456535 0.699396 0.000187 0.513840 0.296115 0.000999 
 Using last state from the in-silico simulation.
-STATES before:
--88.001905 0.012584 0.000085 7.268004 7.268090 144.655592 144.655565 1.619575 1.571234 0.000086 
-Using initial condition from 1000 paces steady-state!
-STATES after:
--88.039214 0.004428 0.000074 6.159156 6.159214 145.804531 145.804518 1.416553 1.416363 0.000075 
+Size:
+Vector: 49 Array: 49
 STATES after:
 -88.039214 0.004428 0.000074 6.159156 6.159214 145.804531 145.804518 1.416553 1.416363 0.000075 
 Using CVode Solver.
@@ -450,11 +441,8 @@ STATES before:
 STATES from last_states vector:
 -88.042981 0.004653 0.000074 6.124899 6.124956 145.838304 145.838291 1.419113 1.418719 0.000075 0.007314 0.699528 0.699528 0.699527 0.456688 0.699526 0.000187 0.513870 0.294247 0.000998 
 Using last state from the in-silico simulation.
-STATES before:
--88.001905 0.012584 0.000085 7.268004 7.268090 144.655592 144.655565 1.619575 1.571234 0.000086 
-Using initial condition from 1000 paces steady-state!
-STATES after:
--88.042981 0.004653 0.000074 6.124899 6.124956 145.838304 145.838291 1.419113 1.418719 0.000075 
+Size:
+Vector: 49 Array: 49
 STATES after:
 -88.042981 0.004653 0.000074 6.124899 6.124956 145.838304 145.838291 1.419113 1.418719 0.000075 
 Using CVode Solver.
@@ -544,12 +532,9 @@ STATES before:
 STATES from last_states vector:
 -88.045129 0.004840 0.000074 6.106759 6.106817 145.855951 145.855937 1.421789 1.421230 0.000075 0.007312 0.699602 0.699602 0.699601 0.456776 0.699600 0.000187 0.513861 0.292814 0.000998 
 Using last state from the in-silico simulation.
-STATES before:
--88.001905 0.012584 0.000085 7.268004 7.268090 144.655592 144.655565 1.619575 1.571234 0.000086 
-Using initial condition from 1000 paces steady-state!
-STATES after:
--88.045129 0.004840 0.000074 6.106759 6.106817 145.855951 145.855937 1.421789 1.421230 0.000075 
+Size:
+Vector: 49 Array: 49
 STATES after:
 -88.045129 0.004840 0.000074 6.106759 6.106817 145.855951 145.855937 1.421789 1.421230 0.000075 
 Using CVode Solver.
-Simulation finished at: 10.879577 minutes.
+Simulation finished at: 12.254008 minutes.

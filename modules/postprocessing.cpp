@@ -85,8 +85,8 @@ const Parameter *p_param, Cipa_Features &p_features, short sample_id, short grou
   }
   mpi_printf(cml::commons::MASTER_NODE,"\nUsing last state from the in-silico simulation.\n");
 
-  //copy( p_features.last_states.begin(), p_features.last_states.end(), p_cell->STATES );
-  set_initial_condition_postprocessing(p_cell, buffer);
+  copy( p_features.last_states.begin(), p_features.last_states.end(), p_cell->STATES );
+  //set_initial_condition_postprocessing(p_cell, buffer);
 
   mpi_printf(cml::commons::MASTER_NODE,"STATES after:\n");
   for(short idx = 0; idx < 10; idx++){
