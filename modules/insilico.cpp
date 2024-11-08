@@ -42,12 +42,6 @@ const Parameter *p_param, Cipa_Features &p_features, short sample_id)
 
   const char *drug_name = p_param->drug_name;
 
-  // simulate drug testing.
-  // we use quinidine optimal data.
-  const double hill_demo[] = {30290,1.98,465400,0.505,179400,0.7851,16620,1.377,2359,0.9002,32010,0.6858,792,0.9789};
-  const double herg_demo[] = {275.7,0.004103,0.8488,53830,-61.35};
-  const double conc_demo = 9711.;
-
   // this is the cellmodel initialization part
   Cellmodel *p_cell;
 #if defined ORD_DYN_2017
@@ -55,7 +49,6 @@ const Parameter *p_param, Cipa_Features &p_features, short sample_id)
   mpi_printf(cml::commons::MASTER_NODE,"Using ORd-dyn 2017 cell model\n");
   p_cell = new ohara_rudy_cipa_v1_2017();
   p_cell->initConsts((double)celltype, conc, hill.data, herg.data);
-  //p_cell->initConsts((double)celltype, conc_demo, hill_demo, herg_demo);
 #elif defined TOMEK_2019
   const char CELL_NAME[] = "tomek";
   mpi_printf(cml::commons::MASTER_NODE,"Using Tomek 2019 cell model\n");
