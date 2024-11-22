@@ -1,5 +1,5 @@
 #PBS -N drugsim_tomek_cvode_optimal
-#PBS -l nodes=1:ppn=1
+#PBS -l nodes=5:ppn=12
 #PBS -l walltime=20000:00:00
 #PBS -e stderr.log
 #PBS -o stdout.log

@@ -16,6 +16,7 @@
 LIBCML_DIR = ../libCML/
 LIBCML_INC_DIR = ../libCML/src
 LIBCML_LIB_DIR = ../libCML/build
+LIBCML_EXTERNAL_LIB_DIR = ../libCML/lib
 
 
 # Define the final program name
@@ -37,16 +38,17 @@ CC := mpicc
 #CXXFLAGS += -Wall -O2 -fno-alias -fpermissive
 #CXXFLAGS += -Wall -Wunused-variable
 CXXFLAGS += -Wall -Wunused-variable -std=c++11
-# Use this if you want to use Tomek 2019 cell model.
-# Otherwise, comment it
-#CXXFLAGS += -DTOMEK_2019
 # Use this if you want to use ORd-dyn 2017 cell model.
 # Otherwise, comment it
 #CXXFLAGS += -DORD_DYN_2017
+# Use this if you want to use Tomek 2019 cell model.
+# Otherwise, comment it
+#CXXFLAGS += -DTOMEK_2019
+
 
 
 # LDFLAGS is used for linker (-g enables debug symbols)
-LDFLAGS  += -g $(LIBCML_LIB_DIR)/libcml.a $(LIBCML_DIR)/libs/libsundials_cvode.a $(LIBCML_DIR)/libs/libsundials_nvecserial.a
+LDFLAGS  += -g $(LIBCML_LIB_DIR)/libcml.a $(LIBCML_EXTERNAL_LIB_DIR)/libsundials_cvode.a $(LIBCML_EXTERNAL_LIB_DIR)/libsundials_nvecserial.a
 
 # List the project' sources to compile or let the Makefile recognize
 # them for you using 'wildcard' function.

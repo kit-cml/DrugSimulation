@@ -35,8 +35,6 @@ const Parameter *p_param, Cipa_Features &p_features, short sample_id)
   const char *user_name = p_param->user_name;
   const double dt_min = p_param->dt_min;
   const double dt_max = p_param->dt_max;
-  const double dVm_min = p_param->dVm_min;
-  const double dVm_max = p_param->dVm_max;
   const double dtw = p_param->dtw;
   const short solver_type = p_param->solver_type;
 
