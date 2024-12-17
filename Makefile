@@ -20,9 +20,9 @@ LIBCML_EXTERNAL_LIB_DIR = ../libCML/lib
 
 
 # Define the final program name
-PROGNAME := drugsim_ordstatic
+#PROGNAME := drugsim_ordstatic
 #PROGNAME := drugsim_ord
-#PROGNAME := drugsim_tomek
+PROGNAME := drugsim_tomek
 
 # Pre-processor flags to be used for includes (-I) and defines (-D) 
 CPPFLAGS := -I./ -I$(LIBCML_INC_DIR) -I/opt/prog/sundials/sundials-5.7.0/include
@@ -43,7 +43,7 @@ CXXFLAGS += -Wall -Wunused-variable -std=c++11
 #CXXFLAGS += -DORD_DYN_2017
 # Use this if you want to use Tomek 2019 cell model.
 # Otherwise, comment it
-#CXXFLAGS += -DTOMEK_2019
+CXXFLAGS += -DTOMEK_2019
 
 
 
