@@ -1,0 +1,367 @@
+user_name -- marcell
+hill_file -- ./chantest_hill/quinidine/IC50_samples10.csv
+herg_file -- ./chantest_herg/quinidine/boot_pars10.csv
+steady-state_init_values_file -- last_states_%hpaces_ord.dat
+celltype -- 2
+solver_type -- 1
+is_postprocessing -- false
+is_cvar -- false
+basic_cycle_length -- 2000.000000
+number_of_pacing -- 1000
+time_step -- 0.500000
+time_step_min -- 0.500000
+time_step_max -- 2.000000
+dvm/dt_min -- 0.200000
+dvm/dt_max -- 0.800000
+writing_step -- 2.000000
+stimulus_duration -- 0.500000
+stimulus_amplitude_scale -- 1.000000
+gks_scale -- 1.000000
+gkr_scale -- 1.000000
+gk1_scale -- 1.000000
+gto_scale -- 1.000000
+pca_scale -- 1.000000
+gna_scale -- 1.000000
+gnaL_scale -- 1.000000
+gnab_scale -- 1.000000
+gcab_scale -- 1.000000
+gncx_scale -- 1.000000
+tau_h_scale -- 1.000000
+mutation_type -- CTL
+drug_name -- quinidine
+prior_risk -- 2
+concentrations -- 3237,6474,9711,12948
+Running control in-silico simulation...
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 0.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+Last steady-state file: last_states_1000paces_tomek.dat
+Using CVode Solver.
+Running control postprocessing simulation...
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 0.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+Last steady-state file: result/quinidine/0/quinidine_0_last_states_smp0_marcell.csv
+STATES before:
+-89.170400 0.019200 0.000066 15.003800 15.004300 143.040300 143.040200 1.955700 1.959300 0.000082 0.000738 0.836500 0.836300 0.683800 0.835800 0.000151 0.532700 0.283400 0.000925 0.999600 
+STATES from last_states vector:
+-89.053965 0.005073 0.000059 13.368108 13.368500 143.673738 143.673704 1.474864 1.480987 0.000071 0.000757 0.834297 0.834302 0.680081 0.834305 0.000154 0.547901 0.333759 0.000933 0.999629 
+Using last state from the in-silico simulation.
+STATES after:
+-89.053965 0.005073 0.000059 13.368108 13.368500 143.673738 143.673704 1.474864 1.480987 0.000071 
+Using CVode Solver.
+Before INaL at rank 0: -128.244638
+Before ICaL at rank 0: -547.853483
+Before INaL at rank 1: 0.000000
+Before ICaL at rank 1: 0.000000
+Before INaL at rank 2: 0.000000
+Before ICaL at rank 2: 0.000000
+Before INaL at rank 3: 0.000000
+Before ICaL at rank 3: 0.000000
+Before INaL at rank 4: 0.000000
+Before ICaL at rank 4: 0.000000
+Before INaL at rank 5: 0.000000
+Before ICaL at rank 5: 0.000000
+Before INaL at rank 6: 0.000000
+Before ICaL at rank 6: 0.000000
+Before INaL at rank 7: 0.000000
+Before ICaL at rank 7: 0.000000
+Before INaL at rank 9: 0.000000
+Before ICaL at rank 9: 0.000000
+Before INaL at rank 8: 0.000000
+Before ICaL at rank 8: 0.000000
+After INaL at rank 0: -128.244638
+After ICaL at rank 0: -547.853483
+Running sample# 0 in Processor 0
+After INaL at rank 1: -128.244638
+After ICaL at rank 1: -547.853483
+Running sample# 1 in Processor 1
+After INaL at rank 2: -128.244638
+After ICaL at rank 2: -547.853483
+Running sample# 2 in Processor 2
+After INaL at rank 3: -128.244638
+After ICaL at rank 3: -547.853483
+Running sample# 3 in Processor 3
+After INaL at rank 4: -128.244638
+After ICaL at rank 4: -547.853483
+Running sample# 4 in Processor 4
+After INaL at rank 5: -128.244638
+After ICaL at rank 5: -547.853483
+Running sample# 5 in Processor 5
+After INaL at rank 6: -128.244638
+After ICaL at rank 6: -547.853483
+Running sample# 6 in Processor 6
+After INaL at rank 7: -128.244638
+After ICaL at rank 7: -547.853483
+Running sample# 7 in Processor 7
+After INaL at rank 8: -128.244638
+After ICaL at rank 8: -547.853483
+Running sample# 8 in Processor 8
+After INaL at rank 9: -128.244638
+After ICaL at rank 9: -547.853483
+Running sample# 9 in Processor 9
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 3237.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001089 
+GNa:10.262702 
+GNaL:0.011895 
+Gto:0.134934 
+GKr:0.008247
+Last steady-state file: last_states_1000paces_tomek.dat
+Using CVode Solver.
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 3237.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001089 
+GNa:10.262702 
+GNaL:0.011895 
+Gto:0.134934 
+GKr:0.008247
+Last steady-state file: result/quinidine/3237/quinidine_3237_last_states_smp0_marcell.csv
+STATES before:
+-89.170400 0.019200 0.000066 15.003800 15.004300 143.040300 143.040200 1.955700 1.959300 0.000082 0.000738 0.836500 0.836300 0.683800 0.835800 0.000151 0.532700 0.283400 0.000925 0.999600 
+STATES from last_states vector:
+-89.090290 0.004789 0.000055 12.728708 12.729037 144.157948 144.157923 1.320695 1.325186 0.000065 0.000751 0.835001 0.835002 0.681245 0.835000 0.000153 0.547906 0.313313 0.000930 0.999632 
+Using last state from the in-silico simulation.
+STATES after:
+-89.090290 0.004789 0.000055 12.728708 12.729037 144.157948 144.157923 1.320695 1.325186 0.000065 
+Using CVode Solver.
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 6474.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001076 
+GNa:9.001336 
+GNaL:0.007636 
+Gto:0.125641 
+GKr:0.005212
+Last steady-state file: last_states_1000paces_tomek.dat
+Using CVode Solver.
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 6474.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001076 
+GNa:9.001336 
+GNaL:0.007636 
+Gto:0.125641 
+GKr:0.005212
+Last steady-state file: result/quinidine/6474/quinidine_6474_last_states_smp0_marcell.csv
+STATES before:
+-89.170400 0.019200 0.000066 15.003800 15.004300 143.040300 143.040200 1.955700 1.959300 0.000082 0.000738 0.836500 0.836300 0.683800 0.835800 0.000151 0.532700 0.283400 0.000925 0.999600 
+STATES from last_states vector:
+-88.672926 0.006472 0.000057 11.021735 11.022038 143.358200 143.358197 1.117185 1.075810 0.000066 0.000822 0.826688 0.814501 0.667613 0.781684 0.000166 0.385413 0.127458 0.000957 0.999603 
+Using last state from the in-silico simulation.
+STATES after:
+-88.672926 0.006472 0.000057 11.021735 11.022038 143.358200 143.358197 1.117185 1.075810 0.000066 
+Using CVode Solver.
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 9711.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001062 
+GNa:7.987313 
+GNaL:0.005638 
+Gto:0.119146 
+GKr:0.003897
+Last steady-state file: last_states_1000paces_tomek.dat
+Using CVode Solver.
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 9711.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001062 
+GNa:7.987313 
+GNaL:0.005638 
+Gto:0.119146 
+GKr:0.003897
+Last steady-state file: result/quinidine/9711/quinidine_9711_last_states_smp0_marcell.csv
+STATES before:
+-89.170400 0.019200 0.000066 15.003800 15.004300 143.040300 143.040200 1.955700 1.959300 0.000082 0.000738 0.836500 0.836300 0.683800 0.835800 0.000151 0.532700 0.283400 0.000925 0.999600 
+STATES from last_states vector:
+-88.475871 0.006971 0.000053 12.117975 12.118265 140.958911 140.958891 1.266750 1.270661 0.000062 0.000857 0.822728 0.822750 0.661191 0.822761 0.000172 0.528768 0.304717 0.000970 0.999590 
+Using last state from the in-silico simulation.
+STATES after:
+-88.475871 0.006971 0.000053 12.117975 12.118265 140.958911 140.958891 1.266750 1.270661 0.000062 
+Using CVode Solver.
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 12948.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699199 
+GKs:0.001046 
+GNa:7.163191 
+GNaL:0.004475 
+Gto:0.114075 
+GKr:0.003147
+Last steady-state file: last_states_1000paces_tomek.dat
+Using CVode Solver.
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Celltype: 2.000000
+Concentration: 12948.000000
+Control: 
+PCa:0.000084 
+GK1:0.699200 
+GKs:0.001100 
+GNa:11.780200 
+GNaL:0.027900 
+Gto:0.160000 
+GKr:0.032100
+After drug: 
+PCa:0.000084 
+GK1:0.699199 
+GKs:0.001046 
+GNa:7.163191 
+GNaL:0.004475 
+Gto:0.114075 
+GKr:0.003147
+Last steady-state file: result/quinidine/12948/quinidine_12948_last_states_smp0_marcell.csv
+STATES before:
+-89.170400 0.019200 0.000066 15.003800 15.004300 143.040300 143.040200 1.955700 1.959300 0.000082 0.000738 0.836500 0.836300 0.683800 0.835800 0.000151 0.532700 0.283400 0.000925 0.999600 
+STATES from last_states vector:
+-88.281649 0.007783 0.000051 11.235063 11.235315 140.495458 140.495448 1.211821 1.214974 0.000059 0.000894 0.818692 0.818719 0.654695 0.818733 0.000179 0.522350 0.299743 0.000982 0.999576 
+Using last state from the in-silico simulation.
+STATES after:
+-88.281649 0.007783 0.000051 11.235063 11.235315 140.495458 140.495448 1.211821 1.214974 0.000059 
+Using CVode Solver.
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Using Tomek 2019 cell model
+Simulation finished at: 8.023943 minutes.
