@@ -20,6 +20,7 @@ gnab_scale = 1.
 gcab_scale = 1.
 gncx_scale = 1.
 drug_name = quinidine
+cell_name = ord
 concentrations = 3237,6474,9711,12948
 hill_file = ./chantest_hill/quinidine/IC50_samples10.csv
 herg_file = ./chantest_herg/quinidine/boot_pars10.csv

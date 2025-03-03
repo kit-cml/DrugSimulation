@@ -1,5 +1,6 @@
 #include "report_drug.hpp"
 
+#include <types/cml_consts.hpp>
 #include <types/cipa_features.hpp>
 #include <types/drug_block_input.hpp>
 #include <types/mpi_profile.hpp>
@@ -7,6 +8,7 @@
 
 #include <cstring>
 #include <cstdio>
+#include <ctime>
 #include <map>
 #include <string>
 #include <vector>
@@ -15,16 +17,24 @@ using std::multimap;
 using std::string;
 using std::vector;
 
-int generate_report_drug(const Parameter *p_param, Cipa_Features *p_features, Drug_Block_Input &hill)
+int generate_report_drug(const Parameter *p_param)
 {
-  
-  char latex_filename[50];
-  snprintf(latex_filename,sizeof(latex_filename),"report_drug.tex");
+  time_t time_data = time(NULL);
+  struct tm *current_time = localtime(&time_data);
+
+  char latex_filename[255];
+  //snprintf(latex_filename,sizeof(latex_filename),"report_drug_%s_%s_%04d%02d%02d%02d%02d%02d.tex",
+  //         p_param->drug_name, p_param->user_name, current_time->tm_year + 1900, current_time->tm_mon + 1, current_time->tm_mday,
+  //         current_time->tm_hour, current_time->tm_min, current_time->tm_sec);
+  snprintf(latex_filename,sizeof(latex_filename),"report_drug_%s_%s_%s.tex",
+           p_param->drug_name, p_param->cell_name, p_param->user_name);
   FILE *fp_latex = fopen(latex_filename,"w");
   short font_size = 11;
   float image_scale = 0.8;
-  const char *DOCUMENT_TITLE = "CardioSim Drug Simulation Result";
+  float image_horizontal_padding = 0.;
+  const char *DOCUMENT_TITLE = "CardioSim Single Cell Drug Simulation Result";
   const char *USER_NAME = p_param->user_name;
+
   // header part of LaTEX file
   fprintf(fp_latex,"\\documentclass[%dpt]{article}\n",font_size);
   fprintf(fp_latex,"\\usepackage{graphicx}\n");
@@ -36,7 +46,7 @@ int generate_report_drug(const Parameter *p_param, Cipa_Features *p_features, Dr
   fprintf(fp_latex,"\n\\begin{document}\n");
   fprintf(fp_latex,"\\maketitle\n");
   fprintf(fp_latex,"\\section*{Simulation Parameter}\n");
-  fprintf(fp_latex,"Drug Name: %s\n\\\\Cmax: %s\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", p_param->drug_name,p_param->concs);
+  fprintf(fp_latex,"Cellmodel: %s\n\\\\Drug Name: %s\n\\\\Cmax: %s\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", (cml::commons::MAP_CELL_NAME.at(p_param->cell_name)).c_str(),p_param->drug_name,p_param->concs);
 
   fprintf(fp_latex,"\\section*{Simulation Protocol}\n");
   fprintf(fp_latex,"Each drug was simulated by inducing %d beats at a %.0lf ms cycle.\n", p_param->pace_max, p_param->bcl);
@@ -59,187 +69,196 @@ int generate_report_drug(const Parameter *p_param, Cipa_Features *p_features, Dr
 
 
   fprintf(fp_latex,"\\section*{Result}\n");
-  fprintf(fp_latex,"The biomarker for cardiotoxicity assessment proposed by the US FDA Leading Study Group is qNet, and Figure 3 shows the distribution of qNet for 1 compound (%s).\n", p_param->drug_name );
-  fprintf(fp_latex,"\\\\The box-shaped range is the qNet data distribution interval between 5\\%% and 95\\%% confidence interval, the line interval is the standard deviation, and the dot distribution is the qNet data outside the standard deviation.\n");
+  fprintf(fp_latex,"\\subsection*{Time-series Result}\n");
+  fprintf(fp_latex,"The following results will show the time-series result of the action potential, rates of action potentials, intracellular calcium, and ionic currents involved in the drugs.\n");
 
 
-  // get concentration values from input
-  // and make the directories of them.
-  std::vector<double> concs;
-  char buffer[255];
-  strncpy(buffer, p_param->concs, sizeof(buffer));
-  char *token = strtok( buffer, "," );
-  int idx = 0;
-  while( token != NULL )
-  { // begin data tokenizing
-    concs.push_back(strtod(token, NULL));
-        token = strtok(NULL, ",");
-  } // end data tokenizing
-
-  if(MPI_Profile::rank == 0) create_concs_directories(concs,p_param->drug_name);
-
-  // generate time series for control
+  // generate time series for control and other concentrations.
+  // Select 5 of random samples to be displayed.
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_Vm(mVolt).png}\n",
-                    image_scale,p_param->drug_name, 0., p_param->drug_name, 0., 0 );
-  fprintf(fp_latex,"\t\\caption{action potential result for control}\n");
-  fprintf(fp_latex,"\t\\label{fig:image_vmplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, 0., 0);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/Vm_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Action potential result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_vm}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_dVmdt(mVoltmsec).png}\n",
-                    image_scale,p_param->drug_name, 0., p_param->drug_name, 0. , 0 );
-  fprintf(fp_latex,"\t\\caption{rates of action potential result for control}\n");
-  fprintf(fp_latex,"\t\\label{fig:image_dvmdtplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, 0., 0);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/dVm_dt_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Rates of action potential result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_dvmdt}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_Cai(x1000000)(nanoM).png}\n",
-                    image_scale,p_param->drug_name, 0., p_param->drug_name, 0., 0 );
-  fprintf(fp_latex,"\t\\caption{intracellular calcium concentration result for control}\n");
-  fprintf(fp_latex,"\t\\label{fig:image_caiplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, 0., 0);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/Cai_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Intracellular calcium concentration result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_cai}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_ICaL(x1000)(nanoA).png}\n",
-                    image_scale,p_param->drug_name, 0., p_param->drug_name, 0., 0 );
-  fprintf(fp_latex,"\t\\caption{L-type calcium current result for control}\n");
-  fprintf(fp_latex,"\t\\label{fig:image_icalplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, 0., 0);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/INaL_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{L-type sodium current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_inal}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_INaL(x1000)(nanoA).png}\n",
-                    image_scale,p_param->drug_name, 0., p_param->drug_name, 0., 0 );
-  fprintf(fp_latex,"\t\\caption{L-type sodium surrent result for control}\n");
-  fprintf(fp_latex,"\t\\label{fig:image_inalplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, 0., 0);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/INa_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Sodium current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_ina}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_INa(x1000)(nanoA).png}\n",
-                    image_scale,p_param->drug_name, 0., p_param->drug_name, 0.,0 );
-  fprintf(fp_latex,"\t\\caption{sodium current result for control}");
-  fprintf(fp_latex,"\t\\label{fig:image_inaplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, 0., 0);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/ICaL_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{L-type calcium current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_ical}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_IKr(x1000)(nanoA).png}\n",
-                    image_scale,p_param->drug_name, 0., p_param->drug_name, 0.,0 );
-  fprintf(fp_latex,"\t\\caption{rapid potassium current result for control}\n");
-  fprintf(fp_latex,"\t\\label{fig:image_icalplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, 0., 0);
-  fprintf(fp_latex,"\\end{figure}\n");
-
-  // attach time series result of the drug effect
-  for( int sample_id = 0; sample_id < hill.size(); sample_id++ ){
-    for( int jdx = 0; jdx < concs.size(); jdx++ ){
-  fprintf(fp_latex,"\\begin{figure}[H]\n");
-  fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_Vm(mVolt).png}\n",
-                    image_scale,p_param->drug_name, concs[jdx], p_param->drug_name, concs[jdx],sample_id );
-  fprintf(fp_latex,"\t\\caption{action potential result for drug %s with concentration %.0lf of sample %d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
-  fprintf(fp_latex,"\t\\label{fig:image_vmplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/IKs_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Slow potassium current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_iks}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_dVmdt(mVoltmsec).png}\n",
-                    image_scale,p_param->drug_name, concs[jdx], p_param->drug_name, concs[jdx],sample_id );
-  fprintf(fp_latex,"\t\\caption{rates of action potential result for drug %s with concentration %.0lf of sample %d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
-  fprintf(fp_latex,"\t\\label{fig:image_dvmdtplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/IK1_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Inward rectifier current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_ik1}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_Cai(x1000000)(nanoM).png}\n",
-                    image_scale,p_param->drug_name, concs[jdx], p_param->drug_name, concs[jdx],sample_id );
-  fprintf(fp_latex,"\t\\caption{intracellular calcium concentration result for drug %s with concentration %.0lf of sample %d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
-  fprintf(fp_latex,"\t\\label{fig:image_caiplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/Ito_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Transient outward current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_ito}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_ICaL(x1000)(nanoA).png}\n",
-                    image_scale,p_param->drug_name, concs[jdx], p_param->drug_name, concs[jdx],sample_id );
-  fprintf(fp_latex,"\t\\caption{L-type calcium current result for drug %s with concentration %.0lf of sample %d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
-  fprintf(fp_latex,"\t\\label{fig:image_icalplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/IKr_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{hERG current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_ikr}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_INaL(x1000)(nanoA).png}\n",
-                    image_scale,p_param->drug_name, concs[jdx], p_param->drug_name, concs[jdx],sample_id );
-  fprintf(fp_latex,"\t\\caption{L-type sodium surrent result for drug %s with concentration %.0lf of sample %d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
-  fprintf(fp_latex,"\t\\label{fig:image_inalplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s/Inet_plot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Cummulative current result (iNet) in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_inet}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+
+  fprintf(fp_latex,"\\subsection*{Feature Distribution}\n");
+  fprintf(fp_latex,"The biomarker for cardiotoxicity assessment proposed by the US FDA Leading Study Group is qNet, and the following figures show the distribution of qNet and other features.\n");
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/qnet_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{qNet value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_qnet}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_INa(x1000)(nanoA).png}\n",
-                    image_scale,p_param->drug_name, concs[jdx], p_param->drug_name, concs[jdx],sample_id );
-  fprintf(fp_latex,"\t\\caption{sodium current result for drug %s with concentration %.0lf of sample %d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
-  fprintf(fp_latex,"\t\\label{fig:image_inaplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/apd90_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{APD90 value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_apd90}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/%s_%.0lf_time_series_result_smp%d_plot_IKr(x1000)(nanoA).png}\n",
-                    image_scale,p_param->drug_name, concs[jdx], p_param->drug_name, concs[jdx],sample_id );
-  fprintf(fp_latex,"\t\\caption{rapid potassium current result for drug %s with concentration %.0lf of sample %d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
-  fprintf(fp_latex,"\t\\label{fig:image_ikrplot_%s_%.0lf_%d}\n",
-                    p_param->drug_name, concs[jdx], sample_id);
-  fprintf(fp_latex,"\\end{figure}\n");
-
-    } // end of concentration loop
-  } // end of sample loop
-
-  // generate figure of features distribution
-  for(int jdx = 0; jdx < concs.size(); jdx++){
-  fprintf(fp_latex,"\\begin{figure}[H]\n");
-  fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1lf]{./plots/%s/%.0lf/APD90.png}\n",
-                    image_scale,p_param->drug_name, concs[jdx] );
-  fprintf(fp_latex,"\t\\caption{APD90 distribution of %s with concentration %.0lf mMolar}\n",
-                    p_param->drug_name, concs[jdx]);
-  fprintf(fp_latex,"\t\\label{fig:image_apd90_%s_%.0lf}\n",
-                    p_param->drug_name, 0.);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/apd50_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{APD50 value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_apd50}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/%s/%.0lf/APD50.png}\n",
-                    image_scale,p_param->drug_name, concs[jdx] );
-  fprintf(fp_latex,"\t\\caption{APD50 distribution of %s with concentration %.0lf mMolar}\n",
-                    p_param->drug_name, concs[jdx]);
-  fprintf(fp_latex,"\t\\label{fig:image_apd90_%s_%.0lf}\n",
-                    p_param->drug_name, 0.);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/cad90_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{CaD90 value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_cad90}\n");
   fprintf(fp_latex,"\\end{figure}\n");
-  }
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/cad50_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{CaD50 value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_cad50}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/vm_peak_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Peak action potential value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_vm_peak}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/vm_valley_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Lowest action potential value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_vm_valley}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/ca_peak_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Peak calcium concentration value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_ca_peak}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/ca_valley_boxplot.png}\n",
+                    image_scale,p_param->drug_name);
+  fprintf(fp_latex,"\t\\caption{Lowest calcium concentration value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_ca_valley}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
 
   // end of LaTEX document
   fprintf(fp_latex,"\n\\end{document}\n");

@@ -48,7 +48,7 @@ int main(int argc, char **argv)
   double t_end = MPI_Wtime();
 
   // move to other post-processing app
-  // if(MPI_Profile::rank == 0) generate_report_drug(p_param, p_features, hill);
+  if(MPI_Profile::rank == 0) generate_report_drug(p_param);
   // MPI_Barrier(MPI_COMM_WORLD);
 
   mpi_printf(0,"Simulation finished at: %lf minutes.\n", (t_end-t_begin)*cml::math::SECOND_TO_MINUTE);

@@ -1,6 +1,7 @@
 ./bin/simulation_dirs/drugsim_ord_cvode/result
 ./bin/simulation_dirs/drugsim_ord_euler_optimal/result
-./bin/simulation_dirs/drugsim_ordstatic_cvode_optimal/result ./bin/simulation_dirs/drugsim_tomek_cvode/result
+./bin/simulation_dirs/drugsim_ordstatic_cvode_optimal/result 
+./bin/simulation_dirs/drugsim_tomek_cvode/result
 ./bin/simulation_dirs/drugsim_tomek_euler_optimal/result
 ./bin/simulation_dirs/drugsim_ord_cvode_optimal/result
 ./bin/simulation_dirs/drugsim_ordstatic_cvode/result
@@ -8,7 +9,8 @@
 ./bin/simulation_dirs/drugsim_tomek_cvode_optimal/result
 ./bin/simulation_dirs_bash/drugsim_ord_cvode/result
 ./bin/simulation_dirs_bash/drugsim_ord_euler_optimal/result
-./bin/simulation_dirs_bash/drugsim_ordstatic_cvode_optimal/result ./bin/simulation_dirs_bash/drugsim_tomek_cvode/result
+./bin/simulation_dirs_bash/drugsim_ordstatic_cvode_optimal/result 
+./bin/simulation_dirs_bash/drugsim_tomek_cvode/result
 ./bin/simulation_dirs_bash/drugsim_tomek_euler_optimal/result
 ./bin/simulation_dirs/drugsim_ord_cvode_optimal/result
 ./bin/simulation_dirs/drugsim_ordstatic_cvode/result
@@ -17,3 +19,4 @@
 ./bin/drugsim_ord
 ./bin/drugsim_ordstatic
 ./bin/drugsim_tomek
+./bin/drugsim_tomek_dyncl

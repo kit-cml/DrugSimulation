@@ -42,7 +42,6 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   // this is the cellmodel initialization part
   Cellmodel *p_cell;
 #if defined ORD_DYN_2017
-  const char CELL_NAME[] = "ord";
   mpi_printf(cml::commons::MASTER_NODE, "Using ORd-dyn 2017 cell model\n");
   p_cell = new ohara_rudy_cipa_v1_2017();
   if (is_cvar && cvar) {
@@ -51,7 +50,6 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
     p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, herg.data);
   }
 #elif defined TOMEK_2019
-  const char CELL_NAME[] = "tomek";
   mpi_printf(cml::commons::MASTER_NODE, "Using Tomek 2019 cell model\n");
   p_cell = new Tomek_model();
   if (is_cvar && cvar) {
@@ -60,7 +58,6 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
     p_cell->initConsts(static_cast<double>(celltype), conc, hill.data);
   }
 #elif defined TOMEK_DYNCL_2020
-  const char CELL_NAME[] = "tomek_dyncl";
   mpi_printf(cml::commons::MASTER_NODE, "Using Tomek_dynCl 2020 cell model\n");
   p_cell = new Tomek_dynCl();
   if (is_cvar && cvar) {
@@ -69,7 +66,6 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
     p_cell->initConsts(static_cast<double>(celltype), conc, hill.data);
   }
 #else
-  const char CELL_NAME[] = "ordstatic";
   mpi_printf(cml::commons::MASTER_NODE, "Using ORd2011 cell model\n");
   p_cell = new Ohara_Rudy_2011();
   if (is_cvar && cvar) {
@@ -99,7 +95,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
           "INa(x1.000)(microA->nanoA)", "INaL(x1.000)(microA->nanoA)", "ICaL(x1.000)(microA->nanoA)", "Ito(x1.000)(microA->nanoA)",
           "IKr(x1.000)(microA->nanoA)", "IKs(x1.000)(microA->nanoA)", "IK1(x1.000)(microA->nanoA)");
 
-  snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", CELL_NAME);
+  snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", p_param->cell_name);
   mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   // replace the initial condition
   // with the last state value from
