@@ -46,7 +46,9 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\n\\begin{document}\n");
   fprintf(fp_latex,"\\maketitle\n");
   fprintf(fp_latex,"\\section*{Simulation Parameter}\n");
-  fprintf(fp_latex,"Cellmodel: %s\n\\\\Drug Name: %s\n\\\\Cmax: %s\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", (cml::commons::MAP_CELL_NAME.at(p_param->cell_name)).c_str(),p_param->drug_name,p_param->concs);
+  fprintf(fp_latex,"Cellmodel: %s\n\\\\Celltype: %s\n\\\\Drug Name: %s\n\\\\Cmax: %s\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", 
+                               (cml::commons::MAP_CELL_NAME.at(p_param->cell_name)).c_str(),(cml::commons::VECTOR_CELL_TYPE[(int)p_param->celltype]).c_str(),
+                                p_param->drug_name,p_param->concs);
 
   fprintf(fp_latex,"\\section*{Simulation Protocol}\n");
   fprintf(fp_latex,"Each drug was simulated by inducing %d beats at a %.0lf ms cycle.\n", p_param->pace_max, p_param->bcl);
@@ -183,7 +185,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/qnet_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{qNet value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of qNet at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_qnet}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -192,7 +194,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/apd90_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{APD90 value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of APD90 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_apd90}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -201,7 +203,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/apd50_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{APD50 value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of APD50 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_apd50}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -210,7 +212,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/cad90_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{CaD90 value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of CaD90 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_cad90}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -219,7 +221,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/cad50_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{CaD50 value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of CaD50 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_cad50}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -228,7 +230,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/vm_peak_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{Peak action potential value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of peak action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_vm_peak}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -237,7 +239,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/vm_valley_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{Lowest action potential value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of lowest action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_vm_valley}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -246,7 +248,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/ca_peak_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{Peak calcium concentration value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of peak calcium concentration at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_ca_peak}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -255,7 +257,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s/ca_valley_boxplot.png}\n",
                     image_scale,p_param->drug_name);
-  fprintf(fp_latex,"\t\\caption{Lowest calcium concentration value distributions among several concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Distribution of lowest calcium concentrations  at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_ca_valley}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 

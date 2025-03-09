@@ -1,2 +1,0 @@
-sample,qnet,qnet_apd,qInward,inal_auc,ical_auc,apd90,apd50,apd_tri,vm_peak,vm_valley,dvmdt_peak,dvmdt_max_repol,cad90,cad50,cad_tri,ca_peak,ca_valley
-1,0.3608,0.3522,0.0019,-0.4956,-0.0000,1998.5000,1998.5000,0.0000,-66.9748,-89.1459,51.9602,-89.1956,0.0000,0.0000,0.0000,65.4450,65.4450

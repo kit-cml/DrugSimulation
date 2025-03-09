@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2024.7.3)  3 MAR 2025 20:53
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013) (format=pdflatex 2024.7.3)  10 MAR 2025 05:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -148,15 +148,15 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 8.
 
-Overfull \hbox (6.55162pt too wide) in paragraph at lines 15--18
+Overfull \hbox (6.55162pt too wide) in paragraph at lines 16--19
 \OT1/cmr/m/n/10.95 Biomarker: qNet, qIn-ward, APD90, APD50, APDtri, CaD90, CaD5
 0, CaDtri. 
  []
 
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <10.95> on input line 18.
+(Font)              <10.95> on input line 19.
 
-Overfull \hbox (2.50624pt too wide) in paragraph at lines 21--29
+Overfull \hbox (2.50624pt too wide) in paragraph at lines 22--30
 \OT1/cmr/m/n/10.95 (8) CaDtri: Tri-an-gu-la-tion of the CaD. Dif-fer-ence be-tw
 een CaD90 and CaD50. 
  []
@@ -169,10 +169,10 @@ File: ./plots/time_series/quinidine/Vm_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/Vm_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/Vm_plot.png used on inpu
-t line 37.
+t line 38.
 (pdftex.def)             Requested size: 455.87978pt x 342.56026pt.
 
-Overfull \hbox (95.87978pt too wide) in paragraph at lines 35--38
+Overfull \hbox (95.87978pt too wide) in paragraph at lines 36--39
  [] 
  []
 
@@ -182,10 +182,10 @@ Overfull \hbox (95.87978pt too wide) in paragraph at lines 35--38
 File: ./plots/time_series/quinidine/dVm_dt_plot.png Graphic file (type png)
  <use ./plots/time_series/quinidine/dVm_dt_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/dVm_dt_plot.png used on 
-input line 44.
+input line 45.
 (pdftex.def)             Requested size: 455.5907pt x 342.56026pt.
 
-Overfull \hbox (95.5907pt too wide) in paragraph at lines 42--45
+Overfull \hbox (95.5907pt too wide) in paragraph at lines 43--46
  [] 
  []
 
@@ -195,10 +195,10 @@ File: ./plots/time_series/quinidine/Cai_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/Cai_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/Cai_plot.png used on inp
-ut line 51.
+ut line 52.
 (pdftex.def)             Requested size: 456.16885pt x 342.56026pt.
 
-Overfull \hbox (96.16885pt too wide) in paragraph at lines 49--52
+Overfull \hbox (96.16885pt too wide) in paragraph at lines 50--53
  [] 
  []
 
@@ -208,10 +208,10 @@ File: ./plots/time_series/quinidine/INaL_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/INaL_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/INaL_plot.png used on in
-put line 58.
+put line 59.
 (pdftex.def)             Requested size: 456.16885pt x 342.56026pt.
 
-Overfull \hbox (96.16885pt too wide) in paragraph at lines 56--59
+Overfull \hbox (96.16885pt too wide) in paragraph at lines 57--60
  [] 
  []
 
@@ -221,10 +221,10 @@ File: ./plots/time_series/quinidine/INa_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/INa_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/INa_plot.png used on inp
-ut line 65.
+ut line 66.
 (pdftex.def)             Requested size: 456.45793pt x 342.56026pt.
 
-Overfull \hbox (96.45793pt too wide) in paragraph at lines 63--66
+Overfull \hbox (96.45793pt too wide) in paragraph at lines 64--67
  [] 
  []
 
@@ -233,10 +233,10 @@ Overfull \hbox (96.45793pt too wide) in paragraph at lines 63--66
 File: ./plots/time_series/quinidine/ICaL_plot.png Graphic file (type png)
 <use ./plots/time_series/quinidine/ICaL_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/ICaL_plot.png used on in
-put line 72.
+put line 73.
 (pdftex.def)             Requested size: 456.45793pt x 342.56026pt.
 
-Overfull \hbox (96.45793pt too wide) in paragraph at lines 70--73
+Overfull \hbox (96.45793pt too wide) in paragraph at lines 71--74
  [] 
  []
 
@@ -246,10 +246,10 @@ File: ./plots/time_series/quinidine/IKs_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/IKs_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/IKs_plot.png used on inp
-ut line 79.
+ut line 80.
 (pdftex.def)             Requested size: 455.87978pt x 342.56026pt.
 
-Overfull \hbox (95.87978pt too wide) in paragraph at lines 77--80
+Overfull \hbox (95.87978pt too wide) in paragraph at lines 78--81
  [] 
  []
 
@@ -259,10 +259,10 @@ File: ./plots/time_series/quinidine/IK1_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/IK1_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/IK1_plot.png used on inp
-ut line 86.
+ut line 87.
 (pdftex.def)             Requested size: 456.16885pt x 342.56026pt.
 
-Overfull \hbox (96.16885pt too wide) in paragraph at lines 84--87
+Overfull \hbox (96.16885pt too wide) in paragraph at lines 85--88
  [] 
  []
 
@@ -272,10 +272,10 @@ File: ./plots/time_series/quinidine/Ito_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/Ito_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/Ito_plot.png used on inp
-ut line 93.
+ut line 94.
 (pdftex.def)             Requested size: 456.16885pt x 342.56026pt.
 
-Overfull \hbox (96.16885pt too wide) in paragraph at lines 91--94
+Overfull \hbox (96.16885pt too wide) in paragraph at lines 92--95
  [] 
  []
 
@@ -285,10 +285,10 @@ File: ./plots/time_series/quinidine/IKr_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/IKr_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/IKr_plot.png used on inp
-ut line 100.
+ut line 101.
 (pdftex.def)             Requested size: 455.87978pt x 342.56026pt.
 
-Overfull \hbox (95.87978pt too wide) in paragraph at lines 98--101
+Overfull \hbox (95.87978pt too wide) in paragraph at lines 99--102
  [] 
  []
 
@@ -298,10 +298,10 @@ File: ./plots/time_series/quinidine/Inet_plot.png Graphic file (type png)
 
 <use ./plots/time_series/quinidine/Inet_plot.png>
 Package pdftex.def Info: ./plots/time_series/quinidine/Inet_plot.png used on in
-put line 107.
+put line 108.
 (pdftex.def)             Requested size: 455.5907pt x 342.56026pt.
 
-Overfull \hbox (95.5907pt too wide) in paragraph at lines 105--108
+Overfull \hbox (95.5907pt too wide) in paragraph at lines 106--109
  [] 
  []
 
@@ -312,10 +312,10 @@ File: ./plots/features/quinidine/qnet_boxplot.png Graphic file (type png)
 
 <use ./plots/features/quinidine/qnet_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/qnet_boxplot.png used on in
-put line 116.
+put line 117.
 (pdftex.def)             Requested size: 456.74701pt x 224.61545pt.
 
-Overfull \hbox (96.74701pt too wide) in paragraph at lines 114--117
+Overfull \hbox (96.74701pt too wide) in paragraph at lines 115--118
  [] 
  []
 
@@ -325,10 +325,10 @@ File: ./plots/features/quinidine/apd90_boxplot.png Graphic file (type png)
 
 <use ./plots/features/quinidine/apd90_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/apd90_boxplot.png used on i
-nput line 123.
+nput line 124.
 (pdftex.def)             Requested size: 456.74701pt x 224.61545pt.
 
-Overfull \hbox (96.74701pt too wide) in paragraph at lines 121--124
+Overfull \hbox (96.74701pt too wide) in paragraph at lines 122--125
  [] 
  []
 
@@ -338,97 +338,98 @@ File: ./plots/features/quinidine/apd50_boxplot.png Graphic file (type png)
 
 <use ./plots/features/quinidine/apd50_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/apd50_boxplot.png used on i
-nput line 130.
+nput line 131.
 (pdftex.def)             Requested size: 456.74701pt x 224.61545pt.
 
-Overfull \hbox (96.74701pt too wide) in paragraph at lines 128--131
+Overfull \hbox (96.74701pt too wide) in paragraph at lines 129--132
  [] 
  []
 
-
-<./plots/features/quinidine/cad90_boxplot.png, id=78, 570.933pt x 280.76895pt>
+[14 <./plots/features/quinidine/qnet_boxplot.png>]
+<./plots/features/quinidine/cad90_boxplot.png, id=82, 570.933pt x 280.76895pt>
 File: ./plots/features/quinidine/cad90_boxplot.png Graphic file (type png)
 
 <use ./plots/features/quinidine/cad90_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/cad90_boxplot.png used on i
-nput line 137.
+nput line 138.
 (pdftex.def)             Requested size: 456.74701pt x 224.61545pt.
 
-Overfull \hbox (96.74701pt too wide) in paragraph at lines 135--138
+Overfull \hbox (96.74701pt too wide) in paragraph at lines 136--139
  [] 
  []
 
-[14 <./plots/features/quinidine/qnet_boxplot.png> <./plots/features/quinidine/a
-pd90_boxplot.png>]
-<./plots/features/quinidine/cad50_boxplot.png, id=84, 570.933pt x 280.76895pt>
+[15 <./plots/features/quinidine/apd90_boxplot.png>]
+<./plots/features/quinidine/cad50_boxplot.png, id=87, 570.933pt x 280.76895pt>
 File: ./plots/features/quinidine/cad50_boxplot.png Graphic file (type png)
 
 <use ./plots/features/quinidine/cad50_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/cad50_boxplot.png used on i
-nput line 144.
+nput line 145.
 (pdftex.def)             Requested size: 456.74701pt x 224.61545pt.
 
-Overfull \hbox (96.74701pt too wide) in paragraph at lines 142--145
+Overfull \hbox (96.74701pt too wide) in paragraph at lines 143--146
  [] 
  []
 
-
-<./plots/features/quinidine/vm_peak_boxplot.png, id=85, 571.29436pt x 280.76895
+[16 <./plots/features/quinidine/apd50_boxplot.png>]
+<./plots/features/quinidine/vm_peak_boxplot.png, id=92, 571.29436pt x 280.76895
 pt>
 File: ./plots/features/quinidine/vm_peak_boxplot.png Graphic file (type png)
  <use ./plots/features/quinidine/vm_peak_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/vm_peak_boxplot.png used on
- input line 151.
+ input line 152.
 (pdftex.def)             Requested size: 457.0361pt x 224.61545pt.
 
-Overfull \hbox (97.0361pt too wide) in paragraph at lines 149--152
+Overfull \hbox (97.0361pt too wide) in paragraph at lines 150--153
  [] 
  []
 
-[15 <./plots/features/quinidine/apd50_boxplot.png> <./plots/features/quinidine/
-cad90_boxplot.png>]
-<./plots/features/quinidine/vm_valley_boxplot.png, id=91, 570.933pt x 280.76895
+[17 <./plots/features/quinidine/cad90_boxplot.png>]
+<./plots/features/quinidine/vm_valley_boxplot.png, id=97, 570.933pt x 280.76895
 pt>
 File: ./plots/features/quinidine/vm_valley_boxplot.png Graphic file (type png)
  <use ./plots/features/quinidine/vm_valley_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/vm_valley_boxplot.png used 
-on input line 158.
+on input line 159.
 (pdftex.def)             Requested size: 456.74701pt x 224.61545pt.
 
-Overfull \hbox (96.74701pt too wide) in paragraph at lines 156--159
+Overfull \hbox (96.74701pt too wide) in paragraph at lines 157--160
  [] 
  []
 
-
-<./plots/features/quinidine/ca_peak_boxplot.png, id=92, 571.29436pt x 280.76895
-pt>
+[18 <./plots/features/quinidine/cad50_boxplot.png>]
+<./plots/features/quinidine/ca_peak_boxplot.png, id=102, 571.29436pt x 280.7689
+5pt>
 File: ./plots/features/quinidine/ca_peak_boxplot.png Graphic file (type png)
  <use ./plots/features/quinidine/ca_peak_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/ca_peak_boxplot.png used on
- input line 165.
+ input line 166.
 (pdftex.def)             Requested size: 457.0361pt x 224.61545pt.
 
-Overfull \hbox (97.0361pt too wide) in paragraph at lines 163--166
+Overfull \hbox (97.0361pt too wide) in paragraph at lines 164--167
  [] 
  []
 
-[16 <./plots/features/quinidine/cad50_boxplot.png> <./plots/features/quinidine/
-vm_peak_boxplot.png>]
-<./plots/features/quinidine/ca_valley_boxplot.png, id=98, 571.29436pt x 280.768
-95pt>
+[19 <./plots/features/quinidine/vm_peak_boxplot.png>]
+<./plots/features/quinidine/ca_valley_boxplot.png, id=108, 571.29436pt x 280.76
+895pt>
 File: ./plots/features/quinidine/ca_valley_boxplot.png Graphic file (type png)
  <use ./plots/features/quinidine/ca_valley_boxplot.png>
 Package pdftex.def Info: ./plots/features/quinidine/ca_valley_boxplot.png used 
-on input line 172.
+on input line 173.
 (pdftex.def)             Requested size: 457.0361pt x 224.61545pt.
 
-Overfull \hbox (97.0361pt too wide) in paragraph at lines 170--173
+Overfull \hbox (97.0361pt too wide) in paragraph at lines 171--174
  [] 
  []
 
-[17 <./plots/features/quinidine/vm_valley_boxplot.png>] [18 <./plots/features/q
-uinidine/ca_peak_boxplot.png>] [19 <./plots/features/quinidine/ca_valley_boxplo
-t.png>] (./report_drug_quinidine_ord_marcell.aux) ) 
+[20 <./plots/features/quinidine/vm_valley_boxplot.png>] [21 <./plots/features/q
+uinidine/ca_peak_boxplot.png>] [22 <./plots/features/quinidine/ca_valley_boxplo
+t.png>] (./report_drug_quinidine_ord_marcell.aux)
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ ) 
 Here is how much of TeX's memory you used:
  1671 strings out of 495063
  26863 string characters out of 3182202
@@ -436,20 +437,20 @@ Here is how much of TeX's memory you used:
  4839 multiletter control sequences out of 15000+200000
  8503 words of font info for 30 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 37i,7n,23p,263b,213s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texlive/texmf-di
-st/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fon
-ts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/texmf-dist/fonts/typ
-e1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pub
-lic/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
-m/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17
-.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb>
-Output written on report_drug_quinidine_ord_marcell.pdf (19 pages, 2669315 byte
+ 37i,7n,23p,266b,213s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></us
+r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/shar
+e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texl
+ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/p
+ublic/amsfonts/cm/cmr8.pfb>
+Output written on report_drug_quinidine_ord_marcell.pdf (22 pages, 2445541 byte
 s).
 PDF statistics:
- 139 PDF objects out of 1000 (max. 8388607)
- 69 compressed objects within 1 object stream
+ 148 PDF objects out of 1000 (max. 8388607)
+ 75 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  101 words of extra memory for PDF output out of 10000 (max. 10000000)
 

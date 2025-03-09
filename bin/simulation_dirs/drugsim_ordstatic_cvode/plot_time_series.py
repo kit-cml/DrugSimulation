@@ -8,7 +8,7 @@ from pathlib import Path
 
 # Define a global variable
 random_sample = []
-
+fixed_sample = [1,2,3,4,5]
 
 def generate_random_sample(number_of_data):
     global random_sample  # Declare the global variable
@@ -116,7 +116,7 @@ def create_multi_panel_plot(base_path, concentrations, feature_name, ylabel, tit
     # Add legend to the figure
     # Get lines and labels from first subplot
     lines = axes_flat[0].get_lines()
-    labels = ['Control'] + [f'Sample {i}' for i in random_sample]
+    labels = ['Control'] + [f'Sample {i}' for i in fixed_sample]
     
     # Place legend in the center of the figure
     fig.legend(lines[:6], labels, 

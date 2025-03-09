@@ -156,17 +156,10 @@ Before ICaL at rank 7: 0.000000
 Rank 8 reached point Y
 Before INaL at rank 8: 0.000000
 Before ICaL at rank 8: 0.000000
-After INaL at rank 8: -85.682836
 Rank 9 reached point Y
 Before INaL at rank 9: 0.000000
 Before ICaL at rank 9: 0.000000
-After INaL at rank 9: -85.682836
-After ICaL at rank 9: -210.340347
 After INaL at rank 0: -85.682836
-After ICaL at rank 0: -210.340347
-Using ORd-dyn 2017 cell model
-Celltype: 2.000000
-Concentration: 3237.000000
 After INaL at rank 1: -85.682836
 After ICaL at rank 1: -210.340347
 After INaL at rank 2: -85.682836
@@ -181,7 +174,14 @@ After INaL at rank 6: -85.682836
 After ICaL at rank 6: -210.340347
 After INaL at rank 7: -85.682836
 After ICaL at rank 7: -210.340347
+After INaL at rank 8: -85.682836
 After ICaL at rank 8: -210.340347
+After INaL at rank 9: -85.682836
+After ICaL at rank 9: -210.340347
+After ICaL at rank 0: -210.340347
+Using ORd-dyn 2017 cell model
+Celltype: 2.000000
+Concentration: 3237.000000
 Control: 
 PCa:0.000101 
 GK1:0.323978 
@@ -535,4 +535,4 @@ Using last state from the in-silico simulation.
 STATES after:
 -22.005978 0.498139 0.002022 9.473256 9.475846 142.087542 142.087517 3.729798 0.974420 0.000341 
 Using CVode Solver.
-Simulation finished at: 16.363699 minutes.
+Simulation finished at: 18.272508 minutes.

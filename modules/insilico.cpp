@@ -113,6 +113,8 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   double tprint = 0.;
   short pace_count = 0;
   long icount = 0;
+  long imax = (long)((pace_max * bcl)/dt);
+  const long print_freq = (int)(1./dt) * dtw;
 
   // CVode solver.
   CVodeSolverData *p_cvode;
@@ -131,7 +133,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   p_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
 
   // begin computation loop
-  while (tcurr < tmax) {
+  while (icount < imax) {
     // compute and solving part
     //
     // Different solver_type has different
@@ -165,7 +167,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
     // assuming that the minimum dt is 0.005.
     // Because of this,
     // we will have dtw universal for any solver.
-    if (icount % (int)floor(dtw * 1000.) == 0) {
+    if (icount% print_freq == 0) {
       if (tcurr > bcl * (pace_max - 10)) {
         tprint = tcurr - (bcl * (pace_max - 10));
         snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
@@ -176,7 +178,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
         fprintf(fp_last_ten_paces, "%.0lf,%s", round(tprint), buffer);
       }
     }
-    icount += (int)(dt * 1000.);
+    icount++;
 
   }  // end computation loop
 
@@ -188,7 +190,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   fprintf(fp_vmdebug, "Selected final pace: %hd\n", p_features.pace_target);
   fprintf(fp_vmdebug, "Features saved: \n%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
           "dVmdt_repol_max");
-  fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_features.pace_target, p_features.time_vm_peak, p_features.vm_peak,
+  fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.8lf\n", p_features.pace_target, p_features.time_vm_peak, p_features.vm_peak,
           p_features.vm_valley, p_features.vm_amp30, p_features.vm_amp50, p_features.vm_amp90, p_features.dvmdt_repol_max);
   fprintf(fp_vmdebug, "Last states:\n");
   for (short idx = 0; idx < p_cell->states_size; idx++) {

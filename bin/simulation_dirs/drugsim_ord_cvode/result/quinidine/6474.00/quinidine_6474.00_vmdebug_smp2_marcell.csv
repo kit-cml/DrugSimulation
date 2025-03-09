@@ -252,7 +252,7 @@ Pace,T_Peak,Vmpeak,Vmvalley,Vm_repol30,Vm_repol50,Vm_repol90,dVmdt_repol_max
 Selected final pace: 951
 Features saved: 
 Pace,T_Peak,Vmpeak,Vmvalley,Vm_repol30,Vm_repol50,Vm_repol90,dVmdt_repol_max
-951,20.5000,46.7357,27.9175,41.0902,37.3266,29.7993,27.9175
+951,20.5000,46.7357,27.9175,41.0902,37.3266,29.7993,27.91746470
 Last states:
 -19.8959503473816532
 0.5122900072765757
