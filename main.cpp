@@ -1,4 +1,5 @@
 #include <functions/inputoutput.hpp>
+#include <functions/softdongle.hpp>
 #include <types/cipa_features.hpp>
 #include <types/cml_consts.hpp>
 #include <types/mpi_profile.hpp>
@@ -21,7 +22,13 @@ int main(int argc, char **argv)
   // Set the locale to one that uses a comma as the decimal separator
   //setlocale(LC_NUMERIC, "de_DE"); // German locale (or any other locale that uses a comma)
   multimap <double, string> time_series;
-  
+ 
+#if defined LICENSED
+  int check_license = validate_license();
+  if(check_license < 0){
+    return -1;
+  }
+#endif
   // initialize MPI
   MPI_Init( &argc, &argv );
   MPI_Comm_size( MPI_COMM_WORLD, &MPI_Profile::size );
@@ -51,7 +58,7 @@ int main(int argc, char **argv)
   if(MPI_Profile::rank == 0) generate_report_drug(p_param);
   // MPI_Barrier(MPI_COMM_WORLD);
 
-  mpi_printf(0,"Simulation finished at: %lf minutes.\n", (t_end-t_begin)*cml::math::SECOND_TO_MINUTE);
+  mpi_printf(0,"Simulation finished at: %lf minutes.\n", (t_end-t_begin)*cml::math::SECONDS_TO_MINUTES);
 
   delete p_param;
   MPI_Finalize();
