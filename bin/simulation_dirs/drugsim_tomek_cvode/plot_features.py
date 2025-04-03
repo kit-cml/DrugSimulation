@@ -19,7 +19,7 @@ def extract_core_number(filename):
     match = re.search(r'core(\d+)', filename)
     return int(match.group(1)) if match else -1
 
-def read_feature_data(base_path, drug_name, concentration):
+def read_feature_data(base_path, drug_name, concentration, user_name):
     """
     Read all feature_core files for a given concentration
     Returns a sorted DataFrame with all features
@@ -28,7 +28,7 @@ def read_feature_data(base_path, drug_name, concentration):
     folder_path = Path(base_path) / str(concentration)
     
     # Find all feature files matching the pattern
-    pattern = f"{drug_name}_{concentration}_features_core*_marcell.csv"
+    pattern = f"{drug_name}_{concentration}_features_core*_{user_name}.csv"
     for file in folder_path.glob(pattern):
         feature_files.append(str(file))
     
@@ -140,7 +140,7 @@ def create_feature_plots(all_data, drug_name, output_folder):
                    dpi=200, bbox_inches='tight')
         plt.close()
 
-def process_data(base_path, drug_name):
+def process_data(base_path, drug_name, user_name):
     """
     Process all concentrations and create feature-based plots
     """
@@ -163,7 +163,7 @@ def process_data(base_path, drug_name):
     all_data = []
     for concentration in sorted(concentrations, key=float):
         print(f"Processing concentration: {concentration}")
-        data = read_feature_data(base_path, drug_name, concentration)
+        data = read_feature_data(base_path, drug_name, concentration, user_name)
         if data is not None:
             all_data.append(data)
     
@@ -181,8 +181,8 @@ def process_data(base_path, drug_name):
 
 if __name__ == "__main__":
     # Replace these with your actual values
-    if len(sys.argv) < 2: print("Please provide the result folder path!!!")
+    if len(sys.argv) < 3: print("Please provide the result folder path and user name!!!")
     else:
-      drug_name = (sys.argv[1]).split("/")[1]
+      drug_name = os.path.basename(os.path.dirname(sys.argv[1]))
       print(drug_name)
-      process_data(sys.argv[1], drug_name)
+      process_data(sys.argv[1], drug_name,sys.argv[2])
