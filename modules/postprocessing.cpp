@@ -127,6 +127,7 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
   long icount = 0;
   long imax = (long)((bcl)/dt);
   const long print_freq = (long)(1./dt) * dtw;
+  double next_print_time = 0.0;
 
   // CVode solver.
   CVodeSolverData *p_cvode;
@@ -185,7 +186,8 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
     get_ca_features_postprocessing(p_cell, p_features, tcurr);
 
     // write the result to the graph
-    if (icount % print_freq == 0) {
+    if (tcurr >= next_print_time) {
+    //if (icount% print_freq == 0) {
       // mpi_printf(0,"Writing at %lf msec.\n", tcurr);
       snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
                p_cell->RATES[V], dt, p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
@@ -195,6 +197,7 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
       fprintf(fp_time_series, "%.0lf,%s", floor(tcurr), buffer);
       p_features.vm_data.insert(std::pair<double, double>(tcurr, p_cell->STATES[V]));
       p_features.cai_data.insert(std::pair<double, double>(tcurr, p_cell->STATES[cai]));
+      next_print_time += dtw;
     }
 
     icount++;

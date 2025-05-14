@@ -115,6 +115,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   long icount = 0;
   long imax = (long)((pace_max * bcl)/dt);
   const long print_freq = (int)(1./dt) * dtw;
+  double next_print_time = 0.0;
 
   // CVode solver.
   CVodeSolverData *p_cvode;
@@ -167,7 +168,8 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
     // assuming that the minimum dt is 0.005.
     // Because of this,
     // we will have dtw universal for any solver.
-    if (icount% print_freq == 0) {
+    if (tcurr >= next_print_time) {
+    //if (icount% print_freq == 0) {
       if (tcurr > bcl * (pace_max - 10)) {
         tprint = tcurr - (bcl * (pace_max - 10));
         snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
@@ -177,6 +179,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
                  p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO);
         fprintf(fp_last_ten_paces, "%.0lf,%s", round(tprint), buffer);
       }
+      next_print_time += dtw;
     }
     icount++;
 
@@ -190,16 +193,18 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   fprintf(fp_vmdebug, "Selected final pace: %hd\n", p_features.pace_target);
   fprintf(fp_vmdebug, "Features saved: \n%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
           "dVmdt_repol_max");
-  fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.8lf\n", p_features.pace_target, p_features.time_vm_peak, p_features.vm_peak,
+  fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.8lf,%.8lf,%.8lf\n", p_features.pace_target, p_features.time_vm_peak, p_features.vm_peak,
           p_features.vm_valley, p_features.vm_amp30, p_features.vm_amp50, p_features.vm_amp90, p_features.dvmdt_repol_max);
   fprintf(fp_vmdebug, "Last states:\n");
   for (short idx = 0; idx < p_cell->states_size; idx++) {
     fprintf(fp_vmdebug, "%.16lf\n", p_features.last_states[idx]);
   }
 
+  delete p_cvode;
   fclose(fp_last_ten_paces);
   fclose(fp_last_states);
   fclose(fp_vmdebug);
+  
 }
 
 void end_of_cycle_funct(short *pace_count, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,
