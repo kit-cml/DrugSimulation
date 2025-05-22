@@ -1,9 +1,9 @@
 ./bin/simulation_dirs/drugsim_ord_cvode/
 ./bin/simulation_dirs/drugsim_ord_cvode_cvar/
-./bin/simulation_dirs/drugsim_ord_cvode_euler/
-./bin/simulation_dirs/drugsim_ordstatic_euler/
+./bin/simulation_dirs/drugsim_ord_euler/
 ./bin/simulation_dirs/drugsim_ordstatic_cvode/
 ./bin/simulation_dirs/drugsim_ordstatic_cvode_cvar/
+./bin/simulation_dirs/drugsim_ordstatic_euler/
 ./bin/simulation_dirs/drugsim_tomek_euler/
 ./bin/simulation_dirs/drugsim_tomek_cvode/
 ./bin/simulation_dirs/drugsim_tomek_cvode_cvar/
