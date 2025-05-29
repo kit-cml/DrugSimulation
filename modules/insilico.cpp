@@ -35,6 +35,8 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   const double dt_min = p_param->dt_min;
   const double dt_max = p_param->dt_max;
   const double dtw = p_param->dtw;
+  const double stim_dur = p_param->stim_dur;
+  const double stim_amp_scale = p_param->stim_amp_scale;
   const short solver_type = p_param->solver_type;
   const short is_cvar = p_param->is_cvar;
   const char *drug_name = p_param->drug_name;
@@ -76,6 +78,8 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
 #endif
 
   p_cell->CONSTANTS[BCL] = bcl;
+  p_cell->CONSTANTS[duration] = stim_dur;
+  p_cell->CONSTANTS[amp] *= stim_amp_scale;
 
   // variables for I/O
   char buffer[900];
