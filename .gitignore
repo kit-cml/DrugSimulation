@@ -1,8 +1,8 @@
-./bin/simulation_cpu/results
-./bin/drugsim_ord
-./bin/drugsim_ordstatic
-./bin/drugsim_tomek
-./bin/drugsim_tomek_dyncl
+bin/simulation_cpu/results
+bin/drugsim_ord
+bin/drugsim_ordstatic
+bin/drugsim_tomek
+bin/drugsim_tomek_dyncl
 *.tex
 *.pdf
 *.aux
