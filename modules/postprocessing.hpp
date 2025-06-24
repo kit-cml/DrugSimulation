@@ -21,10 +21,6 @@ using std::vector;
 void postprocessing(double conc, double inal_auc_control, double ical_auc_control, const Drug_Row &hill, const Drug_Row &herg,
                     const Parameter *p_param, Cipa_Features &p_features, short sample_id, short group_id, const Cvar_Row *cvar = nullptr);
 
-// load last states from the 1000 paces steady-state control simulation.
-// If error occured, keep using the initial condition from the model.
-short set_initial_condition_postprocessing(Cellmodel *p_cell, const char *ic_file_name);
-
 // functions related to the features retrieval
 void get_vm_features_postprocessing(Cellmodel *p_cell, Cipa_Features &p_features, const double tcurr);
 void get_ca_features_postprocessing(Cellmodel *p_cell, Cipa_Features &p_features, const double tcurr);

@@ -83,14 +83,14 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
 
   // variables for I/O
   char buffer[900];
-  FILE *fp_vmdebug, *fp_last_states;
+  FILE *fp_vmdebug, *fp_repol_states;
 
   snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_vmdebug_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
   fp_vmdebug = fopen(buffer, "w");
   fprintf(fp_vmdebug, "%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
           "dVmdt_repol_max");
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_last_states_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
-  fp_last_states = fopen(buffer, "w");
+  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_repol_states_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
+  fp_repol_states = fopen(buffer, "w");
 
   FILE *fp_last_ten_paces;
   snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_last_10_paces_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
@@ -104,6 +104,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   // replace the initial condition
   // with the last state value from
   // steady-state 1000 paces control simulation.
+  // TODO: implemented later on.
   // set_initial_condition(p_cell, buffer);
 
   // time variables.
@@ -191,7 +192,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
 
   // write the last states into a file for further usage.
   for (short idx = 0; idx < p_cell->states_size; idx++) {
-    fprintf(fp_last_states, "%.16lf\n", p_features.last_states[idx]);
+    fprintf(fp_repol_states, "%.16lf\n", p_features.repol_states[idx]);
   }
 
   fprintf(fp_vmdebug, "Selected final pace: %hd\n", p_features.pace_target);
@@ -199,14 +200,14 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
           "dVmdt_repol_max");
   fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.8lf,%.8lf,%.8lf\n", p_features.pace_target, p_features.time_vm_peak, p_features.vm_peak,
           p_features.vm_valley, p_features.vm_amp30, p_features.vm_amp50, p_features.vm_amp90, p_features.dvmdt_repol_max);
-  fprintf(fp_vmdebug, "Last states:\n");
+  fprintf(fp_vmdebug, "States during the highest dVM/dt between 30%% and 90%% repolarization phase:\n");
   for (short idx = 0; idx < p_cell->states_size; idx++) {
-    fprintf(fp_vmdebug, "%.16lf\n", p_features.last_states[idx]);
+    fprintf(fp_vmdebug, "%.8lf\n", p_features.repol_states[idx]);
   }
 
   delete p_cvode;
   fclose(fp_last_ten_paces);
-  fclose(fp_last_states);
+  fclose(fp_repol_states);
   fclose(fp_vmdebug);
   
 }
@@ -217,11 +218,11 @@ void end_of_cycle_funct(short *pace_count, Cellmodel *p_cell, const Parameter *p
     fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", *pace_count, temp_features.time_vm_peak, temp_features.vm_peak,
             temp_features.vm_valley, temp_features.vm_amp30, temp_features.vm_amp50, temp_features.vm_amp90, temp_features.dvmdt_repol_max);
     fflush(fp_vmdebug);
-    temp_features.last_states.insert(temp_features.last_states.begin(), p_cell->STATES, p_cell->STATES + p_cell->states_size);
+    temp_features.repol_states.insert(temp_features.repol_states.begin(), p_cell->STATES, p_cell->STATES + p_cell->states_size);
     /*
         mpi_printf(cml::commons::MASTER_NODE, "Last states of pace %d:\n", *pace_count);
         for(short idx = 0; idx < p_cell->states_size; idx++){
-          mpi_printf(cml::commons::MASTER_NODE, "%lf,", temp_features.last_states[idx]);
+          mpi_printf(cml::commons::MASTER_NODE, "%lf,", temp_features.repol_states[idx]);
         }
         mpi_printf(cml::commons::MASTER_NODE, "\n");
     */
