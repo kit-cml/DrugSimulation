@@ -88,7 +88,7 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
   char buffer[900];
   FILE *fp_time_series;
 
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_last_states_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_repol_states_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
   mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   // replace the initial condition
   // with the last state value from
@@ -97,13 +97,13 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
   for (short idx = 0; idx < 20; idx++) {
     mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
   }
-  mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from last_states vector:\n");
+  mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from repol_states vector:\n");
   for (short idx = 0; idx < 20; idx++) {
-    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.last_states[idx]);
+    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.repol_states[idx]);
   }
-  mpi_printf(cml::commons::MASTER_NODE, "\nUsing last state from the in-silico simulation.\n");
+  mpi_printf(cml::commons::MASTER_NODE, "\nUsing repol state from the in-silico simulation.\n");
 
-  copy(p_features.last_states.begin(), p_features.last_states.end(), p_cell->STATES);
+  copy(p_features.repol_states.begin(), p_features.repol_states.end(), p_cell->STATES);
   // set_initial_condition_postprocessing(p_cell, buffer);
 
   mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
@@ -219,36 +219,6 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
     delete p_cvode;
   }
   fclose(fp_time_series);
-}
-
-short set_initial_condition_postprocessing(Cellmodel *p_cell, const char *ic_file_name) {
-  char buffer[50];
-  FILE *fp_states;
-  short idx;
-  mpi_printf(cml::commons::MASTER_NODE, "STATES before:\n");
-  for (idx = 0; idx < 10; idx++) {
-    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
-  }
-  mpi_printf(cml::commons::MASTER_NODE, "\n");
-  fp_states = fopen(ic_file_name, "r");
-  if (fp_states != NULL) {
-    mpi_printf(cml::commons::MASTER_NODE, "Using initial condition from 1000 paces steady-state!\n");
-    idx = 0;
-    while (fgets(buffer, sizeof(buffer), fp_states) != NULL) {
-      p_cell->STATES[idx++] = strtod(buffer, NULL);
-    }
-    mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
-    for (idx = 0; idx < 10; idx++) {
-      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
-    }
-    mpi_printf(cml::commons::MASTER_NODE, "\n");
-    fclose(fp_states);
-  } else {
-    mpi_printf(cml::commons::MASTER_NODE, "File %s not found! Make sure the name is correct!\n");
-    return 1;
-  }
-
-  return 0;
 }
 
 void get_vm_features_postprocessing(Cellmodel *p_cell, Cipa_Features &p_features, const double tcurr) {

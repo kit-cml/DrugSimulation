@@ -20,10 +20,14 @@ LIBCML_EXTERNAL_LIB_DIR = ../libCML/libs
 
 
 # Define the final program name
- PROGNAME := drugsim_ordstatic
+# PROGNAME := drugsim_ordstatic
 # PROGNAME := drugsim_ord
 # PROGNAME := drugsim_tomek
 # PROGNAME := drugsim_tomek_dyncl
+# PROGNAME := drugsim_ordstatic_postprocessing
+# PROGNAME := drugsim_ord_postprocessing
+ PROGNAME := drugsim_tomek_postprocessing
+# PROGNAME := drugsim_tomek_dyncl_postprocessing
 
 
 # Pre-processor flags to be used for includes (-I) and defines (-D) 
@@ -38,6 +42,10 @@ CC := mpicc
 # Uncomment this part for the licensed version
 #CXXFLAGS += -DLICENSED
 
+# Uncomment this part for the compilation of postprocessing binaries
+CXXFLAGS += -DPOSTPROCESSING
+
+
 # CXXFLAGS is used for C++ compilation options.
 #CXXFLAGS += -Wall -O0 -fpermissive -std=c++11
 #CXXFLAGS += -Wall -O2 -fno-alias -fpermissive
@@ -48,7 +56,7 @@ CXXFLAGS += -Wall -Wunused-variable -std=c++11
 # CXXFLAGS += -DORD_DYN_2017
 # Use this if you want to use Tomek 2019 cell model.
 # Otherwise, comment it
-# CXXFLAGS += -DTOMEK_2019
+ CXXFLAGS += -DTOMEK_2019
 # Use this if you want to use Tomek 2020 dynamic cell model.
 # Otherwise, comment it
 # CXXFLAGS += -DTOMEK_DYNCL_2020

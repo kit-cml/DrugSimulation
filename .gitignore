@@ -1,8 +1,13 @@
 bin/simulation_cpu/results
+bin/simulation_cpu_postprocessing/results
 bin/drugsim_ord
 bin/drugsim_ordstatic
 bin/drugsim_tomek
 bin/drugsim_tomek_dyncl
+bin/drugsim_ord_postprocessing
+bin/drugsim_ordstatic_postprocessing
+bin/drugsim_tomek_postprocessing
+bin/drugsim_tomek_dyncl_postprocessing
 *.tex
 *.pdf
 *.aux
