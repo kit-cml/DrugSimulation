@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [ "$#" -lt 2 ]; then
-    echo "Error: Provide the cell model name and number of processor size to the script!"
-    echo "Example: ./exec_bash.sh ord 10"
+if [ "$#" -lt 1 ]; then
+    echo "Error: Provide the number of processor size to the script!"
+    echo "Example: ./exec_bash.sh 10"
     exit 1
 fi
 
@@ -14,8 +14,8 @@ export PATH=$PATH
 echo $PATH
 
 # Check whether the input is actually a number or not
-if [ "$#" -eq 2 ] && echo "$2" | grep -Eq '^-?[0-9]+$';  then
-  NUMBER_OF_CPU=$2
+if [ "$#" -eq 1 ] && echo "$1" | grep -Eq '^-?[0-9]+$';  then
+  NUMBER_OF_CPU=$1
 else
   echo "The processor size is not a number!!!"
   exit 1
@@ -27,23 +27,29 @@ if [ $NUMBER_OF_CPU -gt  $MAX_CPU ]; then
   exit 1
 fi
 
-if [ $1 == "ord" ]; then
-  CAPTION="CiPAORdv1.0 DrugSim."
-  BINARY_FILE=../drugsim_ord
-elif [ $1 == "ordstatic" ]; then
-  CAPTION="ORd2011-Dutta DrugSim."
-  BINARY_FILE=../drugsim_ordstatic
-elif [ $1 == "tomek" ]; then
-  CAPTION="ToR-ORd DrugSim."
-  BINARY_FILE=../drugsim_tomek
+# to grab cell_model value from parameter file (thanks, ChatGPT).
+# grep "^user_name": looks for the line starting with user_name
+# cut -d'=' -f2: gets the right-hand side of =
+# sed 's/\/\/.*//': removes any inline comment starting with //
+# xargs: trims leading and trailing whitespace
+cell_model=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+
+# choose the binary based on the value of cell_model
+if [[ $cell_model == *"CiPAORdv1.0"* ]]; then
+  BINARY_FILE=../drugsim_CiPAORdv1.0
+elif [[ $cell_model == *"ORdstatic-Dutta"* ]]; then
+  BINARY_FILE=../drugsim_ORdstatic-Dutta
+elif [[ $cell_model == *"ToR-ORd"* ]]; then
+  BINARY_FILE=../drugsim_ToR-ORd
+elif [[ $cell_model == *"ToR-ORd-dynCl"* ]]; then
+  BINARY_FILE=../drugsim_ToR-ORd-dynCl
 else
-  echo "The cell model $1 is not specified to any simulations!!"
+  echo "The cell model $cell_model is not specified to any simulations!!"
   exit 1
 fi
 
 rm -rf *.log results logfile
 mkdir results
-echo $CAPTION
-echo "Run simulation with $NUMBER_OF_CPU cores."
+echo "Run $cell_model cell model simulation with $NUMBER_OF_CPU cores."
 mpiexec -np $NUMBER_OF_CPU $BINARY_FILE -input_deck param.txt
 echo "Simulation has finished! Check the logfile for more details."

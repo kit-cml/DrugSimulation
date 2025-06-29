@@ -1,14 +1,15 @@
 #include "insilico.hpp"
 
-#ifdef TOMEK_2019
-#include <types/cellmodels/Tomek_model.hpp>
-#elif defined(TOMEK_DYNCL_2020)
-#include <types/cellmodels/Tomek_dynCl.hpp>
-#elif defined(ORD_DYN_2017)
+#if defined CIPAORDV1_0
 #include <types/cellmodels/ohara_rudy_cipa_v1_2017.hpp>
+#elif defined TOR_ORD
+#include <types/cellmodels/Tomek_model.hpp>
+#elif defined TOR_ORD_DYNCL
+#include <types/cellmodels/Tomek_dynCl.hpp>
 #else
 #include <types/cellmodels/Ohara_Rudy_2011.hpp>
 #endif
+
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -30,7 +31,6 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   // the sake of simplicity.
   const double bcl = p_param->bcl;
   const short pace_max = p_param->pace_max;
-  const short celltype = p_param->celltype;
   const char *user_name = p_param->user_name;
   const double dt_min = p_param->dt_min;
   const double dt_max = p_param->dt_max;
@@ -43,37 +43,39 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
 
   // this is the cellmodel initialization part
   Cellmodel *p_cell;
-#if defined ORD_DYN_2017
-  mpi_printf(cml::commons::MASTER_NODE, "Using ORd-dyn 2017 cell model\n");
+  short cell_type;
+  const char *cell_model = p_param->cell_model;
+  if( strstr(cell_model,"endo") != NULL ) cell_type = 0;
+  else if( strstr(cell_model,"epi") != NULL ) cell_type = 1;
+  else if( strstr(cell_model,"myo") != NULL ) cell_type = 2;
+  mpi_printf(cml::commons::MASTER_NODE,"Using %s cell model with cell_type=%hd\n", cell_model, cell_type);
+#if defined CIPAORDV1_0
   p_cell = new ohara_rudy_cipa_v1_2017();
   if (is_cvar && cvar) {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, herg.data, cvar->data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data, cvar->data);
   } else {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, herg.data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data);
   }
-#elif defined TOMEK_2019
-  mpi_printf(cml::commons::MASTER_NODE, "Using Tomek 2019 cell model\n");
+#elif defined TOR_ORD
   p_cell = new Tomek_model();
   if (is_cvar && cvar) {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, cvar->data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, cvar->data);
   } else {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data);
   }
-#elif defined TOMEK_DYNCL_2020
-  mpi_printf(cml::commons::MASTER_NODE, "Using Tomek_dynCl 2020 cell model\n");
+#elif defined TOR_ORD_DYNCL
   p_cell = new Tomek_dynCl();
   if (is_cvar && cvar) {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, cvar->data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, cvar->data);
   } else {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data);
   }
 #else
-  mpi_printf(cml::commons::MASTER_NODE, "Using ORd2011 cell model\n");
   p_cell = new Ohara_Rudy_2011();
   if (is_cvar && cvar) {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, true, cvar->data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, true, cvar->data);
   } else {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, true);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, true);
   }
 #endif
 
@@ -99,7 +101,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
           "INa(x1.000)(microA->nanoA)", "INaL(x1.000)(microA->nanoA)", "ICaL(x1.000)(microA->nanoA)", "Ito(x1.000)(microA->nanoA)",
           "IKr(x1.000)(microA->nanoA)", "IKs(x1.000)(microA->nanoA)", "IK1(x1.000)(microA->nanoA)");
 
-  snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", p_param->cell_name);
+  snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", p_param->cell_model);
   mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   // replace the initial condition
   // with the last state value from

@@ -27,7 +27,7 @@ int generate_report_drug(const Parameter *p_param)
   //         p_param->drug_name, p_param->user_name, current_time->tm_year + 1900, current_time->tm_mon + 1, current_time->tm_mday,
   //         current_time->tm_hour, current_time->tm_min, current_time->tm_sec);
   snprintf(latex_filename,sizeof(latex_filename),"report_drug_%s_%s_%s.tex",
-           p_param->drug_name, p_param->cell_name, p_param->user_name);
+           p_param->drug_name, p_param->cell_model, p_param->user_name);
   FILE *fp_latex = fopen(latex_filename,"w");
   short font_size = 11;
   float image_scale = 0.8;
@@ -46,9 +46,8 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\n\\begin{document}\n");
   fprintf(fp_latex,"\\maketitle\n");
   fprintf(fp_latex,"\\section*{Simulation Parameter}\n");
-  fprintf(fp_latex,"Cellmodel: %s\n\\\\Celltype: %s\n\\\\Drug Name: %s\n\\\\Cmax: %s\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", 
-                               (cml::commons::MAP_CELL_NAME.at(p_param->cell_name)).c_str(),(cml::commons::VECTOR_CELL_TYPE[(int)p_param->celltype]).c_str(),
-                                p_param->drug_name,p_param->concs);
+  fprintf(fp_latex,"Cellmodel: %s\n\\\\Drug Name: %s\n\\\\Cmax: %s\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", 
+                               (cml::commons::MAP_CELL_NAME.at(p_param->cell_model)).c_str(), p_param->drug_name,p_param->concs);
 
   fprintf(fp_latex,"\\section*{Simulation Protocol}\n");
   fprintf(fp_latex,"Each drug was simulated by inducing %d beats at a %.0lf ms cycle.\n", p_param->pace_max, p_param->bcl);
