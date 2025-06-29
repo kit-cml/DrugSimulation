@@ -27,7 +27,7 @@
 using std::copy;
 using std::vector;
 
-void postprocessing(double conc, double inal_auc_control, double ical_auc_control, const Drug_Row &hill, const Drug_Row &herg,
+int postprocessing(double conc, double inal_auc_control, double ical_auc_control, const Drug_Row &hill, const Drug_Row &herg,
                     const Parameter *p_param, Cipa_Features &p_features, short sample_id, short group_id, const Cvar_Row *cvar) {
   bool is_ead = false;
   // simulation parameters.
@@ -40,7 +40,7 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
   const double dtw = p_param->dtw;
   const double stim_dur = p_param->stim_dur;
   const double stim_amp_scale = p_param->stim_amp_scale;
-  const short solver_type = p_param->solver_type;
+  const char *solver_type = p_param->solver_type;
   const short is_cvar = p_param->is_cvar;
   const char *drug_name = p_param->drug_name;
 
@@ -139,14 +139,19 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
   // CVode solver.
   CVodeSolverData *p_cvode;
   int cvode_retval;
-  if (solver_type == 0) {
+  if (strncasecmp(solver_type, "Euler", sizeof(solver_type)) == 0) {
     mpi_printf(cml::commons::MASTER_NODE, "Using Euler Solver.\n");
-  } else if (solver_type == 1) {
+  } else if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
     mpi_printf(cml::commons::MASTER_NODE, "Using CVode Solver.\n");
     p_cvode = new CVodeSolverData();
     init_cvode(p_cvode, p_cell, tcurr);
     set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
   }
+  else{
+    mpi_fprintf(0, stderr, "Solver type %s is undefined! Please choose the available solver types from the manual!\n", solver_type);
+    return 1;
+  }
+
 
   double inal_auc = 0.;
   double ical_auc = 0.;
@@ -162,16 +167,16 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
     //
     // Different solver_type has different
     // method of calling computeRates().
-    if (solver_type == 0) {
+    if (strncasecmp(solver_type, "Euler", sizeof(solver_type)) == 0) {
       p_cell->computeRates(tcurr, p_cell->CONSTANTS, p_cell->RATES, p_cell->STATES, p_cell->ALGEBRAIC);
       solveEuler(dt, p_cell);
       // increase the time based on the dt.
       tcurr += dt;
-    } else if (solver_type == 1) {
+    } else if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
       cvode_retval = solve_cvode(p_cvode, p_cell, tcurr + dt, &tcurr);
       if (cvode_retval != 0) {
         printf("CVode calculation error happened at sample %hd concentration %.0lf!!\n", sample_id, conc);
-        return;
+        return cvode_retval;
       }
       set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
     }
@@ -217,11 +222,13 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
   collect_features(p_features, p_param, p_cell, conc, inet_auc, inet_apd_auc, inal_auc, ical_auc, inal_auc_control, ical_auc_control, buffer,
                    sample_id, group_id);
 
-  if (solver_type == 1) {
+  if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
     clean_cvode(p_cvode);
     delete p_cvode;
   }
   fclose(fp_time_series);
+
+  return 0;
 }
 
 void get_vm_features_postprocessing(Cellmodel *p_cell, Cipa_Features &p_features, const double tcurr) {

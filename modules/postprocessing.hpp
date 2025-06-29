@@ -18,7 +18,7 @@
 #include <vector>
 using std::vector;
 
-void postprocessing(double conc, double inal_auc_control, double ical_auc_control, const Drug_Row &hill, const Drug_Row &herg,
+int postprocessing(double conc, double inal_auc_control, double ical_auc_control, const Drug_Row &hill, const Drug_Row &herg,
                     const Parameter *p_param, Cipa_Features &p_features, short sample_id, short group_id, const Cvar_Row *cvar = nullptr);
 
 // functions related to the features retrieval

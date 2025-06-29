@@ -71,7 +71,7 @@ int main(int argc, char **argv)
   int err_code;
   double t_begin = MPI_Wtime();
   err_code = drug_simulation_bench(p_param,time_series,p_features,hill);
-  if(err_code > 0) MPI_Abort(MPI_COMM_WORLD, err_code);
+  if(err_code != 0) MPI_Abort(MPI_COMM_WORLD, err_code);
   double t_end = MPI_Wtime();
 
   // move to other post-processing app

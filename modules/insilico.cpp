@@ -24,7 +24,7 @@
 
 using std::vector;
 
-void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Parameter *p_param, Cipa_Features &p_features, short sample_id,
+int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Parameter *p_param, Cipa_Features &p_features, short sample_id,
               const Cvar_Row *cvar) {
   // simulation parameters.
   // Assigned to the constant variables for
@@ -37,7 +37,7 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   const double dtw = p_param->dtw;
   const double stim_dur = p_param->stim_dur;
   const double stim_amp_scale = p_param->stim_amp_scale;
-  const short solver_type = p_param->solver_type;
+  const char *solver_type = p_param->solver_type;
   const short is_cvar = p_param->is_cvar;
   const char *drug_name = p_param->drug_name;
 
@@ -127,14 +127,19 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
   // CVode solver.
   CVodeSolverData *p_cvode;
   int cvode_retval;
-  if (solver_type == 0) {
+  if (strncasecmp(solver_type, "Euler", sizeof(solver_type)) == 0) {
     mpi_printf(cml::commons::MASTER_NODE, "Using Euler Solver.\n");
-  } else if (solver_type == 1) {
+  } else if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
     mpi_printf(cml::commons::MASTER_NODE, "Using CVode Solver.\n");
     p_cvode = new CVodeSolverData();
     init_cvode(p_cvode, p_cell, tcurr);
     set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
   }
+  else{
+    mpi_fprintf(0, stderr, "Solver type %s is undefined! Please choose the available solver types from the manual!\n", solver_type);
+    return 1;
+  }
+
 
   Cipa_Features temp_features;
   temp_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
@@ -146,16 +151,16 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
     //
     // Different solver_type has different
     // method of calling computeRates().
-    if (solver_type == 0) {
+    if (strncasecmp(solver_type, "Euler", sizeof(solver_type)) == 0) {
       p_cell->computeRates(tcurr, p_cell->CONSTANTS, p_cell->RATES, p_cell->STATES, p_cell->ALGEBRAIC);
       solveEuler(dt, p_cell);
       // increase the time based on the dt.
       tcurr += dt;
-    } else if (solver_type == 1) {
+    } else if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
       cvode_retval = solve_cvode(p_cvode, p_cell, tcurr + dt, &tcurr);
       if (cvode_retval != 0) {
         printf("CVode calculation error happened at sample %hd concentration %.0lf!!\n", sample_id, conc);
-        return;
+        return cvode_retval;
       }
       set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
     }
@@ -207,11 +212,15 @@ void insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Par
     fprintf(fp_vmdebug, "%.8lf\n", p_features.repol_states[idx]);
   }
 
-  delete p_cvode;
+  if( strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0 ){
+    clean_cvode(p_cvode);
+    delete p_cvode;
+  }
   fclose(fp_last_ten_paces);
   fclose(fp_repol_states);
   fclose(fp_vmdebug);
   
+  return 0;
 }
 
 void end_of_cycle_funct(short *pace_count, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,

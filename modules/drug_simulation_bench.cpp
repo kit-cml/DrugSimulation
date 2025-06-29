@@ -96,15 +96,17 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
       snprintf(repol_states_file, sizeof(repol_states_file), "%s/%.2lf/%s_%.2lf_repol_states_smp%d_%s.csv", 
       p_param->repol_states_folder, 0.00, p_param->drug_name, 0.00, sample_id, p_param->user_name);
       error_code = set_initial_condition_postprocessing(repol_states_file, vec_repol_states);
-      if(error_code != 0) return 1;
+      if(error_code != 0) return error_code;
       p_features.repol_states.clear();
       p_features.repol_states.insert(p_features.repol_states.begin(), vec_repol_states.begin(), vec_repol_states.end());
 #else
     mpi_printf(0, "Running control in-silico simulation...\n");
-    insilico(0., hill[sample_id], herg[sample_id], p_param, p_features, sample_id);
+    error_code = insilico(0., hill[sample_id], herg[sample_id], p_param, p_features, sample_id);
+    if(error_code != 0) return error_code;
 #endif
     mpi_printf(0, "Running control postprocessing simulation...\n");
-    postprocessing(0., inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id, group_id);
+    error_code = postprocessing(0., inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id, group_id);
+    if(error_code != 0) return error_code;
     inal_auc_control = p_features.inal_auc;
     ical_auc_control = p_features.ical_auc;
 
@@ -142,10 +144,12 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
         p_features.repol_states.insert(p_features.repol_states.begin(), vec_repol_states.begin(), vec_repol_states.end());
 #else
         mpi_printf(0, "insilico simulation started. After that, followed by postprocessing...\n");
-        insilico(concs[idx], hill[sample_id], herg[sample_id], p_param, p_features, sample_id, &cvar[sample_id]);
+        error_code = insilico(concs[idx], hill[sample_id], herg[sample_id], p_param, p_features, sample_id, &cvar[sample_id]);
+        if(error_code != 0) return error_code;
 #endif
-        postprocessing(concs[idx], inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id,
+        error_code = postprocessing(concs[idx], inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id,
                             group_id, &cvar[sample_id]);
+        if(error_code != 0) return error_code;
 
         // Update and report local progress
         tasks_completed++;
