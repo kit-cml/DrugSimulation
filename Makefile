@@ -51,10 +51,10 @@ CXXFLAGS += -Wall -Wunused-variable -std=c++11
 #CXXFLAGS += -DTOR_ORD
 # Use this if you want to use ToR-ORd-dynCl cell model.
 # Otherwise, comment it
-CXXFLAGS += -DTOR_ORD_DYNCL
+#CXXFLAGS += -DTOR_ORD_DYNCL
 
 # Uncomment this part for the compilation of postprocessing binaries
-CXXFLAGS += -DPOSTPROCESSING
+#CXXFLAGS += -DPOSTPROCESSING
 
 # The program name wiil depend on the set value above
 # Make sure ONLY ONE MACRO IS USED!!!
@@ -65,7 +65,7 @@ else ifeq ($(findstring -DTOR_ORD_DYNCL,$(CXXFLAGS)), -DTOR_ORD_DYNCL)
 else ifeq ($(findstring -DTOR_ORD,$(CXXFLAGS)), -DTOR_ORD)
     PROGNAME := $(BASE_PROGNAME)_ToR-ORd
 else
-    PROGNAME := $(BASE_PROGNAME)_ORdstatic-Dutta
+    PROGNAME := $(BASE_PROGNAME)_ORd-static
 endif
 
 ifeq ($(findstring -DPOSTPROCESSING,$(CXXFLAGS)), -DPOSTPROCESSING)

@@ -97,9 +97,9 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   FILE *fp_last_ten_paces;
   snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_last_10_paces_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
   fp_last_ten_paces = fopen(buffer, "w");
-  fprintf(fp_last_ten_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time", "Vm", "dVm/dt", "timestep(dt)", "Cai(x1.000.000)(milliM->nanoM)",
-          "INa(x1.000)(microA->nanoA)", "INaL(x1.000)(microA->nanoA)", "ICaL(x1.000)(microA->nanoA)", "Ito(x1.000)(microA->nanoA)",
-          "IKr(x1.000)(microA->nanoA)", "IKs(x1.000)(microA->nanoA)", "IK1(x1.000)(microA->nanoA)");
+  fprintf(fp_last_ten_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)", "Cai(x1.000.000)(nanoM)",
+          "INa(x1.000)(nanoA)", "INaL(x1.000)(nanoA)", "ICaL(x1.000)(nanoA)", "Ito(x1.000)(nanoA)",
+          "IKr(x1.000)(nanoA)", "IKs(x1.000)(nanoA)", "IK1(x1.000)(nanoA)");
 
   snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", p_param->cell_model);
   mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
@@ -184,12 +184,12 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     //if (icount% print_freq == 0) {
       if (tcurr > bcl * (pace_max - 10)) {
         tprint = tcurr - (bcl * (pace_max - 10));
-        snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
-                 dt, p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
+        snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
+                 p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
                  p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
                  p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
                  p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO);
-        fprintf(fp_last_ten_paces, "%.0lf,%s", round(tprint), buffer);
+        fprintf(fp_last_ten_paces, "%.2lf,%s", tprint, buffer);
       }
       next_print_time += dtw;
     }

@@ -43,7 +43,7 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
     get_data_from_file<Cvar_Row, Cvar_Input>(p_param->cvar_file, cvar);
   }
 
-#ifdef ORD_DYN_2017
+#if defined CIPAORDV1_0
   error_code = check_drug_data_content(herg, p_param);
   if (error_code > 0) return 1;
   if (herg.size() != hill.size()) {

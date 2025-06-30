@@ -37,8 +37,8 @@ cell_model=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut 
 # choose the binary based on the value of cell_model
 if [[ $cell_model == *"CiPAORdv1.0"* ]]; then
   BINARY_FILE=../drugsim_CiPAORdv1.0
-elif [[ $cell_model == *"ORdstatic-Dutta"* ]]; then
-  BINARY_FILE=../drugsim_ORdstatic-Dutta
+elif [[ $cell_model == *"ORd-static"* ]]; then
+  BINARY_FILE=../drugsim_ORd-static
 elif [[ $cell_model == *"ToR-ORd"* ]]; then
   BINARY_FILE=../drugsim_ToR-ORd
 elif [[ $cell_model == *"ToR-ORd-dynCl"* ]]; then

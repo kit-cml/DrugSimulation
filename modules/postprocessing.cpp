@@ -117,9 +117,9 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
 
   snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_time_series_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
   fp_time_series = fopen(buffer, "w");
-  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)", "timestep(dt)",
-          "Cai(x1.000.000)(milliM->nanoM)", "INa(x1.000)(microA->nanoA)", "INaL(x1.000)(microA->nanoA)", "ICaL(x1.000)(microA->nanoA)",
-          "Ito(x1.000)(microA->nanoA)", "IKr(x1.000)(microA->nanoA)", "IKs(x1.000)(microA->nanoA)", "IK1(x1.000)(microA->nanoA)", "Inet(microA)",
+  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)",
+          "Cai(x1.000.000)(nanoM)", "INa(x1.000)(nanoA)", "INaL(x1.000)(nanoA)", "ICaL(x1.000)(nanoA)",
+          "Ito(x1.000)(nanoA)", "IKr(x1.000)(nanoA)", "IKs(x1.000)(nanoA)", "IK1(x1.000)(microA->nanoA)", "Inet(microA)",
           "Inet_APD(microA)");
 
   // time variables.
@@ -201,8 +201,8 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
     if (tcurr >= next_print_time) {
     //if (icount% print_freq == 0) {
       // mpi_printf(0,"Writing at %lf msec.\n", tcurr);
-      snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
-               p_cell->RATES[V], dt, p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
+      snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
+               p_cell->RATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO, inet, inet_apd);
