@@ -14,3 +14,4 @@ hill_file = ./chantest_hill/quinidine/IC50_samples30.csv	// File that contains t
 herg_file = ./chantest_herg/quinidine/boot_pars30.csv			// File that contains the hERG parameters.
 is_cvar = 0                       // Conductance variability. Set true to activate and assign the file to Cvar_File
 cvar_file = ./population/indi_1sample // the file for conductance variability.
+number_of_cpu = 10               // Number of CPU used for mpiexec call

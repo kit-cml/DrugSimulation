@@ -12,3 +12,4 @@ drug_concentrations = 3237,6474	// Concentration of the drug, Cmax1 to Cmax4 val
 hill_file = ./chantest_hill/quinidine/IC50_samples30.csv	// File that contains the IC50 information for each ionic channel.
 herg_file = ./chantest_herg/quinidine/boot_pars30.csv			// File that contains the hERG parameters.
 initial_values_directory = ../simulation_cpu/results/quinidine
+number_of_cpu = 10               // Number of CPU used for mpiexec call

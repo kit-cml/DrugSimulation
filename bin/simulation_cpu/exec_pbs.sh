@@ -23,19 +23,19 @@ echo $PATH
 # cut -d'=' -f2: gets the right-hand side of =
 # sed 's/\/\/.*//': removes any inline comment starting with //
 # xargs: trims leading and trailing whitespace
-cell_model=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+CELL_MODEL=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
 
 # choose the binary based on the value of cell_model
-if [[ $cell_model == *"CiPAORdv1.0"* ]]; then
+if [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
   BINARY_FILE=drugsim_CiPAORdv1.0
-elif [[ $cell_model == *"ORd-static"* ]]; then
+elif [[ $CELL_MODEL == *"ORd-static"* ]]; then
   BINARY_FILE=drugsim_ORd-static
-elif [[ $cell_model == *"ToR-ORd"* ]]; then
+elif [[ $CELL_MODEL == *"ToR-ORd"* ]]; then
   BINARY_FILE=drugsim_ToR-ORd
-elif [[ $cell_model == *"ToR-ORd-dynCl"* ]]; then
+elif [[ $CELL_MODEL == *"ToR-ORd-dynCl"* ]]; then
   BINARY_FILE=drugsim_ToR-ORd-dynCl
 else
-  echo "The cell model $1 is not specified to any simulations!!"
+  echo "The cell model $CELL_MODEL is not specified to any simulations!!"
   exit 1
 fi
 
