@@ -54,16 +54,16 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
 
   // get concentration values from input
   // and make the directories of them.
-  std::vector<double> concs;
-  concs.push_back(0.);
-  strncpy(buffer, p_param->concs, sizeof(buffer));
+  std::vector<double> drug_concentrations;
+  drug_concentrations.push_back(0.);
+  strncpy(buffer, p_param->drug_concentrations, sizeof(buffer));
   char *token = strtok(buffer, ",");
   while (token != NULL) {  // begin data tokenizing
-    concs.push_back(strtod(token, NULL));
+    drug_concentrations.push_back(strtod(token, NULL));
     token = strtok(NULL, ",");
   }  // end data tokenizing
 
-  if (MPI_Profile::rank == 0) create_concs_directories(concs, p_param->drug_name);
+  if (MPI_Profile::rank == 0) create_drug_concentrations_directories(drug_concentrations, p_param->drug_name);
   MPI_Barrier(MPI_COMM_WORLD);
 
   // Progress tracking variables
@@ -72,7 +72,7 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
   for (short i = MPI_Profile::rank; i < total_samples; i += MPI_Profile::size) {
     local_samples++;
   }
-  int local_tasks = local_samples * (concs.size() - 1);
+  int local_tasks = local_samples * (drug_concentrations.size() - 1);
   if (MPI_Profile::rank == 0) local_tasks += 1; // Add control task for rank 0
   int tasks_completed = 0;
   double last_reported_progress = -1.0; // To track last reported progress percentage
@@ -85,20 +85,20 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
 
 #if defined POSTPROCESSING
   // Will be used in the postprocessing only.
-  vector<double> vec_repol_states;
-  char repol_states_file[255];
+  vector<double> vec_initial_values;
+  char initial_values_file[255];
 #endif
 
   if (MPI_Profile::rank == 0) {
 #if defined POSTPROCESSING
-      vec_repol_states.clear();
+      vec_initial_values.clear();
       mpi_printf(0, "Running control Postprocessing simulation started. Skipped the insilico process and read the steady state values....\n");
-      snprintf(repol_states_file, sizeof(repol_states_file), "%s/%.2lf/%s_%.2lf_repol_states_smp%d_%s.csv", 
-      p_param->repol_states_folder, 0.00, p_param->drug_name, 0.00, sample_id, p_param->user_name);
-      error_code = set_initial_condition_postprocessing(repol_states_file, vec_repol_states);
+      snprintf(initial_values_file, sizeof(initial_values_file), "%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
+      p_param->initial_values_directory, 0.00, p_param->drug_name, 0.00, sample_id, p_param->user_name);
+      error_code = set_initial_condition_postprocessing(initial_values_file, vec_initial_values);
       if(error_code != 0) return error_code;
-      p_features.repol_states.clear();
-      p_features.repol_states.insert(p_features.repol_states.begin(), vec_repol_states.begin(), vec_repol_states.end());
+      p_features.initial_values.clear();
+      p_features.initial_values.insert(p_features.initial_values.begin(), vec_initial_values.begin(), vec_initial_values.end());
 #else
     mpi_printf(0, "Running control in-silico simulation...\n");
     error_code = insilico(0., hill[sample_id], herg[sample_id], p_param, p_features, sample_id);
@@ -130,24 +130,24 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
   for (sample_id = MPI_Profile::rank; sample_id < hill.size(); sample_id += MPI_Profile::size) {
     if (sample_id >= hill.size()) break;  // Ensure no out-of-bounds access
 
-    for (short idx = 1; idx < concs.size(); idx++) {
+    for (short idx = 1; idx < drug_concentrations.size(); idx++) {
       // postprocessing only read initial states at repolarization.
       // if the certain file cannot be read, skip to the next iteration.
 #if defined POSTPROCESSING
-        vec_repol_states.clear();
+        vec_initial_values.clear();
         mpi_printf(0, "Postprocessing simulation started. Skipped the insilico process and read the steady state values....\n");
-        snprintf(repol_states_file, sizeof(repol_states_file), "%s/%.2lf/%s_%.2lf_repol_states_smp%d_%s.csv", 
-          p_param->repol_states_folder, concs[idx], p_param->drug_name, concs[idx], sample_id, p_param->user_name);
-        error_code = set_initial_condition_postprocessing(repol_states_file, vec_repol_states);
+        snprintf(initial_values_file, sizeof(initial_values_file), "%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
+         p_param->initial_values_directory, drug_concentrations[idx], p_param->drug_name, drug_concentrations[idx], sample_id, p_param->user_name);
+        error_code = set_initial_condition_postprocessing(initial_values_file, vec_initial_values);
         if(error_code != 0) continue;
-        p_features.repol_states.clear();
-        p_features.repol_states.insert(p_features.repol_states.begin(), vec_repol_states.begin(), vec_repol_states.end());
+        p_features.initial_values.clear();
+        p_features.initial_values.insert(p_features.initial_values.begin(), vec_initial_values.begin(), vec_initial_values.end());
 #else
         mpi_printf(0, "insilico simulation started. After that, followed by postprocessing...\n");
-        error_code = insilico(concs[idx], hill[sample_id], herg[sample_id], p_param, p_features, sample_id, &cvar[sample_id]);
+        error_code = insilico(drug_concentrations[idx], hill[sample_id], herg[sample_id], p_param, p_features, sample_id, &cvar[sample_id]);
         if(error_code != 0) return error_code;
 #endif
-        error_code = postprocessing(concs[idx], inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id,
+        error_code = postprocessing(drug_concentrations[idx], inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id,
                             group_id, &cvar[sample_id]);
         if(error_code != 0) return error_code;
 
@@ -182,20 +182,20 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
 
 
 #if defined POSTPROCESSING
-int set_initial_condition_postprocessing(const char *repol_states_file, vector<double> &vec_repol_states) {
+int set_initial_condition_postprocessing(const char *initial_values_file, vector<double> &vec_initial_values) {
   char buffer[50];
-  FILE *fp_repol_states;
+  FILE *fp_initial_values;
 
-  fp_repol_states = fopen(repol_states_file, "r");
-  if (fp_repol_states == NULL) {
-    mpi_printf(cml::commons::MASTER_NODE, "File %s not found! Make sure the name is correct!\n", repol_states_file);
+  fp_initial_values = fopen(initial_values_file, "r");
+  if (fp_initial_values == NULL) {
+    mpi_printf(cml::commons::MASTER_NODE, "File %s not found! Make sure the name is correct!\n", initial_values_file);
     return 1;
   }
   mpi_printf(cml::commons::MASTER_NODE, "Using states from repolarization phase from previous simulations\n");
-  while (fgets(buffer, sizeof(buffer), fp_repol_states) != NULL) {
-    vec_repol_states.push_back(strtod(buffer, NULL));
+  while (fgets(buffer, sizeof(buffer), fp_initial_values) != NULL) {
+    vec_initial_values.push_back(strtod(buffer, NULL));
   }
-  fclose(fp_repol_states); 
+  fclose(fp_initial_values); 
 
   return 0;
 }

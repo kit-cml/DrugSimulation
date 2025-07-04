@@ -33,13 +33,13 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   // simulation parameters.
   // Assigned to the constant variables for
   // the sake of simplicity.
-  const double bcl = p_param->bcl;
+  const double cycle_length = p_param->cycle_length;
   const char *user_name = p_param->user_name;
-  const double dt_min = p_param->dt_min;
-  const double dt_max = p_param->dt_max;
-  const double dtw = p_param->dtw;
-  const double stim_dur = p_param->stim_dur;
-  const double stim_amp_scale = p_param->stim_amp_scale;
+  const double time_step_min = p_param->time_step_min;
+  const double time_step_max = p_param->time_step_max;
+  const double writing_step = p_param->writing_step;
+  const double stimulus_duration = p_param->stimulus_duration;
+  const double stimulus_amplitude_scale = p_param->stimulus_amplitude_scale;
   const char *solver_type = p_param->solver_type;
   const short is_cvar = p_param->is_cvar;
   const char *drug_name = p_param->drug_name;
@@ -82,16 +82,16 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   }
 #endif
 
-  p_cell->CONSTANTS[BCL] = bcl;
-  p_cell->CONSTANTS[duration] = stim_dur;
-  p_cell->CONSTANTS[amp] *= stim_amp_scale;
+  p_cell->CONSTANTS[BCL] = cycle_length;
+  p_cell->CONSTANTS[duration] = stimulus_duration;
+  p_cell->CONSTANTS[amp] *= stimulus_amplitude_scale;
 
 
   // variables for I/O
   char buffer[900];
   FILE *fp_time_series;
 
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_repol_states_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
   mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   // replace the initial condition
   // with the last state value from
@@ -100,13 +100,13 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   for (short idx = 0; idx < 20; idx++) {
     mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
   }
-  mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from repol_states vector:\n");
+  mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from initial_values vector:\n");
   for (short idx = 0; idx < 20; idx++) {
-    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.repol_states[idx]);
+    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.initial_values[idx]);
   }
   mpi_printf(cml::commons::MASTER_NODE, "\nUsing repol state from the in-silico simulation.\n");
 
-  copy(p_features.repol_states.begin(), p_features.repol_states.end(), p_cell->STATES);
+  copy(p_features.initial_values.begin(), p_features.initial_values.end(), p_cell->STATES);
   // set_initial_condition_postprocessing(p_cell, buffer);
 
   mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
@@ -119,21 +119,17 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   fp_time_series = fopen(buffer, "w");
   fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)",
           "Cai(x1.000.000)(nanoM)", "INa(x1.000)(nanoA)", "INaL(x1.000)(nanoA)", "ICaL(x1.000)(nanoA)",
-          "Ito(x1.000)(nanoA)", "IKr(x1.000)(nanoA)", "IKs(x1.000)(nanoA)", "IK1(x1.000)(microA->nanoA)", "Inet(microA)",
+          "Ito(x1.000)(nanoA)", "IKr(x1.000)(nanoA)", "IKs(x1.000)(nanoA)", "IK1(x1.000)(nanoA)", "Inet(microA)",
           "Inet_APD(microA)");
 
   // time variables.
   // some of these values are taken from the supplementary materials of ORd2011
   // page 19.
-  double dt = p_param->dt;
-  double dt_set;
+  double time_step = time_step_min;
   double tcurr = 0.;
   double time_point = 25.;
-  double tmax = bcl;
+  double tmax = cycle_length;
   short pace_count = 0;
-  long icount = 0;
-  long imax = (long)((bcl)/dt);
-  const long print_freq = (long)(1./dt) * dtw;
   double next_print_time = 0.0;
 
   // CVode solver.
@@ -145,7 +141,7 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
     mpi_printf(cml::commons::MASTER_NODE, "Using CVode Solver.\n");
     p_cvode = new CVodeSolverData();
     init_cvode(p_cvode, p_cell, tcurr);
-    set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
+    set_dt_cvode(p_cvode, tcurr, time_point, cycle_length, time_step_min, time_step_max, &time_step);
   }
   else{
     mpi_fprintf(0, stderr, "Solver type %s is undefined! Please choose the available solver types from the manual!\n", solver_type);
@@ -162,36 +158,36 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   p_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
 
   // begin computation loop
-  while (icount < imax) {
+  while (tcurr < tmax) {
     // compute and solving part
     //
     // Different solver_type has different
     // method of calling computeRates().
     if (strncasecmp(solver_type, "Euler", sizeof(solver_type)) == 0) {
       p_cell->computeRates(tcurr, p_cell->CONSTANTS, p_cell->RATES, p_cell->STATES, p_cell->ALGEBRAIC);
-      solveEuler(dt, p_cell);
+      solveEuler(time_step, p_cell);
       // increase the time based on the dt.
-      tcurr += dt;
+      tcurr += time_step;
     } else if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
-      cvode_retval = solve_cvode(p_cvode, p_cell, tcurr + dt, &tcurr);
+      cvode_retval = solve_cvode(p_cvode, p_cell, tcurr + time_step, &tcurr);
       if (cvode_retval != 0) {
         printf("CVode calculation error happened at sample %hd concentration %.0lf!!\n", sample_id, conc);
         return cvode_retval;
       }
-      set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
+      set_dt_cvode(p_cvode, tcurr, time_point, cycle_length, time_step_min, time_step_max, &time_step);
     }
 
     // calculating the AUC
     inet = p_cell->ALGEBRAIC[INaL] + p_cell->ALGEBRAIC[ICaL] + p_cell->ALGEBRAIC[Ito] + p_cell->ALGEBRAIC[IKr] + p_cell->ALGEBRAIC[IKs] +
            p_cell->ALGEBRAIC[IK1];
-    inet_auc += inet * dt;
+    inet_auc += inet * time_step;
     if (p_cell->STATES[V] > p_features.vm_amp90) {
       inet_apd = p_cell->ALGEBRAIC[INaL] + p_cell->ALGEBRAIC[ICaL] + p_cell->ALGEBRAIC[Ito] + p_cell->ALGEBRAIC[IKr] + p_cell->ALGEBRAIC[IKs] +
                  p_cell->ALGEBRAIC[IK1];
-      inet_apd_auc += inet_apd * dt;
+      inet_apd_auc += inet_apd * time_step;
     }
-    inal_auc += p_cell->ALGEBRAIC[INaL] * dt;
-    ical_auc += p_cell->ALGEBRAIC[ICaL] * dt;
+    inal_auc += p_cell->ALGEBRAIC[INaL] * time_step;
+    ical_auc += p_cell->ALGEBRAIC[ICaL] * time_step;
 
     // finding other vm and cai features
     get_vm_features_postprocessing(p_cell, p_features, tcurr);
@@ -199,7 +195,6 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
 
     // write the result to the graph
     if (tcurr >= next_print_time) {
-    //if (icount% print_freq == 0) {
       // mpi_printf(0,"Writing at %lf msec.\n", tcurr);
       snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
                p_cell->RATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
@@ -209,10 +204,9 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
       fprintf(fp_time_series, "%.0lf,%s", floor(tcurr), buffer);
       p_features.vm_data.insert(std::pair<double, double>(tcurr, p_cell->STATES[V]));
       p_features.cai_data.insert(std::pair<double, double>(tcurr, p_cell->STATES[cai]));
-      next_print_time += dtw;
+      next_print_time += writing_step;
     }
 
-    icount++;
   }  // end computation loop
 
   // Assign the remaining features
@@ -318,7 +312,7 @@ void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellm
   fp_features = fopen(features_file_name, "a");
   if (!file_exists_and_not_empty) {
     fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qnet", "qnet_apd", "qInward", "inal_auc", "ical_auc",
-            "apd90", "apd50", "apd_tri", "vm_peak", "vm_valley", "dvmdt_peak", "dvmdt_max_repol", "cad90", "cad50", "cad_tri", "ca_peak",
+            "apd90", "apd50", "apd_tri", "vm_peak", "vm_valley", "dvmdt_peak", "dvmtime_step_max_repol", "cad90", "cad50", "cad_tri", "ca_peak",
             "ca_valley");
   }
   fprintf(fp_features, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", sample_id,

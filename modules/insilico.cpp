@@ -29,14 +29,14 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   // simulation parameters.
   // Assigned to the constant variables for
   // the sake of simplicity.
-  const double bcl = p_param->bcl;
-  const short pace_max = p_param->pace_max;
+  const double cycle_length = p_param->cycle_length;
+  const short number_pacing = p_param->number_pacing;
   const char *user_name = p_param->user_name;
-  const double dt_min = p_param->dt_min;
-  const double dt_max = p_param->dt_max;
-  const double dtw = p_param->dtw;
-  const double stim_dur = p_param->stim_dur;
-  const double stim_amp_scale = p_param->stim_amp_scale;
+  const double time_step_min = p_param->time_step_min;
+  const double time_step_max = p_param->time_step_max;
+  const double writing_step = p_param->writing_step;
+  const double stimulus_duration = p_param->stimulus_duration;
+  const double stimulus_amplitude_scale = p_param->stimulus_amplitude_scale;
   const char *solver_type = p_param->solver_type;
   const short is_cvar = p_param->is_cvar;
   const char *drug_name = p_param->drug_name;
@@ -79,20 +79,20 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   }
 #endif
 
-  p_cell->CONSTANTS[BCL] = bcl;
-  p_cell->CONSTANTS[duration] = stim_dur;
-  p_cell->CONSTANTS[amp] *= stim_amp_scale;
+  p_cell->CONSTANTS[BCL] = cycle_length;
+  p_cell->CONSTANTS[duration] = stimulus_duration;
+  p_cell->CONSTANTS[amp] *= stimulus_amplitude_scale;
 
   // variables for I/O
   char buffer[900];
-  FILE *fp_vmdebug, *fp_repol_states;
+  FILE *fp_vmdebug, *fp_initial_values;
 
   snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_vmdebug_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
   fp_vmdebug = fopen(buffer, "w");
   fprintf(fp_vmdebug, "%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
           "dVmdt_repol_max");
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_repol_states_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
-  fp_repol_states = fopen(buffer, "w");
+  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
+  fp_initial_values = fopen(buffer, "w");
 
   FILE *fp_last_ten_paces;
   snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_last_10_paces_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
@@ -112,16 +112,12 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   // time variables.
   // some of these values are taken from the supplementary materials of ORd2011
   // page 19.
-  double dt = p_param->dt;
-  double dt_set;
+  double time_step = time_step_min;
   double tcurr = 0.;
-  double tmax = pace_max * bcl;
+  double tmax = number_pacing * cycle_length;
   double time_point = 25.0;
   double tprint = 0.;
   short pace_count = 0;
-  long icount = 0;
-  long imax = (long)((pace_max * bcl)/dt);
-  const long print_freq = (int)(1./dt) * dtw;
   double next_print_time = 0.0;
 
   // CVode solver.
@@ -133,7 +129,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     mpi_printf(cml::commons::MASTER_NODE, "Using CVode Solver.\n");
     p_cvode = new CVodeSolverData();
     init_cvode(p_cvode, p_cell, tcurr);
-    set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
+    set_dt_cvode(p_cvode, tcurr, time_point, cycle_length, time_step_min, time_step_max, &time_step);
   }
   else{
     mpi_fprintf(0, stderr, "Solver type %s is undefined! Please choose the available solver types from the manual!\n", solver_type);
@@ -146,44 +142,44 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   p_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
 
   // begin computation loop
-  while (icount < imax) {
+  while (tcurr < tmax) {
     // compute and solving part
     //
     // Different solver_type has different
     // method of calling computeRates().
     if (strncasecmp(solver_type, "Euler", sizeof(solver_type)) == 0) {
       p_cell->computeRates(tcurr, p_cell->CONSTANTS, p_cell->RATES, p_cell->STATES, p_cell->ALGEBRAIC);
-      solveEuler(dt, p_cell);
+      solveEuler(time_step, p_cell);
       // increase the time based on the dt.
-      tcurr += dt;
+      tcurr += time_step;
     } else if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
-      cvode_retval = solve_cvode(p_cvode, p_cell, tcurr + dt, &tcurr);
+      cvode_retval = solve_cvode(p_cvode, p_cell, tcurr + time_step, &tcurr);
       if (cvode_retval != 0) {
         printf("CVode calculation error happened at sample %hd concentration %.0lf!!\n", sample_id, conc);
         return cvode_retval;
       }
-      set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
+      set_dt_cvode(p_cvode, tcurr, time_point, cycle_length, time_step_min, time_step_max, &time_step);
     }
 
     // execute this code when entering new cycle.
-    if (floor(tcurr / bcl) != pace_count) {
+    if (floor(tcurr / cycle_length) != pace_count) {
       end_of_cycle_funct(&pace_count, p_cell, p_param, p_features, temp_features, fp_vmdebug);
       // mpi_printf(0,"Entering pace %hd at %lf msec.\n", pace_count, tcurr);
     }
 
     // begin the last 250 paces operations.
-    if (pace_count >= pace_max - 250) {
+    if (pace_count >= number_pacing - 250) {
       get_dvmdt_repol_max(p_cell, temp_features, p_param, tcurr, pace_count);
     }  // end of the last 250 paces operations.
 
     // We use 1000. as the multiplier
     // assuming that the minimum dt is 0.005.
     // Because of this,
-    // we will have dtw universal for any solver.
+    // we will have writing_step universal for any solver.
     if (tcurr >= next_print_time) {
     //if (icount% print_freq == 0) {
-      if (tcurr > bcl * (pace_max - 10)) {
-        tprint = tcurr - (bcl * (pace_max - 10));
+      if (tcurr > cycle_length * (number_pacing - 10)) {
+        tprint = tcurr - (cycle_length * (number_pacing - 10));
         snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
                  p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
                  p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
@@ -191,15 +187,14 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
                  p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO);
         fprintf(fp_last_ten_paces, "%.2lf,%s", tprint, buffer);
       }
-      next_print_time += dtw;
+      next_print_time += writing_step;
     }
-    icount++;
 
   }  // end computation loop
 
   // write the last states into a file for further usage.
   for (short idx = 0; idx < p_cell->states_size; idx++) {
-    fprintf(fp_repol_states, "%.16lf\n", p_features.repol_states[idx]);
+    fprintf(fp_initial_values, "%.16lf\n", p_features.initial_values[idx]);
   }
 
   fprintf(fp_vmdebug, "Selected final pace: %hd\n", p_features.pace_target);
@@ -209,7 +204,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
           p_features.vm_valley, p_features.vm_amp30, p_features.vm_amp50, p_features.vm_amp90, p_features.dvmdt_repol_max);
   fprintf(fp_vmdebug, "States during the highest dVM/dt between 30%% and 90%% repolarization phase:\n");
   for (short idx = 0; idx < p_cell->states_size; idx++) {
-    fprintf(fp_vmdebug, "%.8lf\n", p_features.repol_states[idx]);
+    fprintf(fp_vmdebug, "%.8lf\n", p_features.initial_values[idx]);
   }
 
   if( strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0 ){
@@ -217,7 +212,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     delete p_cvode;
   }
   fclose(fp_last_ten_paces);
-  fclose(fp_repol_states);
+  fclose(fp_initial_values);
   fclose(fp_vmdebug);
   
   return 0;
@@ -225,15 +220,15 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
 
 void end_of_cycle_funct(short *pace_count, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,
                         FILE *fp_vmdebug) {
-  if (*pace_count >= p_param->pace_max - 250) {
+  if (*pace_count >= p_param->number_pacing - 250) {
     fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", *pace_count, temp_features.time_vm_peak, temp_features.vm_peak,
             temp_features.vm_valley, temp_features.vm_amp30, temp_features.vm_amp50, temp_features.vm_amp90, temp_features.dvmdt_repol_max);
     fflush(fp_vmdebug);
-    temp_features.repol_states.insert(temp_features.repol_states.begin(), p_cell->STATES, p_cell->STATES + p_cell->states_size);
+    temp_features.initial_values.insert(temp_features.initial_values.begin(), p_cell->STATES, p_cell->STATES + p_cell->states_size);
     /*
         mpi_printf(cml::commons::MASTER_NODE, "Last states of pace %d:\n", *pace_count);
         for(short idx = 0; idx < p_cell->states_size; idx++){
-          mpi_printf(cml::commons::MASTER_NODE, "%lf,", temp_features.repol_states[idx]);
+          mpi_printf(cml::commons::MASTER_NODE, "%lf,", temp_features.initial_values[idx]);
         }
         mpi_printf(cml::commons::MASTER_NODE, "\n");
     */
@@ -279,7 +274,7 @@ void set_initial_condition(Cellmodel *p_cell, char *ic_file_name) {
 
 bool get_dvmdt_repol_max(Cellmodel *p_cell, Cipa_Features &p_features, const Parameter *p_param, const double tcurr, const short pace_count) {
   bool is_eligible_AP = false;
-  static const double TIME_NORMALIZER = (p_param->bcl * (p_param->pace_max - 250));
+  static const double TIME_NORMALIZER = (p_param->cycle_length * (p_param->number_pacing - 250));
 
   // Find peak vm around 10 msecs and  30 msecs after stimulation
   if (tcurr > ((p_cell->CONSTANTS[BCL] * pace_count) + (p_cell->CONSTANTS[stim_start] + 10)) &&
@@ -291,7 +286,7 @@ bool get_dvmdt_repol_max(Cellmodel *p_cell, Cipa_Features &p_features, const Par
         p_features.vm_amp30 = p_features.vm_peak - (0.3 * (p_features.vm_peak - p_features.vm_valley));
         p_features.vm_amp50 = p_features.vm_peak - (0.5 * (p_features.vm_peak - p_features.vm_valley));
         p_features.vm_amp90 = p_features.vm_peak - (0.9 * (p_features.vm_peak - p_features.vm_valley));
-        p_features.time_vm_peak = fmod((tcurr - TIME_NORMALIZER), p_param->bcl);
+        p_features.time_vm_peak = fmod((tcurr - TIME_NORMALIZER), p_param->cycle_length);
       }
     }
   }

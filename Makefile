@@ -45,7 +45,7 @@ CXXFLAGS += -Wall -Wunused-variable -std=c++11
 # Make sure ONLY ONE MACRO IS USED!!!
 # Use this if you want to use CiPAORdv1.0 cell model.
 # Otherwise, comment it
-#CXXFLAGS += -DCIPAORDV1_0
+CXXFLAGS += -DCIPAORDV1_0
 # Use this if you want to use ToR-ORd cell model.
 # Otherwise, comment it
 #CXXFLAGS += -DTOR_ORD
@@ -54,7 +54,7 @@ CXXFLAGS += -Wall -Wunused-variable -std=c++11
 #CXXFLAGS += -DTOR_ORD_DYNCL
 
 # Uncomment this part for the compilation of postprocessing binaries
-#CXXFLAGS += -DPOSTPROCESSING
+CXXFLAGS += -DPOSTPROCESSING
 
 # The program name wiil depend on the set value above
 # Make sure ONLY ONE MACRO IS USED!!!

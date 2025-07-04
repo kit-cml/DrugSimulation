@@ -153,16 +153,16 @@ def plot_all_features(base_path):
     features = {
         'Vm(mVolt)': 'Voltage (mV)',
         'dVm/dt(mVolt/msec)': 'dV/dt (mV/ms)',
-        'Cai(x1.000.000)(milliM->nanoM)': 'Ca (nM)',
-        'INa(x1.000)(microA->nanoA)': 'INa (nA)',
-        'INaL(x1.000)(microA->nanoA)': 'INaL (nA)',
-        'ICaL(x1.000)(microA->nanoA)': 'ICaL (nA)',
-        'Ito(x1.000)(microA->nanoA)': 'Ito (nA)',
-        'IKr(x1.000)(microA->nanoA)': 'IKr (nA)',
-        'IKs(x1.000)(microA->nanoA)': 'IKs (nA)',
-        'IK1(x1.000)(microA->nanoA)': 'IK1 (nA)',
-        'Inet(microA)': 'iNet Current (µA)',
-        'Inet_APD(microA)': 'iNet APD Current (µA)'
+        'Cai(x1.000.000)(nanoM)': 'Ca (nM)',
+        'INa(x1.000)(nanoA)': 'INa (nA)',
+        'INaL(x1.000)(nanoA)': 'INaL (nA)',
+        'ICaL(x1.000)(nanoA)': 'ICaL (nA)',
+        'Ito(x1.000)(nanoA)': 'Ito (nA)',
+        'IKr(x1.000)(nanoA)': 'IKr (nA)',
+        'IKs(x1.000)(nanoA)': 'IKs (nA)',
+        'IK1(x1.000)(nanoA)': 'IK1 (nA)',
+        'Inet(microA)': 'iNet (µA)',
+        'Inet_APD(microA)': 'iNet APD (µA)'
     }
     
     # Create output directory if it doesn't exist

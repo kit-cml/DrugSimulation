@@ -47,10 +47,10 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\maketitle\n");
   fprintf(fp_latex,"\\section*{Simulation Parameter}\n");
   fprintf(fp_latex,"Cellmodel: %s\n\\\\Drug Name: %s\n\\\\Cmax: %s\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", 
-                               (cml::commons::MAP_CELL_NAME.at(p_param->cell_model)).c_str(), p_param->drug_name,p_param->concs);
+                               (cml::commons::MAP_CELL_NAME.at(p_param->cell_model)).c_str(), p_param->drug_name,p_param->drug_concentrations);
 
   fprintf(fp_latex,"\\section*{Simulation Protocol}\n");
-  fprintf(fp_latex,"Each drug was simulated by inducing %d beats at a %.0lf ms cycle.\n", p_param->pace_max, p_param->bcl);
+  fprintf(fp_latex,"Each drug was simulated by inducing %d beats at a %.0lf ms cycle.\n", p_param->number_pacing, p_param->cycle_length);
   fprintf(fp_latex,"\\\\Biomarker: qNet, qInward, APD90, APD50, APDtri, CaD90, CaD50, CaDtri.\n");
   fprintf(fp_latex,"\\\\(1) qNet: Net charge carried by six major currents over a simulated beat (IKr, ICaL, INaL, Ito, IKs, IK1).\n");
   fprintf(fp_latex,"\\begin{equation}\n");
