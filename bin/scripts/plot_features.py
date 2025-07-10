@@ -28,6 +28,7 @@ def read_feature_data(base_path, drug_name, concentration, user_name):
     """
     feature_files = []
     folder_path = Path(base_path) / str(concentration)
+    print(folder_path)
     
     # Find all feature files matching the pattern
     pattern = f"{drug_name}_{concentration}_features_core*_{user_name}.csv"
@@ -142,7 +143,7 @@ def create_feature_plots(all_data, drug_name, output_folder):
                    dpi=200, bbox_inches='tight')
         plt.close()
 
-def process_data(base_path, drug_name, user_name):
+def process_data(base_path, drug_name, user_name, cell_model):
     """
     Process all concentrations and create feature-based plots
     """
@@ -160,6 +161,8 @@ def process_data(base_path, drug_name, user_name):
     concentrations = sorted(concentration_map.keys(), key=lambda x: concentration_map[x])
 
     print("Sorted concentrations:", concentrations)
+    print(drug_name)
+    print(user_name)
     
     # Read and combine data from all concentrations
     all_data = []
@@ -174,8 +177,7 @@ def process_data(base_path, drug_name, user_name):
         combined_data = pd.concat(all_data, ignore_index=True)
         
         # Create output folder
-        folder_name = "./plots/features/"
-        output_folder = os.path.join(folder_name, drug_name)
+        output_folder = "./results/"+user_name+"/plots/features/"+drug_name+"_"+cell_model+"/"
         
         # Create plots
         create_feature_plots(combined_data, drug_name, output_folder)
@@ -183,8 +185,14 @@ def process_data(base_path, drug_name, user_name):
 
 if __name__ == "__main__":
     # Replace these with your actual values
-    if len(sys.argv) < 3: print("Please provide the result folder path and user name!!!")
+    if len(sys.argv) < 2: print("Please provide the result folder!")
     else:
-      drug_name = os.path.basename(os.path.dirname(sys.argv[1]))
+      print("TEST: " + sys.argv[1])
+      temp_string_list = os.path.basename(os.path.dirname(sys.argv[1])).split("_")
+      drug_name = temp_string_list[0]
+      cell_model = temp_string_list[1]+"_"+temp_string_list[2]
+      user_name = os.path.dirname(sys.argv[1]).split("/")[2]
       print(drug_name)
-      process_data(sys.argv[1], drug_name,sys.argv[2])
+      print(cell_model)
+      print(user_name)
+      process_data(sys.argv[1], drug_name, user_name, cell_model)

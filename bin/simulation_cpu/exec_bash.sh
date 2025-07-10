@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Source the function script
+source ../scripts/create_concs_directories.sh
+
 # Use this to export the library path.
 # Please change the directory according to your library's location.
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/prog/sundials/sundials-5.7.0/lib:/usr/local/lib64:/usr/lib64
@@ -21,6 +24,14 @@ fi
 # xargs: trims leading and trailing whitespace
 CELL_MODEL=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
 
+RESULT_FOLDER="./results"
+USER_NAME=$(grep "^user_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+DRUG_NAME=$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+DRUG_CONCENTRATIONS=$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+
+# Split the string into an array
+IFS=',' read -r -a drug_concentrations <<< "$DRUG_CONCENTRATIONS"
+
 # choose the binary based on the value of cell_model
 if [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
   BINARY_FILE=../drugsim_CiPAORdv1.0
@@ -35,8 +46,13 @@ else
   exit 1
 fi
 
-rm -rf *.log results logfile
-mkdir results
+EXISTING_PLOT_FOLDER=${RESULT_FOLDER}/${USER_NAME}/plots/time_series/${DRUG_NAME}_${CELL_MODEL}
+EXISTING_RESULT_FOLDER=${RESULT_FOLDER}/${USER_NAME}/${DRUG_NAME}_${CELL_MODEL}
+EXISTING_REPORT_FILES=${RESULT_FOLDER}/${USER_NAME}/report_drug_${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}*
+echo "Cleaning $EXISTING_RESULT_FOLDER folder, $EXISTING_PLOT_FOLDER and $EXISTING_REPORT_FILES files..."
+rm -rf $EXISTING_PLOT_FOLDER $EXISTING_RESULT_FOLDER $EXISTING_REPORT_FILES  logfile
+echo "Cleaning successful!"
+create_drug_concentration_directories "$RESULT_FOLDER" "$USER_NAME" "$DRUG_NAME" "$CELL_MODEL" "${drug_concentrations[@]}"
 echo "Run $CELL_MODEL cell model simulation with $NUMBER_OF_CPU cores."
-mpiexec -np $NUMBER_OF_CPU $BINARY_FILE -input_deck param.txt
+mpiexec -np $NUMBER_OF_CPU $BINARY_FILE -input_deck param.txt >& logfile
 echo "Simulation has finished! Check the logfile for more details."

@@ -53,7 +53,7 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
 #endif
 
   // get concentration values from input
-  // and make the directories of them.
+  // and append control concentration before the input.
   std::vector<double> drug_concentrations;
   drug_concentrations.push_back(0.);
   strncpy(buffer, p_param->drug_concentrations, sizeof(buffer));
@@ -62,9 +62,6 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
     drug_concentrations.push_back(strtod(token, NULL));
     token = strtok(NULL, ",");
   }  // end data tokenizing
-
-  if (MPI_Profile::rank == 0) create_drug_concentrations_directories(drug_concentrations, p_param->drug_name);
-  MPI_Barrier(MPI_COMM_WORLD);
 
   // Progress tracking variables
   int total_samples = hill.size();
@@ -94,7 +91,7 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
       vec_initial_values.clear();
       mpi_printf(0, "Running control Postprocessing simulation started. Skipped the insilico process and read the steady state values....\n");
       snprintf(initial_values_file, sizeof(initial_values_file), "%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
-      p_param->initial_values_directory, 0.00, p_param->drug_name, 0.00, sample_id, p_param->user_name);
+              p_param->initial_values_directory, 0.00, p_param->drug_name, 0.00, sample_id, p_param->user_name);
       error_code = set_initial_condition_postprocessing(initial_values_file, vec_initial_values);
       if(error_code != 0) return error_code;
       p_features.initial_values.clear();
@@ -137,7 +134,7 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
         vec_initial_values.clear();
         mpi_printf(0, "Postprocessing simulation started. Skipped the insilico process and read the steady state values....\n");
         snprintf(initial_values_file, sizeof(initial_values_file), "%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
-         p_param->initial_values_directory, drug_concentrations[idx], p_param->drug_name, drug_concentrations[idx], sample_id, p_param->user_name);
+                p_param->initial_values_directory, drug_concentrations[idx], p_param->drug_name, drug_concentrations[idx], sample_id, p_param->user_name);
         error_code = set_initial_condition_postprocessing(initial_values_file, vec_initial_values);
         if(error_code != 0) continue;
         p_features.initial_values.clear();

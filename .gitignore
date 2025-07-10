@@ -1,5 +1,3 @@
-bin/simulation_cpu/results
-bin/simulation_cpu_postprocessing/results
 bin/drugsim_ORd-static
 bin/drugsim_CiPAORdv1.0
 bin/drugsim_ToR-ORd
@@ -14,3 +12,5 @@ bin/drugsim_ToR-ORd-dynCl_postprocessing
 *.log
 *.out
 *.o
+logfile
+results

@@ -6,6 +6,7 @@
 #include <types/parameter.hpp>
 #include "modules/drug_simulation_bench.hpp"
 #include "modules/report_drug.hpp"
+#include "modules/show_param_logs.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -58,7 +59,7 @@ int main(int argc, char **argv)
   p_param = new Parameter();
   p_param->init();
   assign_params(&argc,argv,p_param);
-  p_param->show_val();
+  show_param_logs(p_param);
 
   // cipa feature object to store
   // the 14 features and time series 

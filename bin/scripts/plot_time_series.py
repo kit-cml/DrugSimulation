@@ -32,10 +32,13 @@ def read_concentration_data(folder_path, concentration, num_samples=10, is_contr
     data_dict = {}
     print(concentration)
 
+    # since the folder is the combination
+    # of drug_name and cell_model separated by underscore,
+    # we need to split it again at the end.
+    drug_name = folder_path.split("/")[3].split("_")[0]
     for i in random_sample:
         if is_control:
             i = 0  # Control sample is always 0
-        drug_name = folder_path.split("/")[1]
         pattern = "{}_{:.2f}_time_series_smp{}_*.csv".format(drug_name, float(concentration), i)
         print(pattern)
         print(folder_path)
@@ -168,8 +171,9 @@ def plot_all_features(base_path):
     # Create output directory if it doesn't exist
     print("TEST0  " + base_path)
     drug_name = Path(base_path).parts[-1]
-    print("TEST1  " + drug_name)
-    output_folder_name = "./plots/time_series/"+drug_name+"/"
+    user_name = Path(base_path).parts[-2]
+    print("TEST1  " + drug_name + "---" + user_name)
+    output_folder_name = "./results/"+user_name+"/plots/time_series/"+drug_name+"/"
     print("TEST2  " + output_folder_name)
     os.makedirs(output_folder_name, exist_ok=True)
     

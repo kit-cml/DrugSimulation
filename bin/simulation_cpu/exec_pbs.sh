@@ -8,6 +8,7 @@
 #Specific the queue type
 #PBS -q dque
 
+
 cd $PBS_O_WORKDIR
 NPROCS=`wc -l < $PBS_NODEFILE`
 echo This job has allocated $NPROCS nodes
@@ -18,12 +19,25 @@ echo $LD_LIBRARY_PATH
 export PATH=$PATH
 echo $PATH
 
+# Source the function script
+# Need to be invoked after the
+# cd $PBS_O_WORKDIR command
+source ../scripts/create_concs_directories.sh
+
 # to grab cell_model value from parameter file (thanks, ChatGPT).
 # grep "^user_name": looks for the line starting with user_name
 # cut -d'=' -f2: gets the right-hand side of =
 # sed 's/\/\/.*//': removes any inline comment starting with //
 # xargs: trims leading and trailing whitespace
 CELL_MODEL=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+
+RESULT_FOLDER="./results"
+USER_NAME=$(grep "^user_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+DRUG_NAME=$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+DRUG_CONCENTRATIONS=$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+
+# Split the string into an array
+IFS=',' read -r -a drug_concentrations <<< "$DRUG_CONCENTRATIONS"
 
 # choose the binary based on the value of cell_model
 if [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
@@ -39,6 +53,11 @@ else
   exit 1
 fi
 
-./clear_workspace.sh
-mkdir results
-mpiexec -machinefile $PBS_NODEFILE -np $NPROCS ~/marcell/MetaHeart/DrugSimulationTest/bin/$BINARY_FILE -input_deck param.txt > logfile
+EXISTING_PLOT_FOLDER=${RESULT_FOLDER}/${USER_NAME}/plots/time_series/${DRUG_NAME}_${CELL_MODEL}
+EXISTING_RESULT_FOLDER=${RESULT_FOLDER}/${USER_NAME}/${DRUG_NAME}_${CELL_MODEL}
+EXISTING_REPORT_FILES=${RESULT_FOLDER}/${USER_NAME}/report_drug_${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}*
+echo "Cleaning $EXISTING_RESULT_FOLDER folder, $EXISTING_PLOT_FOLDER and $EXISTING_REPORT_FILES files..."
+rm -rf $EXISTING_PLOT_FOLDER $EXISTING_RESULT_FOLDER $EXISTING_REPORT_FILES  logfile
+echo "Cleaning successful!"
+create_drug_concentration_directories "$RESULT_FOLDER" "$USER_NAME" "$DRUG_NAME" "$CELL_MODEL" "${drug_concentrations[@]}"
+mpiexec -machinefile $PBS_NODEFILE -np $NPROCS ~/marcell/MetaHeart/DrugSimulationTest/bin/$BINARY_FILE -input_deck param.txt >& logfile

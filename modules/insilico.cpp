@@ -31,6 +31,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   // the sake of simplicity.
   const double cycle_length = p_param->cycle_length;
   const short number_pacing = p_param->number_pacing;
+  const short number_pacing_write = p_param->number_pacing_write;
   const char *user_name = p_param->user_name;
   const double time_step_min = p_param->time_step_min;
   const double time_step_max = p_param->time_step_max;
@@ -40,6 +41,12 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   const char *solver_type = p_param->solver_type;
   const short is_cvar = p_param->is_cvar;
   const char *drug_name = p_param->drug_name;
+
+  if(time_step_min > writing_step){
+    mpi_printf(cml::commons::MASTER_NODE,"%s\n%s\n",
+    "WARNING!!! The writing_step values is smaller than the timestep!",
+    "Simulation still run, but the time series will use time_step_min as writing step.");
+  }
 
   // this is the cellmodel initialization part
   Cellmodel *p_cell;
@@ -85,24 +92,39 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
 
   // variables for I/O
   char buffer[900];
-  FILE *fp_vmdebug, *fp_initial_values;
+  FILE *fp_vmdebug, *fp_initial_values, *fp_last_paces;
 
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_vmdebug_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%s/%s_%s/%.2lf/%s_%.2lf_vmdebug_smp%d_%s.csv", 
+          cml::commons::RESULT_FOLDER, user_name, drug_name, cell_model, conc, drug_name, conc, sample_id, user_name);
   fp_vmdebug = fopen(buffer, "w");
+  if(fp_vmdebug == NULL){
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
+    return 1;
+  }
   fprintf(fp_vmdebug, "%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
           "dVmdt_repol_max");
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
-  fp_initial_values = fopen(buffer, "w");
 
-  FILE *fp_last_ten_paces;
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_last_10_paces_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
-  fp_last_ten_paces = fopen(buffer, "w");
-  fprintf(fp_last_ten_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)", "Cai(x1.000.000)(nanoM)",
+  snprintf(buffer, sizeof(buffer), "%s/%s/%s_%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
+          cml::commons::RESULT_FOLDER, user_name, drug_name, cell_model, conc, drug_name, conc, sample_id, user_name);
+  fp_initial_values = fopen(buffer, "w");
+  if(fp_initial_values == NULL){
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
+    return 1;
+  }
+
+  snprintf(buffer, sizeof(buffer), "%s/%s/%s_%s/%.2lf/%s_%.2lf_last_%hd_paces_smp%hd_%s.csv", 
+          cml::commons::RESULT_FOLDER, user_name, drug_name, cell_model, conc, drug_name, conc, number_pacing_write, sample_id, user_name);
+  fp_last_paces = fopen(buffer, "w");
+  if(fp_last_paces == NULL){
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
+    return 1;
+  }
+  fprintf(fp_last_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)", "Cai(x1.000.000)(nanoM)",
           "INa(x1.000)(nanoA)", "INaL(x1.000)(nanoA)", "ICaL(x1.000)(nanoA)", "Ito(x1.000)(nanoA)",
           "IKr(x1.000)(nanoA)", "IKs(x1.000)(nanoA)", "IK1(x1.000)(nanoA)");
 
-  snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", p_param->cell_model);
-  mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
+  //snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", p_param->cell_model);
+  //mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   // replace the initial condition
   // with the last state value from
   // steady-state 1000 paces control simulation.
@@ -118,7 +140,6 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   double time_point = 25.0;
   double tprint = 0.;
   short pace_count = 0;
-  double next_print_time = 0.0;
 
   // CVode solver.
   CVodeSolverData *p_cvode;
@@ -132,7 +153,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     set_dt_cvode(p_cvode, tcurr, time_point, cycle_length, time_step_min, time_step_max, &time_step);
   }
   else{
-    mpi_fprintf(0, stderr, "Solver type %s is undefined! Please choose the available solver types from the manual!\n", solver_type);
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Solver type %s is undefined! Please choose the available solver types from the manual!\n", solver_type);
     return 1;
   }
 
@@ -172,23 +193,17 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
       get_dvmdt_repol_max(p_cell, temp_features, p_param, tcurr, pace_count);
     }  // end of the last 250 paces operations.
 
-    // We use 1000. as the multiplier
-    // assuming that the minimum dt is 0.005.
-    // Because of this,
-    // we will have writing_step universal for any solver.
-    if (tcurr >= next_print_time) {
-    //if (icount% print_freq == 0) {
-      if (tcurr > cycle_length * (number_pacing - 10)) {
-        tprint = tcurr - (cycle_length * (number_pacing - 10));
-        snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
-                 p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
-                 p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
-                 p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
-                 p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO);
-        fprintf(fp_last_ten_paces, "%.2lf,%s", tprint, buffer);
-      }
-      next_print_time += writing_step;
+    // Output part.
+    if (tcurr > cycle_length * (number_pacing - number_pacing_write)) {
+      tprint = tcurr - (cycle_length * (number_pacing - number_pacing_write));
+      snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
+               p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
+               p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
+               p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
+               p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO);
+      fprintf(fp_last_paces, "%.4lf,%s", tprint, buffer);
     }
+    tprint += writing_step;
 
   }  // end computation loop
 
@@ -211,7 +226,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     clean_cvode(p_cvode);
     delete p_cvode;
   }
-  fclose(fp_last_ten_paces);
+  fclose(fp_last_paces);
   fclose(fp_initial_values);
   fclose(fp_vmdebug);
   
