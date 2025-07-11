@@ -177,7 +177,7 @@ def process_data(base_path, drug_name, user_name, cell_model):
         combined_data = pd.concat(all_data, ignore_index=True)
         
         # Create output folder
-        output_folder = "./results/"+user_name+"/plots/features/"+drug_name+"_"+cell_model+"/"
+        output_folder = "./plots/features/"+drug_name+"_"+cell_model+"/"
         
         # Create plots
         create_feature_plots(combined_data, drug_name, output_folder)
@@ -185,13 +185,13 @@ def process_data(base_path, drug_name, user_name, cell_model):
 
 if __name__ == "__main__":
     # Replace these with your actual values
-    if len(sys.argv) < 2: print("Please provide the result folder!")
+    if len(sys.argv) < 3: print("Please provide the result folder and the user name!")
     else:
       print("TEST: " + sys.argv[1])
       temp_string_list = os.path.basename(os.path.dirname(sys.argv[1])).split("_")
       drug_name = temp_string_list[0]
       cell_model = temp_string_list[1]+"_"+temp_string_list[2]
-      user_name = os.path.dirname(sys.argv[1]).split("/")[2]
+      user_name = sys.argv[2]
       print(drug_name)
       print(cell_model)
       print(user_name)

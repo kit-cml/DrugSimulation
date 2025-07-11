@@ -26,8 +26,7 @@ int generate_report_drug(const Parameter *p_param)
   //snprintf(latex_filename,sizeof(latex_filename),"report_drug_%s_%s_%04d%02d%02d%02d%02d%02d.tex",
   //         p_param->drug_name, p_param->user_name, current_time->tm_year + 1900, current_time->tm_mon + 1, current_time->tm_mday,
   //         current_time->tm_hour, current_time->tm_min, current_time->tm_sec);
-  snprintf(latex_filename,sizeof(latex_filename),"./%s/%s/report_drug_%s_%s_%s.tex",
-           cml::commons::RESULT_FOLDER, p_param->user_name, p_param->drug_name, p_param->cell_model, p_param->user_name);
+  snprintf(latex_filename,sizeof(latex_filename),"./report_drug_%s_%s_%s.tex",p_param->drug_name, p_param->cell_model, p_param->user_name);
   FILE *fp_latex = fopen(latex_filename,"w");
   if( fp_latex == NULL ){
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n", latex_filename);
@@ -269,16 +268,5 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\n\\end{document}\n");
   
   fclose(fp_latex);
-/*  
-  char command[300];
-  snprintf(command, sizeof(command), "pdflatex %s > pdflatex_output.log 2>&1", latex_filename);
-  int result = std::system(command);
-  if(result == 0){
-    printf("PDF generated succesfully!!\n");
-  }
-  else{
-    printf("Failed to generate PDF!!\n");
-  }
-*/
   return 0;
 }

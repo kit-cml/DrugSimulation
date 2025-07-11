@@ -119,8 +119,8 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   }
   mpi_printf(cml::commons::MASTER_NODE, "\n");
 
-  snprintf(buffer, sizeof(buffer), "%s/%s/%s_%s/%.2lf/%s_%.2lf_time_series_smp%d_%s.csv", 
-          cml::commons::RESULT_FOLDER, user_name, drug_name, cell_model, conc, drug_name, conc, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%s_%s/%.2lf/%s_%.2lf_time_series_smp%d_%s.csv", 
+          cml::commons::RESULT_FOLDER, drug_name, cell_model, conc, drug_name, conc, sample_id, user_name);
   fp_time_series = fopen(buffer, "w");
   if(fp_time_series == NULL){
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
@@ -217,8 +217,8 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
 
   // Assign the remaining features
   // and write it into file.
-  snprintf(buffer, sizeof(buffer), "%s/%s/%s_%s/%.2lf/%s_%.2lf_features_core%d_%s.csv", 
-          cml::commons::RESULT_FOLDER, user_name, drug_name, cell_model, conc, drug_name, conc,
+  snprintf(buffer, sizeof(buffer), "%s/%s_%s/%.2lf/%s_%.2lf_features_core%d_%s.csv", 
+          cml::commons::RESULT_FOLDER, drug_name, cell_model, conc, drug_name, conc,
           MPI_Profile::rank, user_name);
   collect_features(p_features, p_param, p_cell, conc, inet_auc, inet_apd_auc, inal_auc, ical_auc, inal_auc_control, ical_auc_control, buffer,
                    sample_id, group_id);

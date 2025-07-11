@@ -32,6 +32,7 @@ source ../scripts/create_concs_directories.sh
 CELL_MODEL=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
 
 RESULT_FOLDER="./results"
+PLOT_FOLDER="./plots"
 USER_NAME=$(grep "^user_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
 DRUG_NAME=$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
 DRUG_CONCENTRATIONS=$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
@@ -53,11 +54,12 @@ else
   exit 1
 fi
 
-EXISTING_PLOT_FOLDER=${RESULT_FOLDER}/${USER_NAME}/plots/time_series/${DRUG_NAME}_${CELL_MODEL}
-EXISTING_RESULT_FOLDER=${RESULT_FOLDER}/${USER_NAME}/${DRUG_NAME}_${CELL_MODEL}
-EXISTING_REPORT_FILES=${RESULT_FOLDER}/${USER_NAME}/report_drug_${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}*
-echo "Cleaning $EXISTING_RESULT_FOLDER folder, $EXISTING_PLOT_FOLDER and $EXISTING_REPORT_FILES files..."
-rm -rf $EXISTING_PLOT_FOLDER $EXISTING_RESULT_FOLDER $EXISTING_REPORT_FILES  logfile
+EXISTING_TIME_SERIES_PLOT_FOLDER=${PLOT_FOLDER}/time_series/${DRUG_NAME}_${CELL_MODEL}
+EXISTING_FEATURES_PLOT_FOLDER=${PLOT_FOLDER}/features/${DRUG_NAME}_${CELL_MODEL}
+EXISTING_RESULT_FOLDER=${RESULT_FOLDER}/${DRUG_NAME}_${CELL_MODEL}
+EXISTING_REPORT_FILES=report_drug_${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}*
+echo "Cleaning $EXISTING_RESULT_FOLDER folder, $EXISTING_TIME_SERIES_PLOT_FOLDER, $EXISTING_FEATURES_PLOT_FOLDER and $EXISTING_REPORT_FILES files..."
+rm -rf $EXISTING_TIME_SERIES_PLOT_FOLDER $EXISTING_FEATURES_PLOT_FOLDER  $EXISTING_RESULT_FOLDER $EXISTING_REPORT_FILES  ${RESULT_FOLDER}/logfile
 echo "Cleaning successful!"
-create_drug_concentration_directories "$RESULT_FOLDER" "$USER_NAME" "$DRUG_NAME" "$CELL_MODEL" "${drug_concentrations[@]}"
+create_drug_concentration_directories "$RESULT_FOLDER" "$DRUG_NAME" "$CELL_MODEL" "${drug_concentrations[@]}"
 mpiexec -machinefile $PBS_NODEFILE -np $NPROCS ~/marcell/MetaHeart/DrugSimulationTest/bin/$BINARY_FILE -input_deck param.txt >& logfile
