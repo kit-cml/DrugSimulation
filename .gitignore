@@ -12,5 +12,6 @@ bin/drugsim_ToR-ORd-dynCl_postprocessing
 *.log
 *.out
 *.o
+*.zip
 logfile
 results

@@ -90,8 +90,8 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
 #if defined POSTPROCESSING
       vec_initial_values.clear();
       mpi_printf(0, "Running control Postprocessing simulation started. Skipped the insilico process and read the steady state values....\n");
-      snprintf(initial_values_file, sizeof(initial_values_file), "%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
-              p_param->initial_values_directory, 0.00, p_param->drug_name, 0.00, sample_id, p_param->user_name);
+      snprintf(initial_values_file, sizeof(initial_values_file), "%s/%s_%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
+              cml::commons::RESULT_FOLDER, p_param->drug_name, p_param->cell_model, 0.00, p_param->drug_name, 0.00, sample_id, p_param->user_name);
       error_code = set_initial_condition_postprocessing(initial_values_file, vec_initial_values);
       if(error_code != 0) return error_code;
       p_features.initial_values.clear();
@@ -133,8 +133,8 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
 #if defined POSTPROCESSING
         vec_initial_values.clear();
         mpi_printf(0, "Postprocessing simulation started. Skipped the insilico process and read the steady state values....\n");
-        snprintf(initial_values_file, sizeof(initial_values_file), "%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
-                p_param->initial_values_directory, drug_concentrations[idx], p_param->drug_name, drug_concentrations[idx], sample_id, p_param->user_name);
+        snprintf(initial_values_file, sizeof(initial_values_file), "%s/%s_%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
+                cml::commons::RESULT_FOLDER, p_param->drug_name, p_param->cell_model, drug_concentrations[idx], p_param->drug_name, drug_concentrations[idx], sample_id, p_param->user_name);
         error_code = set_initial_condition_postprocessing(initial_values_file, vec_initial_values);
         if(error_code != 0) continue;
         p_features.initial_values.clear();
