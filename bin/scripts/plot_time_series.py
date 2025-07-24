@@ -25,21 +25,17 @@ def _is_valid_float(s):
     except ValueError:
         return False
 
-def read_concentration_data(folder_path, concentration, num_samples=10, is_control=False):
+def read_concentration_data(folder_path, drug_name, concentration, num_samples=10, is_control=False):
     """
     Read data for a specific concentration from multiple sample files.
     """
     data_dict = {}
     print(concentration)
 
-    # since the folder is the combination
-    # of drug_name and cell_model separated by underscore,
-    # we need to split it again at the end.
-    drug_name = folder_path.split("/")[2].split("_")[0]
     for i in random_sample:
         if is_control:
             i = 0  # Control sample is always 0
-        pattern = "{}_{:.2f}_time_series_smp{}_*.csv".format(drug_name, float(concentration), i)
+        pattern = "{}_{:.2f}_time_series_smp{}.csv".format(drug_name, float(concentration), i)
         print(pattern)
         print(folder_path)
         matching_files = list(Path(folder_path).glob(pattern))
@@ -58,7 +54,7 @@ def read_concentration_data(folder_path, concentration, num_samples=10, is_contr
 
     return data_dict
 
-def create_multi_panel_plot(base_path, concentrations, feature_name, ylabel, title):
+def create_multi_panel_plot(base_path, drug_name, concentrations, feature_name, ylabel, title, sample_size):
     """
     Create a multi-panel plot for a specific feature across different concentrations.
     """
@@ -86,7 +82,7 @@ def create_multi_panel_plot(base_path, concentrations, feature_name, ylabel, tit
     control_folder = conc_str = f"0.00"  # Ensure two decimal places
 
     if control_folder:
-      control = read_concentration_data(os.path.join(base_path, control_folder), 0, num_samples=1, is_control=True)
+      control = read_concentration_data(os.path.join(base_path, control_folder), drug_name, 0, num_samples=1, is_control=True)
     else:
       print("No control folder found.")
       control = {}
@@ -96,17 +92,17 @@ def create_multi_panel_plot(base_path, concentrations, feature_name, ylabel, tit
     for idx, conc in enumerate(concentrations):
         ax = axes_flat[idx]
         conc_str = f"{conc:.2f}"  # Ensure two decimal places
-        data_dict = read_concentration_data(os.path.join(base_path, conc_str), conc)
+        data_dict = read_concentration_data(os.path.join(base_path, conc_str), drug_name, conc, sample_size)
         
         if data_dict:
             # Plot control first (black dashed line)
             for c_sample, c_df in control.items():
-                ax.plot(c_df['Time(msec)'], c_df[feature_name], 
+                ax.plot(c_df['Time(ms)'], c_df[feature_name], 
                        'k--', label='Control', alpha=0.7, linewidth=1)
             
             # Plot samples
             for sample, df in data_dict.items():
-                ax.plot(df['Time(msec)'], df[feature_name], 
+                ax.plot(df['Time(ms)'], df[feature_name], 
                        alpha=0.7, linewidth=1, label=f'Sample {sample.split("smp")[1]}')
             
             ax.set_title(f'Concentration: {conc}')
@@ -131,7 +127,7 @@ def create_multi_panel_plot(base_path, concentrations, feature_name, ylabel, tit
     plt.tight_layout()
     return fig
 
-def plot_all_features(base_path):
+def plot_all_features(base_path, drug_name, sample_size):
     """
     Plot all features from the data files.
     """
@@ -154,32 +150,31 @@ def plot_all_features(base_path):
     
     # Dictionary of features and their labels
     features = {
-        'Vm(mVolt)': 'Voltage (mV)',
-        'dVm/dt(mVolt/msec)': 'dV/dt (mV/ms)',
-        'Cai(x1.000.000)(nanoM)': 'Ca (nM)',
-        'INa(x1.000)(nanoA)': 'INa (nA)',
-        'INaL(x1.000)(nanoA)': 'INaL (nA)',
-        'ICaL(x1.000)(nanoA)': 'ICaL (nA)',
-        'Ito(x1.000)(nanoA)': 'Ito (nA)',
-        'IKr(x1.000)(nanoA)': 'IKr (nA)',
-        'IKs(x1.000)(nanoA)': 'IKs (nA)',
-        'IK1(x1.000)(nanoA)': 'IK1 (nA)',
-        'Inet(microA)': 'iNet (µA)',
-        'Inet_APD(microA)': 'iNet APD (µA)'
+        'Vm(mV)': 'Voltage (mV)',
+        'dVm/dt(mV/ms)': 'dV/dt (mV/ms)',
+        'Cai(nM)': 'Cai (nM)',
+        'INa(nA)': 'INa (nA)',
+        'INaL(nA)': 'INaL (nA)',
+        'ICaL(nA)': 'ICaL (nA)',
+        'Ito(nA)': 'Ito (nA)',
+        'IKr(nA)': 'IKr (nA)',
+        'IKs(nA)': 'IKs (nA)',
+        'IK1(nA)': 'IK1 (nA)',
+        'Inet(mA)': 'iNet (µA)',
+        'Inet_APD(mA)': 'iNet APD (µA)'
     }
     
     # Create output directory if it doesn't exist
     print("TEST0  " + base_path)
-    drug_name = Path(base_path).parts[-1]
     print("TEST1  " + drug_name)
-    output_folder_name = "./plots/time_series/"+drug_name+"/"
+    output_folder_name = "./results/plots/time_series/"
     print("TEST2  " + output_folder_name)
     os.makedirs(output_folder_name, exist_ok=True)
     
     # Create a plot for each feature
     for feature, ylabel in features.items():
-        fig = create_multi_panel_plot(base_path, sorted_concentrations, feature, 
-                                    ylabel, feature.split('(')[0])
+        fig = create_multi_panel_plot(base_path, drug_name, sorted_concentrations, feature, 
+                                    ylabel, feature.split('(')[0], sample_size)
         if fig:
             file_name = f"{feature.replace('/','_').split('(')[0]}_plot.png"
             plt_fullname = output_folder_name + file_name
@@ -189,9 +184,9 @@ def plot_all_features(base_path):
 # Example usage
 if __name__ == "__main__":
     # Replace with your actual base path
-    if len(sys.argv) < 3: print("Please provide the result folder path and number of sample!!!")
+    if len(sys.argv) < 4: print("Please provide the result folder path, drug name and number of sample!!!")
     else:
-      if (int(sys.argv[2]) <= 0): print("Incorrect data size --- {}!!".format(sys.argv[2]))
+      if (int(sys.argv[3]) <= 0): print("Incorrect data size --- {}!!".format(sys.argv[3]))
       else:
-        generate_random_sample(int(sys.argv[2]))
-        plot_all_features(sys.argv[1])
+        generate_random_sample(int(sys.argv[3]))
+        plot_all_features(sys.argv[1], sys.argv[2], sys.argv[3])

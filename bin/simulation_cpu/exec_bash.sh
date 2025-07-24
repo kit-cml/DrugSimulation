@@ -32,11 +32,11 @@ DRUG_NAME="$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -
 DRUG_CONCENTRATIONS="$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 
 INITIAL_VALUES_SUBSTRING="*initial_values*.csv"
-INITIAL_VALUES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}_initial_values.zip"
+INITIAL_VALUES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_initial_values.zip"
 TIME_SERIES_SUBSTRING="*time_series*.csv"
-TIME_SERIES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}_time_series.zip"
+TIME_SERIES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_time_series.zip"
 FEATURES_SUBSTRING="*features*.csv"
-FEATURES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}_features.zip"
+FEATURES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_features.zip"
 
 # Split the string into an array
 IFS=',' read -r -a drug_concentrations <<< "${DRUG_CONCENTRATIONS}"
@@ -61,15 +61,31 @@ rm -f "${PIDFILE}"
 
 EXISTING_TIME_SERIES_PLOT_FOLDER="${PLOT_FOLDER}/time_series/${DRUG_NAME}_${CELL_MODEL}"
 EXISTING_FEATURES_PLOT_FOLDER="${PLOT_FOLDER}/features/${DRUG_NAME}_${CELL_MODEL}"
-EXISTING_RESULT_FOLDER="${RESULT_FOLDER}/${DRUG_NAME}_${CELL_MODEL}"
-EXISTING_REPORT_FILES="report_drug_${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}*"
-echo "Cleaning ${EXISTING_RESULT_FOLDER} folder, ${EXISTING_TIME_SERIES_PLOT_FOLDER}, ${EXISTING_FEATURES_PLOT_FOLDER}, ${EXISTING_REPORT_FILES}, and zipped results files..."
-rm -rf "${EXISTING_TIME_SERIES_PLOT_FOLDER}" "${EXISTING_FEATURES_PLOT_FOLDER}"  "${EXISTING_RESULT_FOLDER}" "${EXISTING_REPORT_FILES}"  "${RESULT_FOLDER}/logfile" *.zip
+EXISTING_RESULT_FOLDER="${RESULT_FOLDER}/"
+EXISTING_REPORT_FILES="report_drug_${DRUG_NAME}_${CELL_MODEL}*"
+echo "Cleaning ${RESULT_FOLDER}"
+rm -rf "${RESULT_FOLDER}"
 echo "Cleaning successful!"
 create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
 echo "Run $CELL_MODEL cell model simulation with ${NUMBER_OF_CPU} cores."
 ( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" "${BINARY_FILE}" -input_deck param.txt >& "${RESULT_FOLDER}/logfile")
+EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "Simulation program got some problems!!! Exiting..."
+  exit 1
+fi
+echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
 zip_files "${RESULT_FOLDER}" "${INITIAL_VALUES_SUBSTRING}" "${INITIAL_VALUES_ZIPNAME}"
 zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
 zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
-echo "Simulation has finished! Check the logfile for more details."
+mv "${INITIAL_VALUES_ZIPNAME}" "${RESULT_FOLDER}/."
+mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
+mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
+echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
+sh "./generate_report.sh" >> "${RESULT_FOLDER}/logfile" 2>&1
+EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "Reporting program got some problems!!! Exiting..."
+  exit 1
+fi
+echo "Simulation has finished! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1

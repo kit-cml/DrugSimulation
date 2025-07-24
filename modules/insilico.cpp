@@ -94,8 +94,8 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   char buffer[900];
   FILE *fp_vmdebug, *fp_initial_values, *fp_last_paces;
 
-  snprintf(buffer, sizeof(buffer), "%s/%s_%s/%.2lf/%s_%.2lf_vmdebug_smp%d_%s.csv", 
-          cml::commons::RESULT_FOLDER, drug_name, cell_model, conc, drug_name, conc, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_vmdebug_smp%d.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
   fp_vmdebug = fopen(buffer, "w");
   if(fp_vmdebug == NULL){
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
@@ -104,24 +104,25 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   fprintf(fp_vmdebug, "%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
           "dVmdt_repol_max");
 
-  snprintf(buffer, sizeof(buffer), "%s/%s_%s/%.2lf/%s_%.2lf_initial_values_smp%d_%s.csv", 
-          cml::commons::RESULT_FOLDER, drug_name, cell_model, conc, drug_name, conc, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_initial_values_smp%d.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
   fp_initial_values = fopen(buffer, "w");
   if(fp_initial_values == NULL){
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
     return 1;
   }
 
-  snprintf(buffer, sizeof(buffer), "%s/%s_%s/%.2lf/%s_%.2lf_last_%hd_paces_smp%hd_%s.csv", 
-          cml::commons::RESULT_FOLDER, drug_name, cell_model, conc, drug_name, conc, number_pacing_write, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_last_%hd_paces_smp%hd.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc, number_pacing_write, sample_id);
   fp_last_paces = fopen(buffer, "w");
   if(fp_last_paces == NULL){
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
     return 1;
   }
-  fprintf(fp_last_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)", "Cai(x1.000.000)(nanoM)",
-          "INa(x1.000)(nanoA)", "INaL(x1.000)(nanoA)", "ICaL(x1.000)(nanoA)", "Ito(x1.000)(nanoA)",
-          "IKr(x1.000)(nanoA)", "IKs(x1.000)(nanoA)", "IK1(x1.000)(nanoA)");
+  fprintf(fp_last_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
+          "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)", "Cai(nM)",
+          "INa(nA)", "INaL(nA)", "ICaL()(nA)", "Ito()(nA)",
+          "IKr(nA)", "IKs(nA)", "IK1(nA)");
 
   //snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", p_param->cell_model);
   //mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);

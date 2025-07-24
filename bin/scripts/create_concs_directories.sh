@@ -9,16 +9,13 @@ create_drug_concentration_directories() {
 
   local CONTROL_CONC=0.00
 
-  # Create base user directory and drug directory
-  mkdir -p "${RESULT_FOLDER}/${DRUG_NAME}_${CELL_MODEL}"
-
   # Create control concentration directory
-  mkdir -p "${RESULT_FOLDER}/${DRUG_NAME}_${CELL_MODEL}/${CONTROL_CONC}"
+  mkdir -p "${RESULT_FOLDER}/${CONTROL_CONC}"
 
   # Loop through each drug concentration and create directory
   for conc in "${drug_concentrations[@]}"; do
     dir_name=$(printf "%.2f" "$conc")
-    mkdir -p "${RESULT_FOLDER}/${DRUG_NAME}_${CELL_MODEL}/${dir_name}"
+    mkdir -p "${RESULT_FOLDER}/${dir_name}"
   done
 }
 

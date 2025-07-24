@@ -26,7 +26,7 @@ int generate_report_drug(const Parameter *p_param)
   //snprintf(latex_filename,sizeof(latex_filename),"report_drug_%s_%s_%04d%02d%02d%02d%02d%02d.tex",
   //         p_param->drug_name, p_param->user_name, current_time->tm_year + 1900, current_time->tm_mon + 1, current_time->tm_mday,
   //         current_time->tm_hour, current_time->tm_min, current_time->tm_sec);
-  snprintf(latex_filename,sizeof(latex_filename),"./report_drug_%s_%s_%s.tex",p_param->drug_name, p_param->cell_model, p_param->user_name);
+  snprintf(latex_filename,sizeof(latex_filename),"./%s/report_drug_%s_%s.tex", cml::commons::RESULT_FOLDER, p_param->drug_name, p_param->cell_model);
   FILE *fp_latex = fopen(latex_filename,"w");
   if( fp_latex == NULL ){
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n", latex_filename);
@@ -82,8 +82,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/Vm_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Vm_plot.png}\n",image_scale);
   fprintf(fp_latex,"\t\\caption{Action potential result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_vm}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -91,8 +90,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/dVm_dt_plot.png}\n",
-                    image_scale,p_param->drug_name, p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/dVm_dt_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Rates of action potential result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_dvmdt}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -100,8 +98,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/Cai_plot.png}\n",
-                    image_scale,p_param->drug_name, p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Cai_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Intracellular calcium concentration result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_cai}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -109,8 +106,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/INaL_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/INaL_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{L-type sodium current result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_inal}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -118,8 +114,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/INa_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/INa_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Sodium current result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_ina}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -127,8 +122,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/ICaL_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/ICaL_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{L-type calcium current result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_ical}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -136,8 +130,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/IKs_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/IKs_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Slow potassium current result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_iks}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -145,8 +138,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/IK1_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/IK1_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Inward rectifier current result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_ik1}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -154,8 +146,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/Ito_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Ito_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Transient outward current result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_ito}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -163,8 +154,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/IKr_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/IKr_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{hERG current result in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_ikr}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -172,8 +162,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/%s_%s/Inet_plot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Inet_plot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Cummulative current result (iNet) in various concentrations.}\n");
   fprintf(fp_latex,"\t\\label{fig:time_series_inet}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -185,8 +174,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/qnet_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/qNet_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of qNet at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_qnet}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -194,8 +182,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/apd90_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/APD90_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of APD90 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_apd90}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -203,8 +190,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/apd50_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/APD50_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of APD50 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_apd50}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -212,8 +198,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/cad90_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/CaD90_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of CaD90 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_cad90}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -221,8 +206,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/cad50_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/CaD50_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of CaD50 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_cad50}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -230,8 +214,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/vm_peak_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Vm_peak_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of peak action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_vm_peak}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -239,8 +222,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/vm_valley_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Vm_valley_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of lowest action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_vm_valley}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -248,8 +230,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/ca_peak_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Ca_peak_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of peak calcium concentration at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_ca_peak}\n");
   fprintf(fp_latex,"\\end{figure}\n");
@@ -257,8 +238,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/%s_%s/ca_valley_boxplot.png}\n",
-                    image_scale,p_param->drug_name,p_param->cell_model);
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Ca_valley_boxplot.png}\n", image_scale);
   fprintf(fp_latex,"\t\\caption{Distribution of lowest calcium concentrations  at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_ca_valley}\n");
   fprintf(fp_latex,"\\end{figure}\n");

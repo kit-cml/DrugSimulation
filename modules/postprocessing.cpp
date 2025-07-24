@@ -119,17 +119,17 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   }
   mpi_printf(cml::commons::MASTER_NODE, "\n");
 
-  snprintf(buffer, sizeof(buffer), "%s/%s_%s/%.2lf/%s_%.2lf_time_series_smp%d_%s.csv", 
-          cml::commons::RESULT_FOLDER, drug_name, cell_model, conc, drug_name, conc, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_time_series_smp%d.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
   fp_time_series = fopen(buffer, "w");
   if(fp_time_series == NULL){
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
     return 1;
   }
-  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)",
-          "Cai(x1.000.000)(nanoM)", "INa(x1.000)(nanoA)", "INaL(x1.000)(nanoA)", "ICaL(x1.000)(nanoA)",
-          "Ito(x1.000)(nanoA)", "IKr(x1.000)(nanoA)", "IKs(x1.000)(nanoA)", "IK1(x1.000)(nanoA)", "Inet(microA)",
-          "Inet_APD(microA)");
+  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)",
+          "Cai(nM)", "INa(nA)", "INaL(nA)", "ICaL(nA)",
+          "Ito(nA)", "IKr(nA)", "IKs(nA)", "IK1(nA)", "Inet(mA)",
+          "Inet_APD(mA)");
 
   // time variables.
   // some of these values are taken from the supplementary materials of ORd2011
@@ -217,9 +217,9 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
 
   // Assign the remaining features
   // and write it into file.
-  snprintf(buffer, sizeof(buffer), "%s/%s_%s/%.2lf/%s_%.2lf_features_core%d_%s.csv", 
-          cml::commons::RESULT_FOLDER, drug_name, cell_model, conc, drug_name, conc,
-          MPI_Profile::rank, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_features_core%d.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc,
+          MPI_Profile::rank);
   collect_features(p_features, p_param, p_cell, conc, inet_auc, inet_apd_auc, inal_auc, ical_auc, inal_auc_control, ical_auc_control, buffer,
                    sample_id, group_id);
 
@@ -322,9 +322,9 @@ void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellm
     return;
   }
   if (!file_exists_and_not_empty) {
-    fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qnet", "qnet_apd", "qInward", "inal_auc", "ical_auc",
-            "apd90", "apd50", "apd_tri", "vm_peak", "vm_valley", "dvmdt_peak", "dvmdt_max_repol", "cad90", "cad50", "cad_tri", "ca_peak",
-            "ca_valley");
+    fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qNet", "qNet_APD", "qInward", "INaL_AUC", "ICaL_AUC",
+            "APD90", "APD50", "APD_tri", "Vm_peak", "Vm_valley", "dVmdt_peak", "dVmdt_max_repol", "CaD90", "CaD50", "CaD_tri", "Ca_peak",
+            "Ca_valley");
   }
   fprintf(fp_features, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", sample_id,
           p_features.qnet, p_features.qnet_apd, p_features.qinward, p_features.inal_auc, p_features.ical_auc, p_features.apd90, p_features.apd50,
