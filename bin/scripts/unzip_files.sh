@@ -4,9 +4,8 @@ unzip_files() {
   local ZIP_FILE="$1"
   local UNZIP_DESTINATION="$2"
   local RESULTS_ROOT="$3"
-  local DRUG_NAME="$4"
-  local SAMPLE_SIZE="$5"
-  shift 5
+  local SAMPLE_SIZE="$4"
+  shift 4
   local drug_concentrations=("$@")
    
   unzip "${ZIP_FILE}" -d "${UNZIP_DESTINATION}"
@@ -20,19 +19,11 @@ unzip_files() {
   fi
   echo "Root folder ${RESULTS_ROOT} found."
 
-
-  DRUG_DIR="${RESULTS_ROOT}/${DRUG_NAME}"
-  if [[ ! -d "${DRUG_DIR}" ]]; then
-    echo "Missing drug folder: ${DRUG_DIR}"
-    exit 1
-  fi
-  echo "Folder ${DRUG_DIR} found."
-
   STATUS=0
   # Loop through each drug concentration and check the contents
   for conc in "${drug_concentrations[@]}"; do
     FOLDER=$(printf "%.2f" "${conc}")
-    TARGET_DIR="${DRUG_DIR}/${FOLDER}"
+    TARGET_DIR="${RESULTS_ROOT}/${FOLDER}"
     if [[ ! -d "${TARGET_DIR}" ]]; then
       echo "Missing concentration folder: ${TARGET_DIR}"
       STATUS=1

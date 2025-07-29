@@ -124,13 +124,13 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
           "INa(nA)", "INaL(nA)", "ICaL()(nA)", "Ito()(nA)",
           "IKr(nA)", "IKs(nA)", "IK1(nA)");
 
-  //snprintf(buffer, sizeof(buffer), "last_states_1000paces_%s.dat", p_param->cell_model);
+  //snprintf(buffer, sizeof(buffer), "./%s/last_states_%hdpaces_%s.dat", "initial_values_files", number_pacing, p_param->cell_model);
   //mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   // replace the initial condition
   // with the last state value from
   // steady-state 1000 paces control simulation.
   // TODO: implemented later on.
-  // set_initial_condition(p_cell, buffer);
+  //set_initial_condition(p_cell, buffer);
 
   // time variables.
   // some of these values are taken from the supplementary materials of ORd2011
@@ -284,7 +284,7 @@ void set_initial_condition(Cellmodel *p_cell, char *ic_file_name) {
     mpi_printf(cml::commons::MASTER_NODE, "\n");
     fclose(fp_states);
   } else {
-    mpi_printf(cml::commons::MASTER_NODE, "No initial file found! Keep using initial condition from the cell model!\n");
+    mpi_printf(cml::commons::MASTER_NODE, "File %s\n cannot be found! Keep using initial condition from the cell model!\n", buffer);
   }
 }
 
