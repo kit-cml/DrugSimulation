@@ -48,13 +48,13 @@ IFS=',' read -r -a drug_concentrations <<< "${DRUG_CONCENTRATIONS}"
 
 # choose the binary based on the value of cell_model
 if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
-  BINARY_FILE=../drugsim_CiPAORdv1.0
+  BINARY_FILE=../drugsim_CiPAORdv1.0_postprocessing
 elif [[ "${CELL_MODEL}" == *"ORd-static"* ]]; then
-  BINARY_FILE=../drugsim_ORd-static
+  BINARY_FILE=../drugsim_ORd-static_postprocessing
 elif [[ "${CELL_MODEL}" == *"ToR-ORd"* ]]; then
-  BINARY_FILE=../drugsim_ToR-ORd
+  BINARY_FILE=../drugsim_ToR-ORd_postprocessing
 elif [[ "${CELL_MODEL}" == *"ToR-ORd-dynCl"* ]]; then
-  BINARY_FILE=../drugsim_ToR-ORd-dynCl
+  BINARY_FILE=../drugsim_ToR-ORd-dynCl_postprocessing
 else
   echo "The cell model ${CELL_MODEL} is not specified to any simulations!!"
   exit 1
