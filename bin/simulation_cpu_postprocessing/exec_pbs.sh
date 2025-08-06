@@ -44,11 +44,25 @@ echo "FILE HILL: ${HILL_FILE}"
 SAMPLE_SIZE=$(( $(wc -l < "${HILL_FILE}") - 1 ))
 echo "FILE LINE: ${SAMPLE_SIZE}"
 
+TIME_SERIES_SUBSTRING="*time_series*.csv"
+TIME_SERIES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_time_series.zip"
 FEATURES_SUBSTRING="*features*.csv"
 FEATURES_ZIPNAME="./${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}_features.zip"
 
 # Split the string into an array
 IFS=',' read -r -a "${drug_concentrations}" <<< "${DRUG_CONCENTRATIONS}"
+
+# Logging starts from here
+RESULT_FOLDER="./results"
+echo "Cleaning ${RESULT_FOLDER}"
+rm -rf "${RESULT_FOLDER}"
+echo "Cleaning successful!"
+create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
+echo "DrugSimulationPostprocessing Log Start..." >& "${RESULT_FOLDER}/logfile"
+
+# Clear any old PID file
+PIDFILE="mpiexec.pid"
+rm -f "${PIDFILE}"
 
 # choose the binary based on the value of cell_model
 if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
@@ -64,14 +78,19 @@ else
   exit 1
 fi
 
-EXISTING_TIME_SERIES_PLOT_FOLDER="${PLOT_FOLDER}/time_series/${DRUG_NAME}_${CELL_MODEL}"
-EXISTING_FEATURES_PLOT_FOLDER="${PLOT_FOLDER}/features/${DRUG_NAME}_${CELL_MODEL}"
-EXISTING_RESULT_FOLDER="${RESULT_FOLDER}/${DRUG_NAME}_${CELL_MODEL}"
-EXISTING_REPORT_FILES="report_drug_${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}*"
-echo "Cleaning ${EXISTING_RESULT_FOLDER} folder, ${EXISTING_TIME_SERIES_PLOT_FOLDER}, ${EXISTING_FEATURES_PLOT_FOLDER} and ${EXISTING_REPORT_FILES} files..."
-rm -rf "${EXISTING_TIME_SERIES_PLOT_FOLDER}" "${EXISTING_FEATURES_PLOT_FOLDER}" "${EXISTING_RESULT_FOLDER}" "${EXISTING_REPORT_FILES}" "${RESULT_FOLDER}/logfile" "*.zip"
-echo "Cleaning successful!"
-create_drug_concentration_directories "$RESULT_FOLDER" "$DRUG_NAME" "$CELL_MODEL" "${drug_concentrations[@]}"
-unzip_files "${INITIAL_VALUES_ZIP_FILE}" "./" "${RESULT_FOLDER}" "${DRUG_NAME}_${CELL_MODEL}" "${SAMPLE_SIZE}" "${drug_concentrations[@]}"
-mpiexec "-machinefile" "${PBS_NODEFILE}" "-np" "${NPROCS}" "~/marcell/MetaHeart/DrugSimulationTest/bin/${BINARY_FILE}" -input_deck "param.txt" >& "${RESULT_FOLDER}/logfile"
+echo "Unzipping files..." >> "${RESULT_FOLDER}/logfile" 2>&1
+unzip_files "${INITIAL_VALUES_ZIP_FILE}" "./" "${RESULT_FOLDER}" "${SAMPLE_SIZE}" "${drug_concentrations[@]}" >> "${RESULT_FOLDER}/logfile" 2>&1
+EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "Simulation program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1
+  exit 1
+fi
+echo "Unzipping successful!!!" >> "${RESULT_FOLDER}/logfile" 2>&1
+mpiexec "-machinefile" "${PBS_NODEFILE}" "-np" "${NPROCS}" "~/marcell/MetaHeart/DrugSimulationTest/bin/${BINARY_FILE}" -input_deck "param.txt" >> "${RESULT_FOLDER}/logfile" 2>&1
+echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
+zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
 zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
+mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
+mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
+echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
+echo "Simulation has finished! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1

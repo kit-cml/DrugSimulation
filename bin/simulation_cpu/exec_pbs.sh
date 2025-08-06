@@ -30,7 +30,7 @@ source ../scripts/zip_files.sh
 # cut -d'=' -f2: gets the right-hand side of =
 # sed 's/\/\/.*//': removes any inline comment starting with //
 # xargs: trims leading and trailing whitespace
-CELL_MODEL=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
+CELL_MODEL="$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 
 RESULT_FOLDER="./results"
 PLOT_FOLDER="./plots"
@@ -39,14 +39,28 @@ DRUG_NAME="$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -
 DRUG_CONCENTRATIONS="$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 
 INITIAL_VALUES_SUBSTRING="*initial_values*.csv"
-INITIAL_VALUES_ZIPNAME="./${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}_initial_values.zip"
+INITIAL_VALUES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_initial_values.zip"
 TIME_SERIES_SUBSTRING="*time_series*.csv"
-TIME_SERIES_ZIPNAME="./${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}_time_series.zip"
+TIME_SERIES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_time_series.zip"
 FEATURES_SUBSTRING="*features*.csv"
-FEATURES_ZIPNAME="./${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}_features.zip"
+FEATURES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_features.zip"
+LAST_PACES_SUBSTRING="*last_paces*.csv"
+LAST_PACES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_last_paces.zip"
 
 # Split the string into an array
 IFS=',' read -r -a drug_concentrations <<< "${DRUG_CONCENTRATIONS}"
+
+# Logging starts from here
+RESULT_FOLDER="./results"
+echo "Cleaning ${RESULT_FOLDER}"
+rm -rf "${RESULT_FOLDER}"
+echo "Cleaning successful!"
+create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
+echo "DrugSimulationPostprocessing Log Start..." >& "${RESULT_FOLDER}/logfile"
+
+# Clear any old PID file
+PIDFILE="mpiexec.pid"
+rm -f "${PIDFILE}"
 
 # choose the binary based on the value of cell_model
 if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
@@ -62,16 +76,25 @@ else
   exit 1
 fi
 
-EXISTING_TIME_SERIES_PLOT_FOLDER="${PLOT_FOLDER}/time_series/${DRUG_NAME}_${CELL_MODEL}"
-EXISTING_FEATURES_PLOT_FOLDER="${PLOT_FOLDER}/features/${DRUG_NAME}_${CELL_MODEL}"
-EXISTING_RESULT_FOLDER="${RESULT_FOLDER}/${DRUG_NAME}_${CELL_MODEL}"
-EXISTING_REPORT_FILES="report_drug_${DRUG_NAME}_${CELL_MODEL}_${USER_NAME}*"
-echo "Cleaning ${EXISTING_RESULT_FOLDER} folder, ${EXISTING_TIME_SERIES_PLOT_FOLDER}, ${EXISTING_FEATURES_PLOT_FOLDER}, ${EXISTING_REPORT_FILES}, and zipped results files..."
-rm -rf "${EXISTING_TIME_SERIES_PLOT_FOLDER}" "${EXISTING_FEATURES_PLOT_FOLDER}"  "${EXISTING_RESULT_FOLDER}" "${EXISTING_REPORT_FILES}"  "${RESULT_FOLDER}/logfile" *.zip
+echo "Cleaning ${RESULT_FOLDER}"
+rm -rf "${RESULT_FOLDER}"
 echo "Cleaning successful!"
 create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
 echo "Run $CELL_MODEL cell model simulation with ${NUMBER_OF_CPU} cores."
-mpiexec -machinefile $PBS_NODEFILE -np $NPROCS ~/marcell/MetaHeart/DrugSimulationTest/bin/$BINARY_FILE -input_deck param.txt >& $RESULT_FOLDER/logfile
+mpiexec -machinefile $PBS_NODEFILE -np $NPROCS ~/marcell/MetaHeart/DrugSimulationTest/bin/$BINARY_FILE -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1
+EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "Simulation program got some problems!!! Exiting..."
+  exit 1
+fi
+echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
 zip_files "${RESULT_FOLDER}" "${INITIAL_VALUES_SUBSTRING}" "${INITIAL_VALUES_ZIPNAME}"
 zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
 zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
+zip_files "${RESULT_FOLDER}" "${LAST_PACES_SUBSTRING}" "${LAST_PACES_ZIPNAME}"
+mv "${INITIAL_VALUES_ZIPNAME}" "${RESULT_FOLDER}/."
+mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
+mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
+mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
+echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
+echo "Simulation has finished! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1

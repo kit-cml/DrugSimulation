@@ -112,17 +112,17 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     return 1;
   }
 
-  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_last_%hd_paces_smp%hd.csv", 
-          cml::commons::RESULT_FOLDER, conc, drug_name, conc, number_pacing_write, sample_id);
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_last_paces_smp%hd.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
   fp_last_paces = fopen(buffer, "w");
   if(fp_last_paces == NULL){
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
     return 1;
   }
   fprintf(fp_last_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
-          "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)", "Cai(nM)",
-          "INa(nA)", "INaL(nA)", "ICaL()(nA)", "Ito()(nA)",
-          "IKr(nA)", "IKs(nA)", "IK1(nA)");
+          "Time(ms)", "Last_Vm(mV)", "Last_dVm/dt(mV/ms)", "Last_Cai(nM)",
+          "Last_INa(nA)", "Last_INaL(nA)", "Last_ICaL(nA)", "Last_Ito(nA)",
+          "Last_IKr(nA)", "Last_IKs(nA)", "Last_IK1(nA)");
 
   //snprintf(buffer, sizeof(buffer), "./%s/last_states_%hdpaces_%s.dat", "initial_values_files", number_pacing, p_param->cell_model);
   //mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);

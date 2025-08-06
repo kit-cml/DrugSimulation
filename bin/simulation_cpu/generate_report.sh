@@ -28,7 +28,7 @@ PROGRESS=$((PROGRESS + 25)) # 25% for plot generating.
 echo "DrugSimulation Report Progress: $PROGRESS%"
 
 #Generate report based on the pre-generated LaTEX file
-echo "Generate PDF from LaTEX (on construction)"
+echo "Generate PDF from LaTEX"
 cd "${RESULT_FOLDER}"
 pdflatex $LATEX_FILE
 PROGRESS=$((PROGRESS + 50)) # 25% for plot generating.
