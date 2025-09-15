@@ -6,6 +6,7 @@
 #include <types/parameter.hpp>
 #include "modules/drug_simulation_bench.hpp"
 #include "modules/report_drug.hpp"
+#include "modules/show_param_logs.hpp"
 
 #include <cstdio>
 #include <cstdlib>
@@ -58,7 +59,7 @@ int main(int argc, char **argv)
   p_param = new Parameter();
   p_param->init();
   assign_params(&argc,argv,p_param);
-  p_param->show_val();
+  show_param_logs(p_param);
 
   // cipa feature object to store
   // the 14 features and time series 
@@ -68,14 +69,17 @@ int main(int argc, char **argv)
   // drug input data
   Drug_Block_Input hill;
 
+  int err_code;
   double t_begin = MPI_Wtime();
-  drug_simulation_bench(p_param,time_series,p_features,hill);
+  err_code = drug_simulation_bench(p_param,time_series,p_features,hill);
+  if(err_code != 0) MPI_Abort(MPI_COMM_WORLD, err_code);
   double t_end = MPI_Wtime();
 
   // move to other post-processing app
-  if(MPI_Profile::rank == 0) generate_report_drug(p_param);
-  // MPI_Barrier(MPI_COMM_WORLD);
+  if(MPI_Profile::rank == 0) err_code = generate_report_drug(p_param);
+  //MPI_Barrier(MPI_COMM_WORLD);
 
+  if(err_code != 0) MPI_Abort(MPI_COMM_WORLD, err_code);
   mpi_printf(0,"Simulation finished at: %lf minutes.\n", (t_end-t_begin)*cml::math::SECONDS_TO_MINUTES);
 
   delete p_param;

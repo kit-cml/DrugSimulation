@@ -21,16 +21,17 @@ def extract_core_number(filename):
     match = re.search(r'core(\d+)', filename)
     return int(match.group(1)) if match else -1
 
-def read_feature_data(base_path, drug_name, concentration, user_name):
+def read_feature_data(base_path, drug_name, concentration):
     """
     Read all feature_core files for a given concentration
     Returns a sorted DataFrame with all features
     """
     feature_files = []
     folder_path = Path(base_path) / str(concentration)
+    print(folder_path)
     
     # Find all feature files matching the pattern
-    pattern = f"{drug_name}_{concentration}_features_core*_{user_name}.csv"
+    pattern = f"{drug_name}_{concentration}_features_core*.csv"
     for file in folder_path.glob(pattern):
         feature_files.append(str(file))
     
@@ -64,31 +65,30 @@ def create_feature_plots(all_data, drug_name, output_folder):
     
     # List of features to plot
     features = [
-        'qnet', 'qnet_apd', 'qInward', 'inal_auc', 'ical_auc',
-        'apd90', 'apd50', 'apd_tri', 'vm_peak', 'vm_valley',
-        'dvmdt_peak', 'dvmdt_max_repol', 'cad90', 'cad50',
-        'cad_tri', 'ca_peak', 'ca_valley'
+        'qNet', 'qInward', 'INaL_AUC', 'ICaL_AUC',
+        'APD90', 'APD50', 'APD_tri', 'Vm_max', 'Vm_rest',
+        'dVmdt_max', 'dVmdt_max_repol', 'CaTD90', 'CaTD50',
+        'CaTD_tri', 'Ca_max', 'Ca_rest'
     ]
     
     # Dictionary for feature name formatting
     feature_format = {
-        'qnet': 'qNet',
-        'qnet_apd': 'qNet_APD',
+        'qNet': 'qNet',
         'qInward': 'qInward',
-        'inal_auc': 'INaL_AUC',
-        'ical_auc': 'ICaL_AUC',
-        'apd90': 'APD90',
-        'apd50': 'APD50',
-        'apd_tri': 'APD_tri',
-        'vm_peak': 'Vm_peak',
-        'vm_valley': 'Vm_valley',
-        'dvmdt_peak': 'dVm/dt_peak',
-        'dvmdt_max_repol': 'dVm/dt_max_repol',
-        'cad90': 'CaD90',
-        'cad50': 'CaD50',
-        'cad_tri': 'CaD_tri',
-        'ca_peak': 'Ca_peak',
-        'ca_valley': 'Ca_valley'
+        'INaL_AUC': 'INaL_AUC',
+        'ICaL_AUC': 'ICaL_AUC',
+        'APD0': 'APD90',
+        'APD50': 'APD50',
+        'APD_tri': 'APD_tri',
+        'Vm_max': 'Vm_max',
+        'Vm_rest': 'Vm_rest',
+        'dVmdt_max': 'dVm/dt_max',
+        'dVmdt_max_repol': 'dVm/dt_max_repol',
+        'CaTD90': 'CaTD90',
+        'CaTD50': 'CaTD50',
+        'CaTD_tri': 'CaTD_tri',
+        'Ca_peak': 'Ca_peak',
+        'Ca_valley': 'Ca_valley'
     }
     
     # Get unique concentrations
@@ -160,12 +160,14 @@ def process_data(base_path, drug_name, user_name):
     concentrations = sorted(concentration_map.keys(), key=lambda x: concentration_map[x])
 
     print("Sorted concentrations:", concentrations)
+    print(drug_name)
+    print(user_name)
     
     # Read and combine data from all concentrations
     all_data = []
     for concentration in sorted(concentrations, key=float):
         print(f"Processing concentration: {concentration}")
-        data = read_feature_data(base_path, drug_name, concentration, user_name)
+        data = read_feature_data(base_path, drug_name, concentration)
         if data is not None:
             all_data.append(data)
     
@@ -174,8 +176,7 @@ def process_data(base_path, drug_name, user_name):
         combined_data = pd.concat(all_data, ignore_index=True)
         
         # Create output folder
-        folder_name = "./plots/features/"
-        output_folder = os.path.join(folder_name, drug_name)
+        output_folder = "./results/plots/features/"
         
         # Create plots
         create_feature_plots(combined_data, drug_name, output_folder)
@@ -183,8 +184,12 @@ def process_data(base_path, drug_name, user_name):
 
 if __name__ == "__main__":
     # Replace these with your actual values
-    if len(sys.argv) < 3: print("Please provide the result folder path and user name!!!")
+    if len(sys.argv) < 4: print("Please provide the result folder, drug name and the user name!")
     else:
-      drug_name = os.path.basename(os.path.dirname(sys.argv[1]))
+      print("TEST: " + sys.argv[1])
+      temp_string_list = os.path.basename(os.path.dirname(sys.argv[1])).split("_")
+      drug_name = sys.argv[2]
+      user_name = sys.argv[3]
       print(drug_name)
-      process_data(sys.argv[1], drug_name,sys.argv[2])
+      print(user_name)
+      process_data(sys.argv[1], drug_name, user_name)

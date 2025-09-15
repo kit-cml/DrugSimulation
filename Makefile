@@ -20,14 +20,7 @@ LIBCML_EXTERNAL_LIB_DIR = ../libCML/libs
 
 
 # Define the final program name
-# PROGNAME := drugsim_ordstatic
-# PROGNAME := drugsim_ord
-# PROGNAME := drugsim_tomek
-# PROGNAME := drugsim_tomek_dyncl
-# PROGNAME := drugsim_ordstatic_postprocessing
-# PROGNAME := drugsim_ord_postprocessing
- PROGNAME := drugsim_tomek_postprocessing
-# PROGNAME := drugsim_tomek_dyncl_postprocessing
+BASE_PROGNAME := drugsim
 
 
 # Pre-processor flags to be used for includes (-I) and defines (-D) 
@@ -42,24 +35,46 @@ CC := mpicc
 # Uncomment this part for the licensed version
 #CXXFLAGS += -DLICENSED
 
-# Uncomment this part for the compilation of postprocessing binaries
-CXXFLAGS += -DPOSTPROCESSING
-
 
 # CXXFLAGS is used for C++ compilation options.
 #CXXFLAGS += -Wall -O0 -fpermissive -std=c++11
 #CXXFLAGS += -Wall -O2 -fno-alias -fpermissive
 #CXXFLAGS += -Wall -Wunused-variable
 CXXFLAGS += -Wall -Wunused-variable -std=c++11
-# Use this if you want to use ORd-dyn 2017 cell model.
+
+# Make sure ONLY ONE MACRO IS USED!!!
+# Use this if you want to use CiPAORdv1.0 cell model.
 # Otherwise, comment it
-# CXXFLAGS += -DORD_DYN_2017
-# Use this if you want to use Tomek 2019 cell model.
+#CXXFLAGS += -DCIPAORDV1_0
+# Use this if you want to use ToR-ORd cell model.
 # Otherwise, comment it
- CXXFLAGS += -DTOMEK_2019
-# Use this if you want to use Tomek 2020 dynamic cell model.
+#CXXFLAGS += -DTOR_ORD
+# Use this if you want to use ToR-ORd-dynCl cell model.
 # Otherwise, comment it
-# CXXFLAGS += -DTOMEK_DYNCL_2020
+#CXXFLAGS += -DTOR_ORD_DYNCL
+
+# Uncomment this part for the compilation of postprocessing binaries
+#CXXFLAGS += -DPOSTPROCESSING
+
+# Uncomment this part for enabling some files for debugging
+#CXXFLAGS += -DCMLDEBUG
+
+
+# The program name wiil depend on the set value above
+# Make sure ONLY ONE MACRO IS USED!!!
+ifeq ($(findstring -DCIPAORDV1_0,$(CXXFLAGS)), -DCIPAORDV1_0)
+    PROGNAME := $(BASE_PROGNAME)_CiPAORdv1.0
+else ifeq ($(findstring -DTOR_ORD_DYNCL,$(CXXFLAGS)), -DTOR_ORD_DYNCL)
+    PROGNAME := $(BASE_PROGNAME)_ToR-ORd-dynCl
+else ifeq ($(findstring -DTOR_ORD,$(CXXFLAGS)), -DTOR_ORD)
+    PROGNAME := $(BASE_PROGNAME)_ToR-ORd
+else
+    PROGNAME := $(BASE_PROGNAME)_ORd-static
+endif
+
+ifeq ($(findstring -DPOSTPROCESSING,$(CXXFLAGS)), -DPOSTPROCESSING)
+    PROGNAME := $(PROGNAME)_postprocessing
+endif
 
 # LDFLAGS is used for linker (-g enables debug symbols)
 LDFLAGS  += -g  $(LIBCML_LIB_DIR)/libcml.a $(LIBCML_EXTERNAL_LIB_DIR)/sundials-5.7.0/lib64/libsundials_cvode.a $(LIBCML_EXTERNAL_LIB_DIR)/sundials-5.7.0/lib64/libsundials_nvecserial.a -L/usr/lib64 -lcurl -ljson-c 

@@ -1,14 +1,15 @@
 #include "postprocessing.hpp"
 
-#ifdef TOMEK_2019
-#include <types/cellmodels/Tomek_model.hpp>
-#elif defined(TOMEK_DYNCL_2020)
-#include <types/cellmodels/Tomek_dynCl.hpp>
-#elif defined(ORD_DYN_2017)
+#if defined CIPAORDV1_0
 #include <types/cellmodels/ohara_rudy_cipa_v1_2017.hpp>
+#elif defined TOR_ORD
+#include <types/cellmodels/Tomek_model.hpp>
+#elif defined TOR_ORD_DYNCL
+#include <types/cellmodels/Tomek_dynCl.hpp>
 #else
 #include <types/cellmodels/Ohara_Rudy_2011.hpp>
 #endif
+
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -26,70 +27,76 @@
 using std::copy;
 using std::vector;
 
-void postprocessing(double conc, double inal_auc_control, double ical_auc_control, const Drug_Row &hill, const Drug_Row &herg,
+int postprocessing(double conc, double inal_auc_control, double ical_auc_control, const Drug_Row &hill, const Drug_Row &herg,
                     const Parameter *p_param, Cipa_Features &p_features, short sample_id, short group_id, const Cvar_Row *cvar) {
   bool is_ead = false;
   // simulation parameters.
   // Assigned to the constant variables for
   // the sake of simplicity.
-  const double bcl = p_param->bcl;
-  const short celltype = p_param->celltype;
+  const double cycle_length = p_param->cycle_length;
   const char *user_name = p_param->user_name;
-  const double dt_min = p_param->dt_min;
-  const double dt_max = p_param->dt_max;
-  const double dtw = p_param->dtw;
-  const double stim_dur = p_param->stim_dur;
-  const double stim_amp_scale = p_param->stim_amp_scale;
-  const short solver_type = p_param->solver_type;
+  const double time_step_min = p_param->time_step_min;
+  const double time_step_max = p_param->time_step_max;
+  const double writing_step = p_param->writing_step;
+  const double stimulus_duration = p_param->stimulus_duration;
+  const double stimulus_amplitude_scale = p_param->stimulus_amplitude_scale;
+  const char *solver_type = p_param->solver_type;
   const short is_cvar = p_param->is_cvar;
   const char *drug_name = p_param->drug_name;
 
+  if(time_step_min > writing_step){
+    mpi_printf(cml::commons::MASTER_NODE,"%s\n%s\n",
+    "WARNING!!! The writing_step values is smaller than the timestep!",
+    "Simulation still run, but the time series will use time_step_min as writing step.");
+  }
+
   // this is the cellmodel initialization part
   Cellmodel *p_cell;
-#if defined ORD_DYN_2017
-  mpi_printf(cml::commons::MASTER_NODE, "Using ORd-dyn 2017 cell model\n");
+  short cell_type;
+  const char *cell_model = p_param->cell_model;
+  if( strstr(cell_model,"endo") != NULL ) cell_type = 0;
+  else if( strstr(cell_model,"epi") != NULL ) cell_type = 1;
+  else if( strstr(cell_model,"myo") != NULL ) cell_type = 2;
+  mpi_printf(cml::commons::MASTER_NODE,"Using %s cell model with cell_type=%hd\n", cell_model, cell_type);
+#if defined CIPAORDV1_0
   p_cell = new ohara_rudy_cipa_v1_2017();
   if (is_cvar && cvar) {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, herg.data, cvar->data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data, cvar->data);
   } else {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, herg.data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data);
   }
-#elif defined TOMEK_2019
-  mpi_printf(cml::commons::MASTER_NODE, "Using Tomek 2019 cell model\n");
+#elif defined TOR_ORD
   p_cell = new Tomek_model();
   if (is_cvar && cvar) {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, cvar->data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, cvar->data);
   } else {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data);
   }
-#elif defined TOMEK_DYNCL_2020
-  mpi_printf(cml::commons::MASTER_NODE, "Using Tomek_dynCl 2020 cell model\n");
+#elif defined TOR_ORD_DYNCL
   p_cell = new Tomek_dynCl();
   if (is_cvar && cvar) {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, cvar->data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, cvar->data);
   } else {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data);
   }
 #else
-  mpi_printf(cml::commons::MASTER_NODE, "Using ORd2011 cell model\n");
   p_cell = new Ohara_Rudy_2011();
   if (is_cvar && cvar) {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, true, cvar->data);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, true, cvar->data);
   } else {
-    p_cell->initConsts(static_cast<double>(celltype), conc, hill.data, true);
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, true);
   }
 #endif
 
-  p_cell->CONSTANTS[BCL] = bcl;
-  p_cell->CONSTANTS[duration] = stim_dur;
-  p_cell->CONSTANTS[amp] *= stim_amp_scale;
+  p_cell->CONSTANTS[BCL] = cycle_length;
+  p_cell->CONSTANTS[duration] = stimulus_duration;
+  p_cell->CONSTANTS[amp] *= stimulus_amplitude_scale;
+
 
   // variables for I/O
   char buffer[900];
   FILE *fp_time_series;
 
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_repol_states_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
-  mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   // replace the initial condition
   // with the last state value from
   // the in-silico simulation
@@ -97,14 +104,17 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
   for (short idx = 0; idx < 20; idx++) {
     mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
   }
-  mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from repol_states vector:\n");
+  mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from initial_values vector:\n");
   for (short idx = 0; idx < 20; idx++) {
-    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.repol_states[idx]);
+    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.initial_values[idx]);
   }
-  mpi_printf(cml::commons::MASTER_NODE, "\nUsing repol state from the in-silico simulation.\n");
+  mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
 
-  copy(p_features.repol_states.begin(), p_features.repol_states.end(), p_cell->STATES);
-  // set_initial_condition_postprocessing(p_cell, buffer);
+  copy(p_features.initial_values.begin(), p_features.initial_values.end(), p_cell->STATES);
+  for( int idx = 0; idx < p_cell->states_size; idx++ ){
+    p_cell->STATES[idx] = p_features.initial_values[idx];
+  }
+  //set_initial_condition_postprocessing(p_cell, buffer);
 
   mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
   for (short idx = 0; idx < 10; idx++) {
@@ -112,113 +122,124 @@ void postprocessing(double conc, double inal_auc_control, double ical_auc_contro
   }
   mpi_printf(cml::commons::MASTER_NODE, "\n");
 
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_time_series_smp%d_%s.csv", cml::commons::RESULT_FOLDER, drug_name, conc, drug_name, conc, sample_id, user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_time_series_smp%d.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
   fp_time_series = fopen(buffer, "w");
-  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(msec)", "Vm(mVolt)", "dVm/dt(mVolt/msec)", "timestep(dt)",
-          "Cai(x1.000.000)(milliM->nanoM)", "INa(x1.000)(microA->nanoA)", "INaL(x1.000)(microA->nanoA)", "ICaL(x1.000)(microA->nanoA)",
-          "Ito(x1.000)(microA->nanoA)", "IKr(x1.000)(microA->nanoA)", "IKs(x1.000)(microA->nanoA)", "IK1(x1.000)(microA->nanoA)", "Inet(microA)",
-          "Inet_APD(microA)");
+  if(fp_time_series == NULL){
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
+    return 1;
+  }
+  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
+          "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)",
+          "Cai(nM)", "INa(nA)", "INaL(nA)", "ICaL(nA)",
+          "Ito(nA)", "IKr(nA)", "IKs(nA)", "IK1(nA)", "Inet(uA)","Inet_AUC(uC)");
 
   // time variables.
   // some of these values are taken from the supplementary materials of ORd2011
   // page 19.
-  double dt = p_param->dt;
-  double dt_set;
+  double time_step = time_step_min;
   double tcurr = 0.;
   double time_point = 25.;
-  double tmax = bcl;
+  double tmax = cycle_length;
   short pace_count = 0;
-  long icount = 0;
-  long imax = (long)((bcl)/dt);
-  const long print_freq = (long)(1./dt) * dtw;
   double next_print_time = 0.0;
+  double start_time = 0.0;
+  double next_output_time = start_time;
+  double tprint = 0.0;
 
   // CVode solver.
   CVodeSolverData *p_cvode;
   int cvode_retval;
-  if (solver_type == 0) {
+  if (strncasecmp(solver_type, "Euler", sizeof(solver_type)) == 0) {
     mpi_printf(cml::commons::MASTER_NODE, "Using Euler Solver.\n");
-  } else if (solver_type == 1) {
+  } else if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
     mpi_printf(cml::commons::MASTER_NODE, "Using CVode Solver.\n");
     p_cvode = new CVodeSolverData();
     init_cvode(p_cvode, p_cell, tcurr);
-    set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
+    set_dt_cvode(p_cvode, tcurr, time_point, cycle_length, time_step_min, time_step_max, &time_step);
   }
+  else{
+    mpi_fprintf(0, stderr, "Solver type %s is undefined! Please choose the available solver types from the manual!\n", solver_type);
+    return 1;
+  }
+
 
   double inal_auc = 0.;
   double ical_auc = 0.;
   double inet = 0.;
-  double inet_apd = 0.;
   double inet_auc = 0.;
+  double inet_apd = 0.;
   double inet_apd_auc = 0.;
   p_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
-
+  p_features.vm_amp90 = -77.;
+  
   // begin computation loop
-  while (icount < imax) {
+  while (tcurr < tmax) {
     // compute and solving part
     //
     // Different solver_type has different
     // method of calling computeRates().
-    if (solver_type == 0) {
+    if (strncasecmp(solver_type, "Euler", sizeof(solver_type)) == 0) {
       p_cell->computeRates(tcurr, p_cell->CONSTANTS, p_cell->RATES, p_cell->STATES, p_cell->ALGEBRAIC);
-      solveEuler(dt, p_cell);
+      solveEuler(time_step, p_cell);
       // increase the time based on the dt.
-      tcurr += dt;
-    } else if (solver_type == 1) {
-      cvode_retval = solve_cvode(p_cvode, p_cell, tcurr + dt, &tcurr);
+      tcurr += time_step;
+    } else if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
+      cvode_retval = solve_cvode(p_cvode, p_cell, tcurr + time_step, &tcurr);
       if (cvode_retval != 0) {
         printf("CVode calculation error happened at sample %hd concentration %.0lf!!\n", sample_id, conc);
-        return;
+        return cvode_retval;
       }
-      set_dt_cvode(p_cvode, tcurr, time_point, bcl, dt_min, dt_max, &dt);
+      set_dt_cvode(p_cvode, tcurr, time_point, cycle_length, time_step_min, time_step_max, &time_step);
     }
 
     // calculating the AUC
     inet = p_cell->ALGEBRAIC[INaL] + p_cell->ALGEBRAIC[ICaL] + p_cell->ALGEBRAIC[Ito] + p_cell->ALGEBRAIC[IKr] + p_cell->ALGEBRAIC[IKs] +
            p_cell->ALGEBRAIC[IK1];
-    inet_auc += inet * dt;
+    inet_auc += inet * time_step;
+    inal_auc += p_cell->ALGEBRAIC[INaL] * time_step;
+    ical_auc += p_cell->ALGEBRAIC[ICaL] * time_step;
     if (p_cell->STATES[V] > p_features.vm_amp90) {
       inet_apd = p_cell->ALGEBRAIC[INaL] + p_cell->ALGEBRAIC[ICaL] + p_cell->ALGEBRAIC[Ito] + p_cell->ALGEBRAIC[IKr] + p_cell->ALGEBRAIC[IKs] +
                  p_cell->ALGEBRAIC[IK1];
-      inet_apd_auc += inet_apd * dt;
+      inet_apd_auc += inet_apd * time_step;
     }
-    inal_auc += p_cell->ALGEBRAIC[INaL] * dt;
-    ical_auc += p_cell->ALGEBRAIC[ICaL] * dt;
 
     // finding other vm and cai features
     get_vm_features_postprocessing(p_cell, p_features, tcurr);
     get_ca_features_postprocessing(p_cell, p_features, tcurr);
+    p_features.vm_data.insert(std::pair<double, double>(tprint, p_cell->STATES[V]));
+    p_features.cai_data.insert(std::pair<double, double>(tprint, p_cell->STATES[cai]));
 
-    // write the result to the graph
-    if (tcurr >= next_print_time) {
-    //if (icount% print_freq == 0) {
-      // mpi_printf(0,"Writing at %lf msec.\n", tcurr);
-      snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
-               p_cell->RATES[V], dt, p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
+    if( tcurr >= next_output_time - cml::math::EPSILON ){
+      tprint = next_output_time-start_time;
+      snprintf(buffer, sizeof(buffer), 
+               "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
+               p_cell->RATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
-               p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO, inet, inet_apd);
-      fprintf(fp_time_series, "%.0lf,%s", floor(tcurr), buffer);
-      p_features.vm_data.insert(std::pair<double, double>(tcurr, p_cell->STATES[V]));
-      p_features.cai_data.insert(std::pair<double, double>(tcurr, p_cell->STATES[cai]));
-      next_print_time += dtw;
+               p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO, inet, inet_auc);
+      fprintf(fp_time_series, "%.4lf,%s", tprint, buffer);
+      next_output_time += writing_step;
     }
 
-    icount++;
   }  // end computation loop
 
   // Assign the remaining features
   // and write it into file.
-  snprintf(buffer, sizeof(buffer), "%s/%s/%.2lf/%s_%.2lf_features_core%d_%s.csv", cml::commons::RESULT_FOLDER, p_param->drug_name, conc, p_param->drug_name, conc,
-           MPI_Profile::rank, p_param->user_name);
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_features_core%d.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc,
+          MPI_Profile::rank);
   collect_features(p_features, p_param, p_cell, conc, inet_auc, inet_apd_auc, inal_auc, ical_auc, inal_auc_control, ical_auc_control, buffer,
                    sample_id, group_id);
 
-  if (solver_type == 1) {
+  if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
     clean_cvode(p_cvode);
     delete p_cvode;
   }
   fclose(fp_time_series);
+
+  return 0;
 }
 
 void get_vm_features_postprocessing(Cellmodel *p_cell, Cipa_Features &p_features, const double tcurr) {
@@ -279,8 +300,10 @@ void get_duration_postprocessing(Cipa_Features &p_features) {
 }
 
 void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellmodel *p_cell, double conc, double inet_auc, double inet_apd_auc,
-                      double inal_auc, double ical_auc, double inal_auc_control, double ical_auc_control, char *features_file_name, short sample_id,
-                      short group_id) {
+                      double inal_auc, double ical_auc, double inal_auc_control, double ical_auc_control, char *features_file_name, 
+                      short sample_id, short group_id) 
+{
+
   bool file_exists_and_not_empty = false;
   {
     std::ifstream infile(features_file_name);
@@ -299,17 +322,22 @@ void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellm
   p_features.inal_auc = inal_auc;
   p_features.ical_auc = ical_auc;
 
-  if ((int)(floor(conc)) == 0) {
+  // assuming control concentration value is arbitrary small.
+  if (fabs(conc) < cml::math::EPSILON) {
     inal_auc_control = inal_auc;
     ical_auc_control = ical_auc;
   }
   p_features.qinward = ((p_features.inal_auc / inal_auc_control) + (p_features.ical_auc / ical_auc_control)) * 0.5;
 
   fp_features = fopen(features_file_name, "a");
+  if( fp_features == NULL ){
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n", features_file_name);
+    return;
+  }
   if (!file_exists_and_not_empty) {
-    fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qnet", "qnet_apd", "qInward", "inal_auc", "ical_auc",
-            "apd90", "apd50", "apd_tri", "vm_peak", "vm_valley", "dvmdt_peak", "dvmdt_max_repol", "cad90", "cad50", "cad_tri", "ca_peak",
-            "ca_valley");
+    fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qNet", "qNet_APD", "qInward", "INaL_AUC", "ICaL_AUC",
+            "APD90", "APD50", "APD_tri", "Vm_max", "Vm_rest", "dVmdt_max", "dVmdt_max_repol", "CaTD90", "CaTD50", "CaTD_tri", "Ca_max",
+            "Ca_rest");
   }
   fprintf(fp_features, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", sample_id,
           p_features.qnet, p_features.qnet_apd, p_features.qinward, p_features.inal_auc, p_features.ical_auc, p_features.apd90, p_features.apd50,
