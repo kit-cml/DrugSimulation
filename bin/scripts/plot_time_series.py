@@ -160,8 +160,8 @@ def plot_all_features(base_path, drug_name, sample_size):
         'IKr(nA)': 'IKr (nA)',
         'IKs(nA)': 'IKs (nA)',
         'IK1(nA)': 'IK1 (nA)',
-        'Inet(mA)': 'iNet (µA)',
-        'Inet_APD(mA)': 'iNet APD (µA)'
+        'Inet(uA)': 'iNet (uA)',
+        'Inet_AUC(uC)': 'AUC of iNet (uC)'
     }
     
     # Create output directory if it doesn't exist

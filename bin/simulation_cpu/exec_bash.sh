@@ -81,6 +81,7 @@ echo "Run $CELL_MODEL cell model simulation with ${NUMBER_OF_CPU} cores."
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Simulation program got some problems!!! Exiting..."
+  rm -rf "${PIDFILE}"
   exit 1
 fi
 echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
@@ -97,6 +98,8 @@ sh "./generate_report.sh" >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Reporting program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1
+  rm -rf "${PIDFILE}"
   exit 1
 fi
+rm -rf "${PIDFILE}"
 echo "Simulation has finished! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1

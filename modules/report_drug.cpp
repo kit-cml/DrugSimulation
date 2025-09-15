@@ -64,9 +64,9 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\\\(3) APD90: Action Potential Duration at 90\\%% repolarization. time it takes for the action potential of a cardiac cell to repolarize to 90\\%% of its maximum\n");
   fprintf(fp_latex,"\\\\(4) APD50: APD at 50\\%% repolarization. time it takes for the action potential of a cardiac cell to repolarize to 50\\%% of its maximum\n");
   fprintf(fp_latex,"\\\\(5)  APDtri: Triangulation of the APD. Difference between APD90 and APD50. \n");
-  fprintf(fp_latex,"\\\\(6)  CaD90: Calcium Duration at 90\\%% recovery. Time it takes for the concentration of calcium ions within a heart cell to recover to 90\\%% of its peak level.\n");
-  fprintf(fp_latex,"\\\\(7)  CaD50: Calcium Duration at 50\\%% recovery. Time it takes for the concentration of calcium ions within a heart cell to recover to 50\\%% of its peak level\n");
-  fprintf(fp_latex,"\\\\(8)  CaDtri: Triangulation of the CaD. Difference between CaD90 and CaD50.\n");
+  fprintf(fp_latex,"\\\\(6)  CaTD90: Calcium Transient Duration at 90\\%% recovery. Time it takes for the concentration of calcium ions within a heart cell to recover to 90\\%% of its peak level.\n");
+  fprintf(fp_latex,"\\\\(7)  CaTD50: Calcium Transient Duration at 50\\%% recovery. Time it takes for the concentration of calcium ions within a heart cell to recover to 50\\%% of its peak level\n");
+  fprintf(fp_latex,"\\\\(8)  CaTDtri: Triangulation of the CaTD. Difference between CaD90 and CaD50.\n");
 
   fprintf(fp_latex,"\\section*{Method}\n");
   fprintf(fp_latex,"Calculate biomarkers by simulating one cycle after assigning the state values of the ventricular cell membrane protein gates derived through in silico simulation as the initial conditions of the model.\n");
@@ -167,6 +167,14 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\label{fig:time_series_inet}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Inet_AUC_plot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{AUC of iNet in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\label{fig:time_series_inet_auc}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
 
   fprintf(fp_latex,"\\subsection*{Feature Distribution}\n");
   fprintf(fp_latex,"The biomarker for cardiotoxicity assessment proposed by the US FDA Leading Study Group is qNet, and the following figures show the distribution of qNet and other features.\n");
@@ -178,6 +186,15 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\caption{Distribution of qNet at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_qnet}\n");
   fprintf(fp_latex,"\\end{figure}\n");
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/qInward_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of qInward at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_qinward}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
@@ -198,48 +215,82 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/CaD90_boxplot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Distribution of CaD90 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
-  fprintf(fp_latex,"\t\\label{fig:features_cad90}\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/APD_tri_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of APD triangulation at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_apdtri}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/CaD50_boxplot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Distribution of CaD50 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
-  fprintf(fp_latex,"\t\\label{fig:features_cad50}\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Vm_max_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of maximum action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_vm_max}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Vm_peak_boxplot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Distribution of peak action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
-  fprintf(fp_latex,"\t\\label{fig:features_vm_peak}\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Vm_rest_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of minimum action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_vm_rest}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Vm_valley_boxplot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Distribution of lowest action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
-  fprintf(fp_latex,"\t\\label{fig:features_vm_valley}\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/dVmdt_max_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of maximum rates action potential at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_dvmdt_max}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Ca_peak_boxplot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Distribution of peak calcium concentration at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
-  fprintf(fp_latex,"\t\\label{fig:features_ca_peak}\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/dVmdt_max_repol_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of maximum rates action potential during repolarization at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_dvmdt_max_repol}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/CaTD90_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of CaTD90 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_catd90}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
   fprintf(fp_latex,"\\begin{figure}[H]\n");
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
-  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Ca_valley_boxplot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Distribution of lowest calcium concentrations  at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/CaTD50_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of CaTD50 at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_catd50}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/CaTD_tri_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of CaTD triangulation at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_catdtri}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Ca_max_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of maximum calcium concentration at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
+  fprintf(fp_latex,"\t\\label{fig:features_ca_max}\n");
+  fprintf(fp_latex,"\\end{figure}\n");
+
+  fprintf(fp_latex,"\\begin{figure}[H]\n");
+  fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/features/Ca_rest_boxplot.png}\n", image_scale);
+  fprintf(fp_latex,"\t\\caption{Distribution of minimum calcium concentrations  at different concentration levels, from control, cmax1, cmax2, cmax3, and cmax4.}\n");
   fprintf(fp_latex,"\t\\label{fig:features_ca_valley}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 

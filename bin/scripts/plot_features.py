@@ -65,29 +65,28 @@ def create_feature_plots(all_data, drug_name, output_folder):
     
     # List of features to plot
     features = [
-        'qNet', 'qNet_APD', 'qInward', 'INaL_AUC', 'ICaL_AUC',
-        'APD90', 'APD50', 'APD_tri', 'Vm_peak', 'Vm_valley',
-        'dVmdt_peak', 'dVmdt_max_repol', 'CaD90', 'CaD50',
-        'CaD_tri', 'Ca_peak', 'Ca_valley'
+        'qNet', 'qInward', 'INaL_AUC', 'ICaL_AUC',
+        'APD90', 'APD50', 'APD_tri', 'Vm_max', 'Vm_rest',
+        'dVmdt_max', 'dVmdt_max_repol', 'CaTD90', 'CaTD50',
+        'CaTD_tri', 'Ca_max', 'Ca_rest'
     ]
     
     # Dictionary for feature name formatting
     feature_format = {
         'qNet': 'qNet',
-        'qNet_APD': 'qNet_APD',
         'qInward': 'qInward',
         'INaL_AUC': 'INaL_AUC',
         'ICaL_AUC': 'ICaL_AUC',
         'APD0': 'APD90',
         'APD50': 'APD50',
         'APD_tri': 'APD_tri',
-        'Vm_peak': 'Vm_peak',
-        'Vm_valley': 'Vm_valley',
-        'dVmdt_peak': 'dVm/dt_peak',
+        'Vm_max': 'Vm_max',
+        'Vm_rest': 'Vm_rest',
+        'dVmdt_max': 'dVm/dt_max',
         'dVmdt_max_repol': 'dVm/dt_max_repol',
-        'CaD90': 'CaD90',
-        'CaD50': 'CaD50',
-        'CaD_tri': 'CaD_tri',
+        'CaTD90': 'CaTD90',
+        'CaTD50': 'CaTD50',
+        'CaTD_tri': 'CaTD_tri',
         'Ca_peak': 'Ca_peak',
         'Ca_valley': 'Ca_valley'
     }

@@ -26,6 +26,6 @@ void get_vm_features_postprocessing(Cellmodel *p_cell, Cipa_Features &p_features
 void get_ca_features_postprocessing(Cellmodel *p_cell, Cipa_Features &p_features, const double tcurr);
 void get_duration_postprocessing(Cipa_Features &p_features);
 void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellmodel *p_cell, double conc, double inet_auc, double inet_apd_auc,
-                      double inal_auc, double ical_auc, double inal_auc_control, double ical_auc_control, char *features_file_name, short sample_id,
-                      short group_id);
+                      double inal_auc, double ical_auc, double inal_auc_control, double ical_auc_control, char *features_file_name, 
+                      short sample_id,short group_id);
 #endif

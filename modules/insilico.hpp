@@ -26,7 +26,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
 void set_initial_condition(Cellmodel *p_cell, char *ic_file_name);
 
 // functions that will be run at the end of cycle.
-void end_of_cycle_funct(short *pace_count, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,
+void end_of_cycle_funct(short *pace_count, double *inet_auc, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,
                         FILE *fp_vmdebug);
 
 bool get_dvmdt_repol_max(Cellmodel *p_cell, Cipa_Features &p_features, const Parameter *p_param, const double tcurr, const short pace_count);

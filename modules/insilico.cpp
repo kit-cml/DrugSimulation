@@ -94,6 +94,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   char buffer[900];
   FILE *fp_vmdebug, *fp_initial_values, *fp_last_paces;
 
+#ifdef CMLDEBUG
   snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_vmdebug_smp%d.csv", 
           cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
   fp_vmdebug = fopen(buffer, "w");
@@ -101,8 +102,21 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
     return 1;
   }
-  fprintf(fp_vmdebug, "%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
-          "dVmdt_repol_max");
+  fprintf(fp_vmdebug, "%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
+          "dVmdt_repol_max","Qnet");
+
+  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_last_paces_smp%hd.csv", 
+          cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
+  fp_last_paces = fopen(buffer, "w");
+  if(fp_last_paces == NULL){
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
+    return 1;
+  }
+  fprintf(fp_last_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
+          "Time(ms)", "Last_Vm(mV)", "Last_dVm/dt(mV/ms)", "Last_Cai(nM)",
+          "Last_INa(nA)", "Last_INaL(nA)", "Last_ICaL(nA)", "Last_Ito(nA)",
+          "Last_IKr(nA)", "Last_IKs(nA)", "Last_IK1(nA)", "Last_Inet(uA)", "Last_Inet_AUC(uC)" );
+#endif
 
   snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_initial_values_smp%d.csv", 
           cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
@@ -112,17 +126,6 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     return 1;
   }
 
-  snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_last_paces_smp%hd.csv", 
-          cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
-  fp_last_paces = fopen(buffer, "w");
-  if(fp_last_paces == NULL){
-    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
-    return 1;
-  }
-  fprintf(fp_last_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
-          "Time(ms)", "Last_Vm(mV)", "Last_dVm/dt(mV/ms)", "Last_Cai(nM)",
-          "Last_INa(nA)", "Last_INaL(nA)", "Last_ICaL(nA)", "Last_Ito(nA)",
-          "Last_IKr(nA)", "Last_IKs(nA)", "Last_IK1(nA)");
 
   //snprintf(buffer, sizeof(buffer), "./%s/last_states_%hdpaces_%s.dat", "initial_values_files", number_pacing, p_param->cell_model);
   //mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
@@ -139,8 +142,11 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   double tcurr = 0.;
   double tmax = number_pacing * cycle_length;
   double time_point = 25.0;
-  double tprint = 0.;
   short pace_count = 0;
+  short last_print_pace = number_pacing - number_pacing_write;
+  double start_time = cycle_length * last_print_pace;
+  double next_output_time = start_time;
+  double tprint = 0.;
 
   // CVode solver.
   CVodeSolverData *p_cvode;
@@ -163,6 +169,10 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   temp_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
   p_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
 
+  // adding inet and inet_auc for inspection.
+  double inet = 0.;
+  double inet_auc = 0.;
+
   // begin computation loop
   while (tcurr < tmax) {
     // compute and solving part
@@ -183,9 +193,13 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
       set_dt_cvode(p_cvode, tcurr, time_point, cycle_length, time_step_min, time_step_max, &time_step);
     }
 
+    inet = p_cell->ALGEBRAIC[INaL] + p_cell->ALGEBRAIC[ICaL] + p_cell->ALGEBRAIC[Ito] + p_cell->ALGEBRAIC[IKr] + p_cell->ALGEBRAIC[IKs] +
+           p_cell->ALGEBRAIC[IK1];
+    inet_auc += inet * time_step;
+
     // execute this code when entering new cycle.
     if (floor(tcurr / cycle_length) != pace_count) {
-      end_of_cycle_funct(&pace_count, p_cell, p_param, p_features, temp_features, fp_vmdebug);
+      end_of_cycle_funct(&pace_count, &inet_auc, p_cell, p_param, p_features, temp_features, fp_vmdebug);
       // mpi_printf(0,"Entering pace %hd at %lf msec.\n", pace_count, tcurr);
     }
 
@@ -194,17 +208,23 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
       get_dvmdt_repol_max(p_cell, temp_features, p_param, tcurr, pace_count);
     }  // end of the last 250 paces operations.
 
+#ifdef CMLDEBUG
     // Output part.
-    if (tcurr > cycle_length * (number_pacing - number_pacing_write)) {
-      tprint = tcurr - (cycle_length * (number_pacing - number_pacing_write));
-      snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
+    if( tcurr >= next_output_time - cml::math::EPSILON ){
+      // relative time since writing began
+      tprint = next_output_time - start_time;
+      snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V], p_cell->RATES[V],
                p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
-               p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO);
+               p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO, inet, inet_auc);
       fprintf(fp_last_paces, "%.4lf,%s", tprint, buffer);
+
+      // schedule next output
+      next_output_time += writing_step;
     }
-    tprint += writing_step;
+#endif
+
 
   }  // end computation loop
 
@@ -213,6 +233,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     fprintf(fp_initial_values, "%.16lf\n", p_features.initial_values[idx]);
   }
 
+#ifdef CMLDEBUG
   fprintf(fp_vmdebug, "Selected final pace: %hd\n", p_features.pace_target);
   fprintf(fp_vmdebug, "Features saved: \n%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
           "dVmdt_repol_max");
@@ -222,24 +243,30 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   for (short idx = 0; idx < p_cell->states_size; idx++) {
     fprintf(fp_vmdebug, "%.8lf\n", p_features.initial_values[idx]);
   }
+#endif
 
   if( strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0 ){
     clean_cvode(p_cvode);
     delete p_cvode;
   }
-  fclose(fp_last_paces);
   fclose(fp_initial_values);
+#ifdef CMLDEBUG
+  fclose(fp_last_paces);
   fclose(fp_vmdebug);
-  
+#endif
   return 0;
 }
 
-void end_of_cycle_funct(short *pace_count, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,
+void end_of_cycle_funct(short *pace_count, double *inet_auc, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,
                         FILE *fp_vmdebug) {
+  *pace_count += 1;
   if (*pace_count >= p_param->number_pacing - 250) {
-    fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", *pace_count, temp_features.time_vm_peak, temp_features.vm_peak,
-            temp_features.vm_valley, temp_features.vm_amp30, temp_features.vm_amp50, temp_features.vm_amp90, temp_features.dvmdt_repol_max);
+    double qnet = *inet_auc/1000.;
+#ifdef CMLDEBUG
+    fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", *pace_count, temp_features.time_vm_peak, temp_features.vm_peak,
+            temp_features.vm_valley, temp_features.vm_amp30, temp_features.vm_amp50, temp_features.vm_amp90, temp_features.dvmdt_repol_max, qnet);
     fflush(fp_vmdebug);
+#endif
     temp_features.initial_values.insert(temp_features.initial_values.begin(), p_cell->STATES, p_cell->STATES + p_cell->states_size);
     /*
         mpi_printf(cml::commons::MASTER_NODE, "Last states of pace %d:\n", *pace_count);
@@ -256,8 +283,7 @@ void end_of_cycle_funct(short *pace_count, Cellmodel *p_cell, const Parameter *p
       // mpi_printf(cml::commons::MASTER_NODE,"Selected pace: %hd\n", p_features.pace_target);
     }
   }
-
-  *pace_count += 1;
+  *inet_auc = 0.;
   temp_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
 }
 

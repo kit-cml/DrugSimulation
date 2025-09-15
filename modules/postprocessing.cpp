@@ -111,7 +111,10 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
 
   copy(p_features.initial_values.begin(), p_features.initial_values.end(), p_cell->STATES);
-  // set_initial_condition_postprocessing(p_cell, buffer);
+  for( int idx = 0; idx < p_cell->states_size; idx++ ){
+    p_cell->STATES[idx] = p_features.initial_values[idx];
+  }
+  //set_initial_condition_postprocessing(p_cell, buffer);
 
   mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
   for (short idx = 0; idx < 10; idx++) {
@@ -126,10 +129,10 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
     return 1;
   }
-  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)",
+  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
+          "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)",
           "Cai(nM)", "INa(nA)", "INaL(nA)", "ICaL(nA)",
-          "Ito(nA)", "IKr(nA)", "IKs(nA)", "IK1(nA)", "Inet(mA)",
-          "Inet_APD(mA)");
+          "Ito(nA)", "IKr(nA)", "IKs(nA)", "IK1(nA)", "Inet(uA)","Inet_AUC(uC)");
 
   // time variables.
   // some of these values are taken from the supplementary materials of ORd2011
@@ -140,6 +143,9 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   double tmax = cycle_length;
   short pace_count = 0;
   double next_print_time = 0.0;
+  double start_time = 0.0;
+  double next_output_time = start_time;
+  double tprint = 0.0;
 
   // CVode solver.
   CVodeSolverData *p_cvode;
@@ -161,11 +167,12 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   double inal_auc = 0.;
   double ical_auc = 0.;
   double inet = 0.;
-  double inet_apd = 0.;
   double inet_auc = 0.;
+  double inet_apd = 0.;
   double inet_apd_auc = 0.;
   p_features.init(p_cell->STATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO);
-
+  p_features.vm_amp90 = -77.;
+  
   // begin computation loop
   while (tcurr < tmax) {
     // compute and solving part
@@ -190,28 +197,31 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
     inet = p_cell->ALGEBRAIC[INaL] + p_cell->ALGEBRAIC[ICaL] + p_cell->ALGEBRAIC[Ito] + p_cell->ALGEBRAIC[IKr] + p_cell->ALGEBRAIC[IKs] +
            p_cell->ALGEBRAIC[IK1];
     inet_auc += inet * time_step;
+    inal_auc += p_cell->ALGEBRAIC[INaL] * time_step;
+    ical_auc += p_cell->ALGEBRAIC[ICaL] * time_step;
     if (p_cell->STATES[V] > p_features.vm_amp90) {
       inet_apd = p_cell->ALGEBRAIC[INaL] + p_cell->ALGEBRAIC[ICaL] + p_cell->ALGEBRAIC[Ito] + p_cell->ALGEBRAIC[IKr] + p_cell->ALGEBRAIC[IKs] +
                  p_cell->ALGEBRAIC[IK1];
       inet_apd_auc += inet_apd * time_step;
     }
-    inal_auc += p_cell->ALGEBRAIC[INaL] * time_step;
-    ical_auc += p_cell->ALGEBRAIC[ICaL] * time_step;
 
     // finding other vm and cai features
     get_vm_features_postprocessing(p_cell, p_features, tcurr);
     get_ca_features_postprocessing(p_cell, p_features, tcurr);
+    p_features.vm_data.insert(std::pair<double, double>(tprint, p_cell->STATES[V]));
+    p_features.cai_data.insert(std::pair<double, double>(tprint, p_cell->STATES[cai]));
 
-    // mpi_printf(0,"Writing at %lf msec.\n", tcurr);
-    snprintf(buffer, sizeof(buffer), "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
-             p_cell->RATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
-             p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
-             p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
-             p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO, inet, inet_apd);
-    fprintf(fp_time_series, "%.4lf,%s", floor(tcurr), buffer);
-    p_features.vm_data.insert(std::pair<double, double>(tcurr, p_cell->STATES[V]));
-    p_features.cai_data.insert(std::pair<double, double>(tcurr, p_cell->STATES[cai]));
-    tcurr += writing_step;
+    if( tcurr >= next_output_time - cml::math::EPSILON ){
+      tprint = next_output_time-start_time;
+      snprintf(buffer, sizeof(buffer), 
+               "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
+               p_cell->RATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
+               p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
+               p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
+               p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO, inet, inet_auc);
+      fprintf(fp_time_series, "%.4lf,%s", tprint, buffer);
+      next_output_time += writing_step;
+    }
 
   }  // end computation loop
 
@@ -290,8 +300,10 @@ void get_duration_postprocessing(Cipa_Features &p_features) {
 }
 
 void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellmodel *p_cell, double conc, double inet_auc, double inet_apd_auc,
-                      double inal_auc, double ical_auc, double inal_auc_control, double ical_auc_control, char *features_file_name, short sample_id,
-                      short group_id) {
+                      double inal_auc, double ical_auc, double inal_auc_control, double ical_auc_control, char *features_file_name, 
+                      short sample_id, short group_id) 
+{
+
   bool file_exists_and_not_empty = false;
   {
     std::ifstream infile(features_file_name);
@@ -310,7 +322,8 @@ void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellm
   p_features.inal_auc = inal_auc;
   p_features.ical_auc = ical_auc;
 
-  if ((int)(floor(conc)) == 0) {
+  // assuming control concentration value is arbitrary small.
+  if (fabs(conc) < cml::math::EPSILON) {
     inal_auc_control = inal_auc;
     ical_auc_control = ical_auc;
   }
@@ -323,8 +336,8 @@ void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellm
   }
   if (!file_exists_and_not_empty) {
     fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qNet", "qNet_APD", "qInward", "INaL_AUC", "ICaL_AUC",
-            "APD90", "APD50", "APD_tri", "Vm_peak", "Vm_valley", "dVmdt_peak", "dVmdt_max_repol", "CaD90", "CaD50", "CaD_tri", "Ca_peak",
-            "Ca_valley");
+            "APD90", "APD50", "APD_tri", "Vm_max", "Vm_rest", "dVmdt_max", "dVmdt_max_repol", "CaTD90", "CaTD50", "CaTD_tri", "Ca_max",
+            "Ca_rest");
   }
   fprintf(fp_features, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", sample_id,
           p_features.qnet, p_features.qnet_apd, p_features.qinward, p_features.inal_auc, p_features.ical_auc, p_features.apd90, p_features.apd50,

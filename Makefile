@@ -56,6 +56,10 @@ CXXFLAGS += -Wall -Wunused-variable -std=c++11
 # Uncomment this part for the compilation of postprocessing binaries
 #CXXFLAGS += -DPOSTPROCESSING
 
+# Uncomment this part for enabling some files for debugging
+#CXXFLAGS += -DCMLDEBUG
+
+
 # The program name wiil depend on the set value above
 # Make sure ONLY ONE MACRO IS USED!!!
 ifeq ($(findstring -DCIPAORDV1_0,$(CXXFLAGS)), -DCIPAORDV1_0)
