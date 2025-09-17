@@ -22,8 +22,8 @@ echo "${PATH}"
 # Source the function script
 # Need to be invoked after the
 # cd $PBS_O_WORKDIR command
-source ../scripts/create_concs_directories.sh
-source ../scripts/zip_files.sh
+source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/create_concs_directories.sh"
+source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/zip_files.sh"
 
 # to grab cell_model value from parameter file (thanks, ChatGPT).
 # grep "^user_name": looks for the line starting with user_name
@@ -81,7 +81,7 @@ rm -rf "${RESULT_FOLDER}"
 echo "Cleaning successful!"
 create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
 echo "Run $CELL_MODEL cell model simulation with ${NUMBER_OF_CPU} cores."
-mpiexec -machinefile $PBS_NODEFILE -np $NPROCS ~/marcell/MetaHeart/DrugSimulationTest/bin/$BINARY_FILE -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1
+mpiexec -machinefile $PBS_NODEFILE -np $NPROCS ~/marcell/MetaHeart/DrugSimulation/bin/$BINARY_FILE -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Simulation program got some problems!!! Exiting..."

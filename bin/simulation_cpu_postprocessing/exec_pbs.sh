@@ -22,9 +22,9 @@ echo "${PATH}"
 # Source the function script
 # Need to be invoked after the
 # cd $PBS_O_WORKDIR command
-source "../scripts/create_concs_directories.sh"
-source "../scripts/unzip_files.sh"
-source "../scripts/zip_files.sh"
+source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/create_concs_directories.sh"
+source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/unzip_files.sh"
+source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/zip_files.sh"
 
 # to grab cell_model value from parameter file (thanks, ChatGPT).
 # grep "^user_name": looks for the line starting with user_name
@@ -66,13 +66,13 @@ rm -f "${PIDFILE}"
 
 # choose the binary based on the value of cell_model
 if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
-  BINARY_FILE=drugsim_CiPAORdv1.0_postprocessing
+  BINARY_FILE="drugsim_CiPAORdv1.0_postprocessing"
 elif [[ "${CELL_MODEL}" == *"ORd-static"* ]]; then
-  BINARY_FILE=drugsim_ORd-static_postprocessing
+  BINARY_FILE="drugsim_ORd-static_postprocessing"
 elif [[ "${CELL_MODEL}" == *"ToR-ORd"* ]]; then
-  BINARY_FILE=drugsim_ToR-ORd_postprocessing
+  BINARY_FILE="drugsim_ToR-ORd_postprocessing"
 elif [[ "${CELL_MODEL}" == *"ToR-ORd-dynCl"* ]]; then
-  BINARY_FILE=drugsim_ToR-ORd-dynCl_postprocessing
+  BINARY_FILE="drugsim_ToR-ORd-dynCl_postprocessing"
 else
   echo "The cell model ${CELL_MODEL} is not specified to any simulations!!"
   exit 1
@@ -86,7 +86,7 @@ if [ $EXIT_CODE -ne 0 ]; then
   exit 1
 fi
 echo "Unzipping successful!!!" >> "${RESULT_FOLDER}/logfile" 2>&1
-mpiexec "-machinefile" "${PBS_NODEFILE}" "-np" "${NPROCS}" "~/marcell/MetaHeart/DrugSimulationTest/bin/${BINARY_FILE}" -input_deck "param.txt" >> "${RESULT_FOLDER}/logfile" 2>&1
+mpiexec "-machinefile" "${PBS_NODEFILE}" "-np" "${NPROCS}" "~/marcell/MetaHeart/DrugSimulation/bin/${BINARY_FILE}" -input_deck "param.txt" >> "${RESULT_FOLDER}/logfile" 2>&1
 echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
 zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
 zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
