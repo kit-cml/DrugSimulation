@@ -94,7 +94,7 @@ mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
 mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
 mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
 echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
-sh "./generate_report.sh" >> "${RESULT_FOLDER}/logfile" 2>&1
+sh "./generate_report.sh"
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Reporting program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1

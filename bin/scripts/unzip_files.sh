@@ -9,6 +9,11 @@ unzip_files() {
   local drug_concentrations=("$@")
    
   unzip "${ZIP_FILE}" -d "${UNZIP_DESTINATION}"
+  EXIT_CODE=$?
+  if [ $EXIT_CODE -ne 0 ]; then
+    echo "Cannot unzip ${ZIP_FILE}! Please check whether the file is existing and healthy!!"
+    exit 1
+  fi
   echo "Zip file ${ZIP_FILE} has been successfully extracted into ${UNZIP_DESTINATION}"
 
   # Multiple checks of the unzipped folders
