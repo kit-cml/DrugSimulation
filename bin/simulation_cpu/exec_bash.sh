@@ -43,8 +43,9 @@ TIME_SERIES_SUBSTRING="*time_series*.csv"
 TIME_SERIES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_time_series.zip"
 FEATURES_SUBSTRING="*features*.csv"
 FEATURES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_features.zip"
-LAST_PACES_SUBSTRING="*last_paces*.csv"
-LAST_PACES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_last_paces.zip"
+# Only uncomment these 2 lines when CMLDEBUG preprocessor is active
+#LAST_PACES_SUBSTRING="*last_paces*.csv"
+#LAST_PACES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_last_paces.zip"
 
 # Split the string into an array
 IFS=',' read -r -a drug_concentrations <<< "${DRUG_CONCENTRATIONS}"
@@ -55,7 +56,7 @@ echo "Cleaning ${RESULT_FOLDER}"
 rm -rf "${RESULT_FOLDER}"
 echo "Cleaning successful!"
 create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
-echo "DrugSimulationPostprocessing Log Start..." >& "${RESULT_FOLDER}/logfile"
+echo "DrugSimulation Log Start..." >& "${RESULT_FOLDER}/logfile"
 
 # Clear any old PID file
 PIDFILE="mpiexec.pid"
@@ -64,19 +65,19 @@ rm -f "${PIDFILE}"
 
 # choose the binary based on the value of cell_model
 if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
-  BINARY_FILE=../drugsim_CiPAORdv1.0
+  BINARY_FILE="../drugsim_CiPAORdv1.0"
 elif [[ "${CELL_MODEL}" == *"ORd-static"* ]]; then
-  BINARY_FILE=../drugsim_ORd-static
+  BINARY_FILE="../drugsim_ORd-static"
 elif [[ "${CELL_MODEL}" == *"ToR-ORd"* ]]; then
-  BINARY_FILE=../drugsim_ToR-ORd
+  BINARY_FILE="../drugsim_ToR-ORd"
 elif [[ "${CELL_MODEL}" == *"ToR-ORd-dynCl"* ]]; then
-  BINARY_FILE=../drugsim_ToR-ORd-dynCl
+  BINARY_FILE="../drugsim_ToR-ORd-dynCl"
 else
   echo "The cell model ${CELL_MODEL} is not specified to any simulations!!" >> "${RESULT_FOLDER}/logfile" 2>&1
   exit 1
 fi
 
-echo "Run $CELL_MODEL cell model simulation with ${NUMBER_OF_CPU} cores."
+echo "Run ${CELL_MODEL} cell model simulation with ${NUMBER_OF_CPU} cores."
 ( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" "${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1 )
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
@@ -88,11 +89,11 @@ echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
 zip_files "${RESULT_FOLDER}" "${INITIAL_VALUES_SUBSTRING}" "${INITIAL_VALUES_ZIPNAME}"
 zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
 zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
-zip_files "${RESULT_FOLDER}" "${LAST_PACES_SUBSTRING}" "${LAST_PACES_ZIPNAME}"
+#zip_files "${RESULT_FOLDER}" "${LAST_PACES_SUBSTRING}" "${LAST_PACES_ZIPNAME}"
 mv "${INITIAL_VALUES_ZIPNAME}" "${RESULT_FOLDER}/."
 mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
 mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
-mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
+#mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
 echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
 sh "./generate_report.sh"
 EXIT_CODE=$?

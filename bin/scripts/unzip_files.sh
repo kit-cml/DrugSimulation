@@ -7,7 +7,8 @@ unzip_files() {
   local SAMPLE_SIZE="$4"
   shift 4
   local drug_concentrations=("$@")
-   
+  
+  echo "Zip data to extract: ${ZIP_FILE}" 
   unzip "${ZIP_FILE}" -d "${UNZIP_DESTINATION}"
   EXIT_CODE=$?
   if [ $EXIT_CODE -ne 0 ]; then

@@ -31,7 +31,7 @@ CELL_MODEL="$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut
 USER_NAME="$(grep "^user_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 DRUG_NAME="$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 DRUG_CONCENTRATIONS="$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
-INITIAL_VALUES_ZIP_FILE="$(grep "^initial_values_zip_file" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
+INITIAL_VALUES_ZIP_FILE="$(grep "^initial_values_zip_file" param.txt | cut -d '=' -f2 | sed 's|//.*||' | xargs)"
 HILL_FILE="$(grep "^hill_file" param.txt | cut -d '=' -f2 | sed 's|//.*||' | xargs)"
 echo "FILE HILL: ${HILL_FILE}"
 SAMPLE_SIZE=$(( $(wc -l < "${HILL_FILE}") - 1 ))
@@ -61,13 +61,13 @@ rm -f "${PIDFILE}"
 
 # choose the binary based on the value of cell_model
 if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
-  BINARY_FILE=../drugsim_CiPAORdv1.0_postprocessing
+  BINARY_FILE="../drugsim_CiPAORdv1.0_postprocessing"
 elif [[ "${CELL_MODEL}" == *"ORd-static"* ]]; then
-  BINARY_FILE=../drugsim_ORd-static_postprocessing
+  BINARY_FILE="../drugsim_ORd-static_postprocessing"
 elif [[ "${CELL_MODEL}" == *"ToR-ORd"* ]]; then
-  BINARY_FILE=../drugsim_ToR-ORd_postprocessing
+  BINARY_FILE="../drugsim_ToR-ORd_postprocessing"
 elif [[ "${CELL_MODEL}" == *"ToR-ORd-dynCl"* ]]; then
-  BINARY_FILE=../drugsim_ToR-ORd-dynCl_postprocessing
+  BINARY_FILE="../drugsim_ToR-ORd-dynCl_postprocessing"
 else
   echo "The cell model ${CELL_MODEL} is not specified to any simulations!!" >> "${RESULT_FOLDER}/logfile" 2>&1
   exit 1
@@ -81,7 +81,7 @@ if [ $EXIT_CODE -ne 0 ]; then
   exit 1
 fi
 echo "Unzipping successful!!!" >> "${RESULT_FOLDER}/logfile" 2>&1
-echo "Run $CELL_MODEL cell model postprocessing simulation with ${NUMBER_OF_CPU} cores."
+echo "Run ${CELL_MODEL} cell model postprocessing simulation with ${NUMBER_OF_CPU} cores."
 ( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" "${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile") 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
