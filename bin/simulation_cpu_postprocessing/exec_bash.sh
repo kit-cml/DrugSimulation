@@ -82,7 +82,7 @@ if [ $EXIT_CODE -ne 0 ]; then
 fi
 echo "Unzipping successful!!!" >> "${RESULT_FOLDER}/logfile" 2>&1
 echo "Run ${CELL_MODEL} cell model postprocessing simulation with ${NUMBER_OF_CPU} cores."
-( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" "${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile") 2>&1
+( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" "${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1)
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Simulation program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1

@@ -11,5 +11,5 @@ drug_name = quinidine							// Name of the drug
 drug_concentrations = 3237,6474	// Concentration of the drug, Cmax1 to Cmax4 values (mMolar)
 hill_file = ./chantest_hill/quinidine/IC50_samples10.csv	// File that contains the IC50 information for each ionic channel.
 herg_file = ./chantest_herg/quinidine/boot_pars10.csv			// File that contains the hERG parameters.
-initial_values_zip_file = ./initial_values_zips/quinidine_ToR-ORd-dynCl_endo_initial_values.zip // Zip file containing the initial values from in silico simulation
+initial_values_zip_file = ./initial_values_zips/quinidine_CiPAORdv1.0_endo_initial_values.zip // Zip file containing the initial values from in silico simulation
 number_of_cpu = 10               // Number of CPU used for mpiexec call
