@@ -110,7 +110,14 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   }
   mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
 
-  copy(p_features.initial_values.begin(), p_features.initial_values.end(), p_cell->STATES);
+  if( p_features.initial_values.size() != p_cell->states_size ){
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!!\n",buffer);
+    return 1;    
+  }
+  else {
+    copy(p_features.initial_values.begin(), p_features.initial_values.end(), p_cell->STATES);
+  }
+
   for( int idx = 0; idx < p_cell->states_size; idx++ ){
     p_cell->STATES[idx] = p_features.initial_values[idx];
   }
