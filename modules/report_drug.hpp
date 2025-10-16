@@ -6,4 +6,6 @@
 
 int generate_report_drug(const Parameter *p_param);
 
+int get_concentrations_size(const char* concs_str);
+
 #endif

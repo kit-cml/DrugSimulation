@@ -73,22 +73,22 @@ def create_feature_plots(all_data, drug_name, output_folder):
     
     # Dictionary for feature name formatting
     feature_format = {
-        'qNet': 'qNet',
-        'qInward': 'qInward',
-        'INaL_AUC': 'INaL_AUC',
-        'ICaL_AUC': 'ICaL_AUC',
-        'APD0': 'APD90',
-        'APD50': 'APD50',
-        'APD_tri': 'APD_tri',
-        'Vm_max': 'Vm_max',
-        'Vm_rest': 'Vm_rest',
-        'dVmdt_max': 'dVm/dt_max',
-        'dVmdt_max_repol': 'dVm/dt_max_repol',
-        'CaTD90': 'CaTD90',
-        'CaTD50': 'CaTD50',
-        'CaTD_tri': 'CaTD_tri',
-        'Ca_peak': 'Ca_peak',
-        'Ca_valley': 'Ca_valley'
+        'qNet': 'qNet (uC/uF)',
+        'qInward': 'qInward (uC/uF)',
+        'INaL_AUC': 'INaL_AUC (mA)',
+        'ICaL_AUC': 'ICaL_AUC (mA)',
+        'APD0': 'APD90 (ms)',
+        'APD50': 'APD50 (ms)',
+        'APD_tri': 'APD_tri (ms)',
+        'Vm_max': 'Vm_max (mV)',
+        'Vm_rest': 'Vm_rest (mV)',
+        'dVmdt_max': 'dVm/dt_max (mV/ms)',
+        'dVmdt_max_repol': 'dVm/dt_max_repol (mV/ms)',
+        'CaTD90': 'CaTD90 (ms)',
+        'CaTD50': 'CaTD50 (ms)',
+        'CaTD_tri': 'CaTD_tri (ms)',
+        'Ca_peak': 'Ca_peak (nM)',
+        'Ca_valley': 'Ca_valley (nM)'
     }
     
     # Get unique concentrations
@@ -127,8 +127,8 @@ def create_feature_plots(all_data, drug_name, output_folder):
         ax.set_xticks(range(1, len(concentrations) + 1))
         ax.set_xticklabels(concentrations)
         
-        plt.title(f'{formatted_feature}')
-        plt.xlabel('Concentration')
+        #plt.title(f'{formatted_feature}')
+        plt.xlabel('Concentrations (nM)')
         plt.ylabel(formatted_feature)
         
         # Remove grid
