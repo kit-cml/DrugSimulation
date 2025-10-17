@@ -37,9 +37,14 @@ int generate_report_drug(const Parameter *p_param)
   float image_horizontal_padding = 0.;
   const char *DOCUMENT_TITLE = "CardioSim Single Cell Drug Simulation Result";
   const char *USER_NAME = p_param->user_name;
+  const char *CELL_MODEL_NAME = (cml::commons::MAP_CELL_NAME.at(p_param->cell_model)).c_str();
+  const char *DRUG_NAME = p_param->drug_name;
+  const char *DRUG_CONCENTRATIONS = p_param->drug_concentrations;
+  const int DRUG_CONCENTRATIONS_SIZE = get_concentrations_size(p_param->drug_concentrations);
 
   // header part of LaTEX file
   fprintf(fp_latex,"\\documentclass[%dpt]{article}\n",font_size);
+  fprintf(fp_latex,"\\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}\n");
   fprintf(fp_latex,"\\usepackage{graphicx}\n");
   fprintf(fp_latex,"\\usepackage{float}\n");
   fprintf(fp_latex,"\\title{%s}\n",DOCUMENT_TITLE);
@@ -49,11 +54,11 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\n\\begin{document}\n");
   fprintf(fp_latex,"\\maketitle\n");
   fprintf(fp_latex,"\\section*{Simulation Parameter}\n");
-  fprintf(fp_latex,"Cellmodel: %s\n\\\\Drug Name: %s\n\\\\Cmax: %s\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", 
-                               (cml::commons::MAP_CELL_NAME.at(p_param->cell_model)).c_str(), p_param->drug_name,p_param->drug_concentrations);
+  fprintf(fp_latex,"Cellmodel: \\textbf{%s}\n\\\\Drug Name: \\textbf{%s}\n\\\\Cmax: \\textbf{%s}\n\\\\Ion Channel: 4 (INa, INaL, ICaL, IKr)\n", 
+                               CELL_MODEL_NAME, DRUG_NAME, DRUG_CONCENTRATIONS);
 
   fprintf(fp_latex,"\\section*{Simulation Protocol}\n");
-  fprintf(fp_latex,"Each drug was simulated by inducing %d beats at a %.0lf ms cycle.\n", p_param->number_pacing, p_param->cycle_length);
+  fprintf(fp_latex,"Each drug was simulated by inducing \\textbf{%d} beats at a \\textbf{%.0lf} ms cycle.\n", p_param->number_pacing, p_param->cycle_length);
   fprintf(fp_latex,"\\\\Biomarker: qNet, qInward, APD90, APD50, APDtri, CaD90, CaD50, CaDtri.\n");
   fprintf(fp_latex,"\\\\(1) qNet: Net charge carried by six major currents over a simulated beat (IKr, ICaL, INaL, Ito, IKs, IK1).\n");
   fprintf(fp_latex,"\\begin{equation}\n");
@@ -83,7 +88,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Vm_plot.png}\n",image_scale);
-  fprintf(fp_latex,"\t\\caption{Action potential result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Action potential profiles of the \\textbf{%s} model at \\textbf{%d} \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control condition, while colored solid lines correspond to drug-related simulations.}\n", CELL_MODEL_NAME, DRUG_CONCENTRATIONS_SIZE, DRUG_NAME, DRUG_CONCENTRATIONS );
   fprintf(fp_latex,"\t\\label{fig:time_series_vm}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -91,7 +96,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/dVm_dt_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Rates of action potential result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Time derivative membrane voltage (dV/dt) at various \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control, and the solid lines denote drug-related simulations.}\n", DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_dvmdt}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -99,7 +104,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Cai_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Intracellular calcium concentration result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Intracellular calcium concentrations (\\([Ca^{2+}]_i\\)) traces simulated at \\textbf{%d} \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line indicates the control condition, and the solid lines represent drug-related simulations }\n", DRUG_CONCENTRATIONS_SIZE, DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_cai}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -107,7 +112,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/INaL_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{L-type sodium current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Late sodium current (INaL) traces at different \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control condition, and the colored solid lines indicate drug-treated simulations.}\n", DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_inal}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -115,7 +120,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/INa_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Sodium current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Fast sodium current (INa) traces at \\textbf{%d} \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control condition, and the colored solid lines indicate drug-treated simulations.}\n", DRUG_CONCENTRATIONS_SIZE, DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_ina}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -123,7 +128,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/ICaL_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{L-type calcium current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{L-type calcium current (ICaL) traces at \\textbf{%d} \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control condition, and the colored solid lines indicate drug-treated simulations.}\n", DRUG_CONCENTRATIONS_SIZE, DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_ical}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -131,7 +136,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/IKs_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Slow potassium current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Slow delayed rectifier potassium current (IKs) at different \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control condition, and the colored solid lines indicate drug-treated simulations.}\n", DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_iks}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -139,7 +144,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/IK1_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Inward rectifier current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Inward rectifier potassium current (IK1) at various \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control, and the solid lines denote drug-related simulations.}\n", DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_ik1}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -147,7 +152,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Ito_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Transient outward current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Transient outward current (Ito) at various \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control, and the solid lines denote drug-related simulations.}\n", DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_ito}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -155,7 +160,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/IKr_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{hERG current result in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{hERG current (IKr) at \\textbf{%d} \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control condition, and the colored solid lines indicate drug-treated simulations.}\n", DRUG_CONCENTRATIONS_SIZE, DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_ikr}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -163,7 +168,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Inet_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{Cummulative current result (iNet) in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{Net current between inward and outward channels (iNet) at \\textbf{%d} \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control condition, and the colored solid lines indicate drug-treated simulations.}\n", DRUG_CONCENTRATIONS_SIZE, DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_inet}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -171,7 +176,7 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\t\\hspace{%.2lfcm}\n", image_horizontal_padding);
   fprintf(fp_latex,"\t\\centering\n");
   fprintf(fp_latex,"\t\\includegraphics[scale=%.1f]{./plots/time_series/Inet_AUC_plot.png}\n", image_scale);
-  fprintf(fp_latex,"\t\\caption{AUC of iNet in various concentrations.}\n");
+  fprintf(fp_latex,"\t\\caption{AUC of iNet in time-series data (qNet) at various \\textbf{%s} concentrations (\\textbf{%s} nM). The dashed line represents the control, and the solid lines denote drug-related simulations.}\n", DRUG_NAME, DRUG_CONCENTRATIONS);
   fprintf(fp_latex,"\t\\label{fig:time_series_inet_auc}\n");
   fprintf(fp_latex,"\\end{figure}\n");
 
@@ -300,4 +305,16 @@ int generate_report_drug(const Parameter *p_param)
   
   fclose(fp_latex);
   return 0;
+}
+
+int get_concentrations_size(const char* concs_str)
+{
+  int count = 1;
+  if (concs_str == 0) count = 0;
+  else{
+    for (const char* pdx = concs_str; *pdx; ++pdx)
+        if (*pdx == ',') count++;
+  }
+
+  return count;
 }
