@@ -52,6 +52,10 @@ CXXFLAGS += -Wall -Wunused-variable -std=c++11
 # Use this if you want to use ToR-ORd-dynCl cell model.
 # Otherwise, comment it
 #CXXFLAGS += -DTOR_ORD_DYNCL
+# Use this if you want to use Grandi 2011 cell model.
+# Otherwise, comment it
+#CXXFLAGS += -DGRANDI
+
 
 # Uncomment this part for the compilation of postprocessing binaries
 #CXXFLAGS += -DPOSTPROCESSING
@@ -68,6 +72,8 @@ else ifeq ($(findstring -DTOR_ORD_DYNCL,$(CXXFLAGS)), -DTOR_ORD_DYNCL)
     PROGNAME := $(BASE_PROGNAME)_ToR-ORd-dynCl
 else ifeq ($(findstring -DTOR_ORD,$(CXXFLAGS)), -DTOR_ORD)
     PROGNAME := $(BASE_PROGNAME)_ToR-ORd
+else ifeq ($(findstring -DGRANDI,$(CXXFLAGS)), -DGRANDI)
+    PROGNAME := $(BASE_PROGNAME)_Grandi
 else
     PROGNAME := $(BASE_PROGNAME)_ORd-static
 endif

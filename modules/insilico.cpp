@@ -6,6 +6,8 @@
 #include <types/cellmodels/Tomek_model.hpp>
 #elif defined TOR_ORD_DYNCL
 #include <types/cellmodels/Tomek_dynCl.hpp>
+#elif defined GRANDI
+#include <types/cellmodels/grandi_2011_atrial_with_meta.hpp>
 #else
 #include <types/cellmodels/Ohara_Rudy_2011.hpp>
 #endif
@@ -55,6 +57,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   if( strstr(cell_model,"endo") != NULL ) cell_type = 0;
   else if( strstr(cell_model,"epi") != NULL ) cell_type = 1;
   else if( strstr(cell_model,"myo") != NULL ) cell_type = 2;
+  else cell_type = 9;
   mpi_printf(cml::commons::MASTER_NODE,"Using %s cell model with cell_type=%hd\n", cell_model, cell_type);
 #if defined CIPAORDV1_0
   p_cell = new ohara_rudy_cipa_v1_2017();
@@ -76,6 +79,13 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, cvar->data);
   } else {
     p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data);
+  }
+#elif defined GRANDI
+  p_cell = new grandi_2011_atrial_with_meta();
+  if (is_cvar && cvar) {
+    p_cell->initConsts(conc, hill.data, cvar->data);
+  } else {
+    p_cell->initConsts(conc, hill.data);
   }
 #else
   p_cell = new Ohara_Rudy_2011();
@@ -126,13 +136,16 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     return 1;
   }
 
-
-  //snprintf(buffer, sizeof(buffer), "./%s/last_states_%hdpaces_%s.dat", "initial_values_files", number_pacing, p_param->cell_model);
-  //mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   // replace the initial condition
   // with the last state value from
   // steady-state 1000 paces control simulation.
   // TODO: implemented later on.
+#if defined GRANDI
+  //snprintf(buffer, sizeof(buffer), "./%s/last_states_100paces_%s.dat", "initial_states", p_param->cell_model);
+#else
+  //snprintf(buffer, sizeof(buffer), "./%s/last_states_%hdpaces_%s.dat", "initial_states", number_pacing, p_param->cell_model);
+#endif
+  //mpi_printf(cml::commons::MASTER_NODE, "Last steady-state file: %s\n", buffer);
   //set_initial_condition(p_cell, buffer);
 
   // time variables.
@@ -292,8 +305,8 @@ void set_initial_condition(Cellmodel *p_cell, char *ic_file_name) {
   FILE *fp_states;
   short idx;
   mpi_printf(cml::commons::MASTER_NODE, "STATES before:\n");
-  for (idx = 0; idx < 10; idx++) {
-    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
+  for (idx = 0; idx < p_cell->states_size; idx++) {
+    mpi_printf(cml::commons::MASTER_NODE, "%lf\n", p_cell->STATES[idx]);
   }
   mpi_printf(cml::commons::MASTER_NODE, "\n");
   fp_states = fopen(ic_file_name, "r");
@@ -304,13 +317,13 @@ void set_initial_condition(Cellmodel *p_cell, char *ic_file_name) {
       p_cell->STATES[idx++] = strtod(buffer, NULL);
     }
     mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
-    for (idx = 0; idx < 10; idx++) {
-      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
+    for (idx = 0; idx < p_cell->states_size; idx++) {
+      mpi_printf(cml::commons::MASTER_NODE, "%lf\n", p_cell->STATES[idx]);
     }
     mpi_printf(cml::commons::MASTER_NODE, "\n");
     fclose(fp_states);
   } else {
-    mpi_printf(cml::commons::MASTER_NODE, "File %s\n cannot be found! Keep using initial condition from the cell model!\n", buffer);
+    mpi_printf(cml::commons::MASTER_NODE, "File %s\n cannot be found! Keep using initial condition from the cell model!\n", ic_file_name);
   }
 }
 
@@ -341,4 +354,3 @@ bool get_dvmdt_repol_max(Cellmodel *p_cell, Cipa_Features &p_features, const Par
 
   return true;
 }
-

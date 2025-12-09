@@ -39,9 +39,7 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
 
   // parsing cvar constants file into variables
   Cvar_Input cvar;
-  if (p_param->is_cvar == 1) {
-    get_data_from_file<Cvar_Row, Cvar_Input>(p_param->cvar_file, cvar);
-  }
+  if (p_param->is_cvar == 1) get_data_from_file<Cvar_Row, Cvar_Input>(p_param->cvar_file, cvar);
 
 #if defined CIPAORDV1_0
   error_code = check_drug_data_content(herg, p_param);
@@ -140,12 +138,15 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
         p_features.initial_values.clear();
         p_features.initial_values.insert(p_features.initial_values.begin(), vec_initial_values.begin(), vec_initial_values.end());
 #else
+        // until we decide a good parallelization for conductanve variability,
+        // we only use the first row of conductance variability at the moment.
+        // Hence why we use cvar[0].
         mpi_printf(0, "insilico simulation started. After that, followed by postprocessing...\n");
-        error_code = insilico(drug_concentrations[idx], hill[sample_id], herg[sample_id], p_param, p_features, sample_id, &cvar[sample_id]);
+        error_code = insilico(drug_concentrations[idx], hill[sample_id], herg[sample_id], p_param, p_features, sample_id, &cvar[0]);
         if(error_code != 0) return error_code;
 #endif
         error_code = postprocessing(drug_concentrations[idx], inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id,
-                            group_id, &cvar[sample_id]);
+                            group_id, &cvar[0]);
         if(error_code != 0) return error_code;
 
         // Update and report local progress
