@@ -153,15 +153,15 @@ def plot_all_features(base_path, drug_name, sample_size):
         'Vm(mV)': 'Voltage (mV)',
         'dVm/dt(mV/ms)': 'dV/dt (mV/ms)',
         'Cai(nM)': 'Cai (nM)',
-        'INa(nA)': 'INa (nA)',
-        'INaL(nA)': 'INaL (nA)',
-        'ICaL(nA)': 'ICaL (nA)',
-        'Ito(nA)': 'Ito (nA)',
-        'IKr(nA)': 'IKr (nA)',
-        'IKs(nA)': 'IKs (nA)',
-        'IK1(nA)': 'IK1 (nA)',
-        'Inet(uA)': 'iNet (uA)',
-        'Inet_AUC(uC)': 'AUC of iNet (uC)'
+        'INa(nA/uF)': 'INa (nA/uF)',
+        'INaL(nA/uF)': 'INaL (nA/uF)',
+        'ICaL(nA/uF)': 'ICaL (nA/uF)',
+        'Ito(nA/uF)': 'Ito (nA/uF)',
+        'IKr(nA/uF)': 'IKr (nA/uF)',
+        'IKs(nA/uF)': 'IKs (nA/uF)',
+        'IK1(nA/uF)': 'IK1 (nA/uF)',
+        'Inet(uA/uF)': 'iNet (uA/uF)',
+        'Inet_AUC(uC/uF)': 'AUC of iNet (uC/uF)'
     }
     
     # Create output directory if it doesn't exist

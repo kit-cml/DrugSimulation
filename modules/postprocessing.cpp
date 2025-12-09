@@ -6,6 +6,8 @@
 #include <types/cellmodels/Tomek_model.hpp>
 #elif defined TOR_ORD_DYNCL
 #include <types/cellmodels/Tomek_dynCl.hpp>
+#elif defined GRANDI
+#include <types/cellmodels/grandi_2011_atrial_with_meta.hpp>
 #else
 #include <types/cellmodels/Ohara_Rudy_2011.hpp>
 #endif
@@ -79,6 +81,13 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   } else {
     p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data);
   }
+#elif defined GRANDI
+  p_cell = new grandi_2011_atrial_with_meta();
+  if (is_cvar && cvar) {
+    p_cell->initConsts(conc, hill.data, cvar->data);
+  } else {
+    p_cell->initConsts(conc, hill.data);
+  }
 #else
   p_cell = new Ohara_Rudy_2011();
   if (is_cvar && cvar) {
@@ -91,7 +100,6 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   p_cell->CONSTANTS[BCL] = cycle_length;
   p_cell->CONSTANTS[duration] = stimulus_duration;
   p_cell->CONSTANTS[amp] *= stimulus_amplitude_scale;
-
 
   // variables for I/O
   char buffer[900];
@@ -111,7 +119,14 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
 
   if( p_features.initial_values.size() != p_cell->states_size ){
-    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!!\n",buffer);
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!! Init_Size: %d States_Size_: %d\n",buffer, p_features.initial_values.size(), p_cell->states_size);
+    for (int idx = 0; idx < p_features.initial_values.size() ; idx++) {
+      mpi_printf(0, "%lf ", p_features.initial_values[idx]);
+    }
+    mpi_printf(0, "\n");
+    for (int idx = 0; idx < p_cell->states_size ; idx++) {
+      mpi_printf(0, "%lf ", p_cell->states_size);
+    }
     return 1;    
   }
   else {
@@ -136,10 +151,22 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
     return 1;
   }
+#if defined GRANDI
   fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
           "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)",
-          "Cai(nM)", "INa(nA)", "INaL(nA)", "ICaL(nA)",
-          "Ito(nA)", "IKr(nA)", "IKs(nA)", "IK1(nA)", "Inet(uA)","Inet_AUC(uC)");
+          "Cai(nM)", "INa(A/F)", "INaL(mA/F)", "ICaL(A/F)",
+          "Ito(A/F)", "IKr(mA/F)", "IKs(mA/F)", "IK1(A/F)", "Inet(A/F)","Inet_AUC(C/F)");
+#else
+  fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
+          "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)",
+          "Cai(nM)", "INa(nA/uF)", "INaL(nA/uF)", "ICaL(nA/uF)",
+          "Ito(nA/uF)", "IKr(nA/uF)", "IKs(nA/uF)", "IK1(nA/uF)", "Inet(uA/uF)","Inet_AUC(uC/uF)");
+#endif
+
+#if defined GRANDI
+  mpi_printf(0,"gKr after drug in postprocessing: %.4lf\n", p_cell->CONSTANTS[gKr]);
+#endif
+
 
   // time variables.
   // some of these values are taken from the supplementary materials of ORd2011
@@ -220,12 +247,21 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
 
     if( tcurr >= next_output_time - cml::math::EPSILON ){
       tprint = next_output_time-start_time;
+#if defined GRANDI
+      snprintf(buffer, sizeof(buffer), 
+               "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", 
+               p_cell->STATES[V],p_cell->RATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, 
+               p_cell->ALGEBRAIC[INa], p_cell->ALGEBRAIC[INaL] * cml::math::BASE_TO_MILLI , p_cell->ALGEBRAIC[ICaL],
+               p_cell->ALGEBRAIC[Ito], p_cell->ALGEBRAIC[IKr] * cml::math::BASE_TO_MILLI,
+               p_cell->ALGEBRAIC[IKs] * cml::math::BASE_TO_MILLI, p_cell->ALGEBRAIC[IK1], inet, inet_auc);
+#else
       snprintf(buffer, sizeof(buffer), 
                "%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", p_cell->STATES[V],
-               p_cell->RATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa] * cml::math::MICRO_TO_NANO,
+               p_cell->RATES[V], p_cell->STATES[cai] * cml::math::MILLI_TO_NANO, p_cell->ALGEBRAIC[INa],
                p_cell->ALGEBRAIC[INaL] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[ICaL] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[Ito] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IKr] * cml::math::MICRO_TO_NANO,
                p_cell->ALGEBRAIC[IKs] * cml::math::MICRO_TO_NANO, p_cell->ALGEBRAIC[IK1] * cml::math::MICRO_TO_NANO, inet, inet_auc);
+#endif
       fprintf(fp_time_series, "%.4lf,%s", tprint, buffer);
       next_output_time += writing_step;
     }
@@ -342,9 +378,9 @@ void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellm
     return;
   }
   if (!file_exists_and_not_empty) {
-    fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qNet", "qNet_APD", "qInward", "INaL_AUC", "ICaL_AUC",
-            "APD90", "APD50", "APD_tri", "Vm_max", "Vm_rest", "dVmdt_max", "dVmdt_max_repol", "CaTD90", "CaTD50", "CaTD_tri", "Ca_max",
-            "Ca_rest");
+    fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qNet", "qNetAPD", "qInward", "INaLAUC", "ICaLAUC",
+            "APD90", "APD50", "APDtri", "Vmmax", "Vmrest", "dVmdtmax", "dVmdtmaxrepol", "CaTD90", "CaTD50", "CaTDtri", "Camax",
+            "Carest");
   }
   fprintf(fp_features, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", sample_id,
           p_features.qnet, p_features.qnet_apd, p_features.qinward, p_features.inal_auc, p_features.ical_auc, p_features.apd90, p_features.apd50,

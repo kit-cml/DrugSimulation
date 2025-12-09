@@ -19,7 +19,7 @@
 using std::vector;
 
 int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Parameter *p_param, Cipa_Features &p_features, short sample_id,
-              const Cvar_Row *cvar = nullptr);
+             const Cvar_Row *cvar = nullptr);
 
 // load last states from the 1000 paces steady-state control simulation.
 // If error occured, keep using the initial condition from the model.
