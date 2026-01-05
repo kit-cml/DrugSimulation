@@ -61,7 +61,7 @@ echo "DrugSimulation Report Progress: ${PROGRESS}%"
 #Generate report based on the pre-generated LaTEX file
 echo "Generate PDF from LaTEX"
 cd "${RESULT_FOLDER}"
-pdflatex -interaction=nonstopmode -halt-on-error  "${LATEX_FILE}"
+/opt/texlive/2025/bin/x86_64-linux/pdflatex -interaction=nonstopmode -halt-on-error  "${LATEX_FILE}"
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "LaTEX to PDF got some errors! Please check the logfile_report for more details." >> "logfile" 2>&1
