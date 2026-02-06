@@ -65,14 +65,22 @@ PIDFILE="mpiexec.pid"
 rm -f "${PIDFILE}"
 
 # choose the binary based on the value of cell_model
-if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
+if [[ $CELL_MODEL == *"CiPAORdv1.0_Land"* ]]; then
+  BINARY_FILE="drugsim_CiPAORdv1.0_Land_postprocessing"
+elif [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
   BINARY_FILE="drugsim_CiPAORdv1.0_postprocessing"
-elif [[ "${CELL_MODEL}" == *"ORd-static"* ]]; then
-  BINARY_FILE="drugsim_ORd-static_postprocessing"
-elif [[ "${CELL_MODEL}" == *"ToR-ORd"* ]]; then
+elif [[ $CELL_MODEL == *"ToR-ORd_Land"* ]]; then
+  BINARY_FILE="drugsim_ToR-ORd_Land_postprocessing"
+elif [[ $CELL_MODEL == *"ToR-ORd"* ]]; then
   BINARY_FILE="drugsim_ToR-ORd_postprocessing"
-elif [[ "${CELL_MODEL}" == *"ToR-ORd-dynCl"* ]]; then
+elif [[ $CELL_MODEL == *"ToR-ORd-dynCl"* ]]; then
   BINARY_FILE="drugsim_ToR-ORd-dynCl_postprocessing"
+elif [[ $CELL_MODEL == *"ORd-static_Land"* ]]; then
+  BINARY_FILE="drugsim_ORd-static_Land_postprocessing"
+elif [[ $CELL_MODEL == *"ORd-static"* ]]; then
+  BINARY_FILE="drugsim_ORd-static_postprocessing"
+elif [[ "${CELL_MODEL}" == *"Grandi"* ]]; then
+  BINARY_FILE="drugsim_Grandi_postprocessing"
 else
   echo "The cell model ${CELL_MODEL} is not specified to any simulations!!"
   exit 1

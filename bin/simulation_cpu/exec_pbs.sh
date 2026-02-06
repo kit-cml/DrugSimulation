@@ -1,5 +1,5 @@
 #PBS -N drugsim_stress_pbs_job
-#PBS -l nodes=5:ppn=10
+#PBS -l nodes=1:ppn=10
 #PBS -l walltime=20000:00:00
 #PBS -e stderr.log
 #PBS -o stdout.log
@@ -64,14 +64,20 @@ PIDFILE="mpiexec.pid"
 rm -f "${PIDFILE}"
 
 # choose the binary based on the value of cell_model
-if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
+if [[ $CELL_MODEL == *"CiPAORdv1.0_Land"* ]]; then
+  BINARY_FILE="drugsim_CiPAORdv1.0_Land"
+elif [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
   BINARY_FILE="drugsim_CiPAORdv1.0"
-elif [[ $CELL_MODEL == *"ORd-static"* ]]; then
-  BINARY_FILE="drugsim_ORd-static"
+elif [[ $CELL_MODEL == *"ToR-ORd_Land"* ]]; then
+  BINARY_FILE="drugsim_ToR-ORd_Land"
 elif [[ $CELL_MODEL == *"ToR-ORd"* ]]; then
   BINARY_FILE="drugsim_ToR-ORd"
 elif [[ $CELL_MODEL == *"ToR-ORd-dynCl"* ]]; then
   BINARY_FILE="drugsim_ToR-ORd-dynCl"
+elif [[ $CELL_MODEL == *"ORd-static_Land"* ]]; then
+  BINARY_FILE="drugsim_ORd-static_Land"
+elif [[ $CELL_MODEL == *"ORd-static"* ]]; then
+  BINARY_FILE="drugsim_ORd-static"
 elif [[ "${CELL_MODEL}" == *"Grandi"* ]]; then
   BINARY_FILE="drugsim_Grandi"
 else

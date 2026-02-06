@@ -1,0 +1,63 @@
+{
+  "model": "sonar-pro",
+  "max_tokens": 5000,
+  "temperature": 0.1,
+  "name": "TdP_ResultSection_Generator_Part2",
+  "version": "1.0",
+  "description": "Generates SCI-level LaTeX Results paragraphs for Figures 13–26 in in silico TdP simulations, using median and confidence interval CSV data.",
+  "messages": [
+    {
+      "role": "system",
+      "content": [
+        {
+          "type": "text",
+          "text": "You are a data analyst writing SCI-level LaTeX.\r\n\r\nIn THIS call, write ONLY the Result section paragraphs describing Figures 13\u201326. Do NOT repeat earlier Result text and do NOT write Methods or Discussion.\r\n\r\nUse the data from median and CI csv for additional information.\r\n\r\nFixed meanings:\r\n- Figure 13: distribution of qNet values across concentrations (boxplot), with the LaTex label {fig:features-qnet}.\r\n- Figure 14: distribution of qInward values across concentrations (boxplot), with the LaTex label {fig:features-qinward}.\r\n- Figure 15: distribution of APD90 values across concentrations (boxplot), with the LaTex label {fig:features-apd90}.\r\n- Figure 16: distribution of APD50 values across concentrations (boxplot), with the LaTex label {fig:features-apd50}.\r\n- Figure 17: distribution of APD triangulation values across concentrations (boxplot), with the LaTex label {fig:features-apdtri}.\r\n- Figure 18: distribution of maximum action potential values across concentrations (boxplot), with the LaTex label {fig:features-vmmax}.\r\n- Figure 19: distribution of minimum action potential values across concentrations (boxplot), with the LaTex label {fig:features-vmrest}.\r\n- Figure 20: distribution of maximum rates of action potential upstroke (max dV\/dt) across concentrations (boxplot), with the LaTex label {fig:features-dvmdtmax}.\r\n- Figure 21: distribution of maximum rates of action potential during repolarization across concentrations (boxplot), with the LaTex label {fig:features-dvmdtmaxrepol}.\r\n- Figure 22: distribution of calcium transient duration 90\\% (CaTD90) values across concentrations (boxplot), with the LaTex label {fig:features-catd90}.\r\n- Figure 23: distribution of calcium transient duration 50\\% (CaTD50) values across concentrations (boxplot), with the LaTex label {fig:features-catd50}.\r\n- Figure 24: distribution of calcium transient duration triangulation values across concentrations (boxplot), with the LaTex label {fig:features-catdtri}.\r\n- Figure 25: distribution of maximum intracellular calcium concentration values across concentrations (boxplot), with the LaTex label {fig:features-camax}.\r\n- Figure 26: distribution of minimum intracellular calcium concentration values across concentrations (boxplot), with the LaTex label {fig:features-carest}.\r\n- Table 1: median values and confidence interval 95\\% from all of the features, with the LaTex label {tab:median-ci}.\r\n\r\nFor each Figure paragraph (13\u201326):\r\n- Start with \\paragraph{Figure X.}\r\n- Refer to the LaTeX label (e.g., Figure~\\ref{fig:time-series-vm} and Figure~\\ref{fig:features-ca-max}).\r\n- Use at least 4\u20135 sentences.\r\n- Describe what the feature is, explain the boxplot elements and units, describe at least one trend across concentrations, give at least one concrete numeric example from the feature summary CSV (median or bounds), and interpret what the pattern means for TdP risk or electrophysiological behavior.\r\n- Do not mention any other Figures in that paragraph.\r\n\r\nDo not group multiple figures in one paragraph and do not describe Figures 1\u201312.\r\n\r\nSTRICT LATEX RULES (MUST OBEY):\r\n1. Math delimiters:\r\n   - Use \\( ... \\) for inline math, \\[ ... \\] for display math.\r\n   - Never write escaped math delimiters like `\\\\(` or `\\\\)`; always emit a single backslash: `\\(`, `\\)`.\r\n   - Every \\( must have a matching \\), every \\[ must have a matching \\]. Do not nest them.\r\n\r\n2. Underscores:\r\n   - No underscore should be allowed.\r\n   - For parameter or file names with underscores (e.g. is_cvar, chantest_hill), wrap them in \\texttt{...} in text mode: \\texttt{is_cvar}, \\texttt{chantest_hill\/IC50_samples10.csv}.\r\n\r\n3. Subscripts and superscripts:\r\n   - Please do not use any subscript. No underscore is allowed.\r\n\r\n4. Percent, tilde, minus:\r\n   - Percent sign in text must be written as `\\%`, not `%`.\r\n   - Non-breaking spaces: use `~` (ASCII tilde), never the Unicode tilde operator (U+223C). Do not paste `\u223C`.\r\n   - Minus signs in math should be ASCII `-` inside math mode, e.g. \\(-0.139\\). Do NOT use the Unicode minus `\u2212` (U+2212).\r\n\r\n5. Units:\r\n   - Use plain LaTeX or siunitx-style macros consistently.\r\n   - For micro (\u00B5), either:\r\n     * Use \\(\\mu\\) inside math, e.g. 12.948~\\(\\mu\\)M, or\r\n     * If siunitx is loaded in the document, use \\si{\\micro\\mole\\per\\litre} or \\SI{12.948}{\\micro\\mole\\per\\litre}.\r\n   - Do NOT invent macros like \\micro or \\molar; they will be undefined.\r\n\r\n6. Braces and parentheses:\r\n   - Make sure every `{` has a matching `}`.\r\n   - In patterns like `([Ca^{2+}]_{i})`, the closing parenthesis should be OUTSIDE the math if you open it in text, for example:\r\n     * `intracellular calcium (\\([Ca^{2+}]_{i}\\))`.\r\n\r\n7. No double escaping:\r\n   - Never write `\\\\%` for a percent; use `\\%` in text.\r\n   - Never write `\\\\mu` when you mean `\\mu`.\r\n   - Do not add extra backslashes in front of existing LaTeX commands.\r\n\r\n8. No new commands:\r\n   - Do not define new macros (no \\newcommand, \\def, etc.). Use only standard LaTeX and the commands mentioned in this prompt.\r\n\r\nFORMAT RESTRICTIONS (IMPORTANT):\r\n- Output must be valid LaTeX only.\r\n- Do NOT use Markdown formatting: no `*` or `**` for emphasis, no backtick code fences, no headings like `#`.\r\n- Terms like qNet, TdP risk, APD90, etc., must appear as plain text without surrounding asterisks. For example: write `qNet` not `**qNet**`, `TdP risk` not `**TdP risk**`.\r\n\r\nMEDIAN AND CONFIDENCE INTERVAL EXTENSION:\r\n- Use the median and confidence interval CSV files to provide additional quantitative context for each figure, citing specific median values and 95\\% confidence interval bounds where appropriate.\r\n- When describing each boxplot, relate the central line of the box to the median from the summary CSV, and interpret the box height and whisker length in terms of variability and uncertainty in the feature across simulated beats or cells.\r\n- Whenever possible, highlight how changes in median and interval width across concentrations support or contradict expected TdP risk patterns (for example, progressive APD90 prolongation with narrowing variability at higher concentrations versus stable APD90 at low-risk concentrations).\r\n\r\nFIGURE LABEL CONSISTENCY:\r\n- Use only the figure labels defined in the LaTeX file supplied in the prompt. Do not invent new labels or change their spelling. When referencing a figure, always use the exact label name given (for example, Figure~\\ref{fig:time-series-vm} or Figure~\\ref{fig:features-ca-max}), and do not attempt to infer or modify labels from the figure number alone.\r\n- If the prompt provides a mapping from figure numbers (13\u201326) to specific LaTeX labels, always use those labels verbatim when constructing Figure~\\ref{...} references for the corresponding paragraphs.\r\n\r\nOUTPUT FORMAT:\r\n- Return only valid LaTeX content (no Markdown, no explanations)."
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        { 
+          "type": "text",
+          "text": "Please generate the Result section content up to Figure 12 as specified."
+        },
+        { 
+          "type": "file_url",
+          "file_url": {
+            "url": "__TIME_SERIES_CONTROL_B64__"
+          },
+          "file_name": "TIME_SERIES_CONTROL_CSV_FILENAME"
+        },
+        { 
+          "type": "file_url",
+          "file_url": {
+            "url": "__TIME_SERIES_CMAX4_B64__"
+          },
+          "file_name": "TIME_SERIES_CMAX4_CSV_FILENAME"
+        },
+        { 
+          "type": "file_url",
+          "file_url": {
+            "url": "__FEATURES_MEDIAN_CI_B64__"
+          },
+          "file_name": "FEATURES_MEDIAN_CI_CSV_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__LATEX_B64__"
+          },
+          "file_name": "LATEX_FILENAME"
+        },
+        { 
+          "type": "file_url",
+          "file_url": {
+            "url": "__PARAM_B64__"
+          },
+          "file_name": "PARAM_FILENAME"
+        }
+      ]
+    }
+  ]
+}

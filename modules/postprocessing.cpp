@@ -1,6 +1,6 @@
 #include "postprocessing.hpp"
 
-#if defined CIPAORDV1_0
+#if defined CIPAORDV1
 #include <types/cellmodels/ohara_rudy_cipa_v1_2017.hpp>
 #elif defined TOR_ORD
 #include <types/cellmodels/Tomek_model.hpp>
@@ -8,6 +8,12 @@
 #include <types/cellmodels/Tomek_dynCl.hpp>
 #elif defined GRANDI
 #include <types/cellmodels/grandi_2011_atrial_with_meta.hpp>
+#elif defined ORD_STATIC_LAND
+#include <types/cellmodels/ORdstatic_Land.hpp>
+#elif defined CIPAORDV1_LAND
+#include <types/cellmodels/ORd_Land.hpp>
+#elif defined TOR_ORD_LAND
+#include <types/cellmodels/Tomek_Land.hpp>
 #else
 #include <types/cellmodels/Ohara_Rudy_2011.hpp>
 #endif
@@ -60,7 +66,7 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   else if( strstr(cell_model,"epi") != NULL ) cell_type = 1;
   else if( strstr(cell_model,"myo") != NULL ) cell_type = 2;
   mpi_printf(cml::commons::MASTER_NODE,"Using %s cell model with cell_type=%hd\n", cell_model, cell_type);
-#if defined CIPAORDV1_0
+#if defined CIPAORDV1
   p_cell = new ohara_rudy_cipa_v1_2017();
   if (is_cvar && cvar) {
     p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data, cvar->data);
@@ -87,6 +93,27 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
     p_cell->initConsts(conc, hill.data, cvar->data);
   } else {
     p_cell->initConsts(conc, hill.data);
+  }
+#elif defined ORD_STATIC_LAND
+  p_cell = new ORdstatic_Land();
+  if (is_cvar && cvar) {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, true, cvar->data);
+  } else {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, true);
+  }
+#elif defined CIPAORDV1_LAND
+  p_cell = new ORd_Land();
+  if (is_cvar && cvar) {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data, cvar->data);
+  } else {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data);
+  }
+#elif defined TOR_ORD_LAND
+  p_cell = new Tomek_Land();
+  if (is_cvar && cvar) {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, cvar->data);
+  } else {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data);
   }
 #else
   p_cell = new Ohara_Rudy_2011();
@@ -119,13 +146,14 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
 
   if( p_features.initial_values.size() != p_cell->states_size ){
-    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!! Init_Size: %d States_Size_: %d\n",buffer, p_features.initial_values.size(), p_cell->states_size);
+    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!! Init_Size: %d States_Size_: %d\n", p_features.initial_values.size(), p_cell->states_size);
+    mpi_printf(0, "INITIAL CONDITIONS:\n");
     for (int idx = 0; idx < p_features.initial_values.size() ; idx++) {
       mpi_printf(0, "%lf ", p_features.initial_values[idx]);
     }
-    mpi_printf(0, "\n");
+    mpi_printf(0, "\nSTATES:\n");
     for (int idx = 0; idx < p_cell->states_size ; idx++) {
-      mpi_printf(0, "%lf ", p_cell->states_size);
+      mpi_printf(0, "%lf ", p_cell->STATES[idx]);
     }
     return 1;    
   }
@@ -153,14 +181,14 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   }
 #if defined GRANDI
   fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
-          "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)",
+          "Time(ms)", "Vm(mV)", "dVmdt(mV/ms)",
           "Cai(nM)", "INa(A/F)", "INaL(mA/F)", "ICaL(A/F)",
-          "Ito(A/F)", "IKr(mA/F)", "IKs(mA/F)", "IK1(A/F)", "Inet(A/F)","Inet_AUC(C/F)");
+          "Ito(A/F)", "IKr(mA/F)", "IKs(mA/F)", "IK1(A/F)", "Inet(A/F)","InetAUC(C/F)");
 #else
   fprintf(fp_time_series, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
-          "Time(ms)", "Vm(mV)", "dVm/dt(mV/ms)",
+          "Time(ms)", "Vm(mV)", "dVmdt(mV/ms)",
           "Cai(nM)", "INa(nA/uF)", "INaL(nA/uF)", "ICaL(nA/uF)",
-          "Ito(nA/uF)", "IKr(nA/uF)", "IKs(nA/uF)", "IK1(nA/uF)", "Inet(uA/uF)","Inet_AUC(uC/uF)");
+          "Ito(nA/uF)", "IKr(nA/uF)", "IKs(nA/uF)", "IK1(nA/uF)", "Inet(uA/uF)","InetAUC(uC/uF)");
 #endif
 
 #if defined GRANDI
@@ -378,9 +406,9 @@ void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellm
     return;
   }
   if (!file_exists_and_not_empty) {
-    fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "sample", "qNet", "qNetAPD", "qInward", "INaLAUC", "ICaLAUC",
-            "APD90", "APD50", "APDtri", "Vmmax", "Vmrest", "dVmdtmax", "dVmdtmaxrepol", "CaTD90", "CaTD50", "CaTDtri", "Camax",
-            "Carest");
+    fprintf(fp_features, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Sample", "qNet", "qNetAPD", "qInward", "INaLAUC", "ICaLAUC",
+            "APD90", "APD50", "APDTri", "VmMax", "VmRest", "dVmdtMax", "dVmdtMaxRepol", "CaTD90", "CaTD50", "CaTDTri", "CaMax",
+            "CaRest");
   }
   fprintf(fp_features, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", sample_id,
           p_features.qnet, p_features.qnet_apd, p_features.qinward, p_features.inal_auc, p_features.ical_auc, p_features.apd90, p_features.apd50,

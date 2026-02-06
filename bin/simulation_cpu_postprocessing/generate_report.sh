@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 RESULT_FOLDER="./results"
 DRUG_NAME=$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
@@ -12,15 +12,12 @@ SAMPLE_SIZE=$(( $(wc -l < "${HILL_FILE}") - 1 ))
 echo "FILE LINE: ${SAMPLE_SIZE}"
 
 RESULT_DRUG_PATH="${RESULT_FOLDER}"
-LATEX_FILE="report_drug_${DRUG_NAME}_${CELL_MODEL}.tex"
+LATEX_FILE="report_template.tex"
+MEDIAN_CI_FILE="${RESULT_FOLDER}/${DRUG_NAME}-median-ci.csv"
 
 #Plot all the time-series result from the in-silico simulation
 echo "Generate plots from the time-series result"
-if [[ "${CELL_MODEL}" == *"Grandi"* ]]; then
-  python3 ../scripts/plot_time_series_grandi.py "${RESULT_DRUG_PATH}" "${DRUG_NAME}" "${SAMPLE_SIZE}"
-else
-  python3 ../scripts/plot_time_series.py "${RESULT_DRUG_PATH}" "${DRUG_NAME}" "${SAMPLE_SIZE}"
-fi
+python3 ../scripts/plot_time_series.py "${RESULT_DRUG_PATH}" "${DRUG_NAME}" "${SAMPLE_SIZE}" "${CELL_MODEL}"
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Plot time series got some errors! Please check the logfile_report for more details." >> "${RESULT_FOLDER}/logfile" 2>&1
@@ -32,11 +29,7 @@ echo "DrugSimulation Report Progress: ${PROGRESS}%"
 
 #Concat the separated feature data
 echo "Unifying feature data"
-if [[ "${CELL_MODEL}" == *"Grandi"* ]]; then
-  python3 ../scripts/plot_features_grandi.py "${RESULT_DRUG_PATH}" "${DRUG_NAME}" "${USER_NAME}"
-else
-  python3 ../scripts/plot_features.py "${RESULT_DRUG_PATH}" "${DRUG_NAME}" "${USER_NAME}"
-fi
+python3 ../scripts/plot_features.py "${RESULT_DRUG_PATH}" "${DRUG_NAME}" "${USER_NAME}" "${CELL_MODEL}"
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Plot features got some errors! Please check the logfile_report for more details." >> "${RESULT_FOLDER}/logfile" 2>&1
@@ -48,7 +41,9 @@ echo "DrugSimulation Report Progress: ${PROGRESS}%"
 
 #Calculating the average feature for each concentration
 echo "Calculating average feature for each concentration."
-python3 ../scripts/compute_dose_averages.py
+python3 ../scripts/combine_and_average_features.py --base_dir "${RESULT_DRUG_PATH}"
+echo "Calculating median and Confidence Interval 95% based on averaged sample."
+python3 ../scripts/compute_mean_ci.py ./results/sample-averages-across-concentrations.csv "${MEDIAN_CI_FILE}" --n-boot "${SAMPLE_SIZE}"
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Compute dose average got some errors! Please check the logfile_report for more details." >> "${RESULT_FOLDER}/logfile" 2>&1
