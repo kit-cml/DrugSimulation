@@ -81,6 +81,7 @@ else
   exit 1
 fi
 
+START_TIME=$(date +%s)
 echo "Unzipping files..." >> "${RESULT_FOLDER}/logfile" 2>&1
 unzip_files "${INITIAL_VALUES_ZIP_FILE}" "./" "${RESULT_FOLDER}" "${SAMPLE_SIZE}" "${drug_concentrations[@]}" >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
@@ -103,7 +104,7 @@ zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
 mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
 mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
 echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
-sh "./generate_report.sh" >> "${RESULT_FOLDER}/logfile_report" 2>&1
+bash "./generate_report.sh" >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Reporting program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1
@@ -111,4 +112,7 @@ if [ $EXIT_CODE -ne 0 ]; then
   exit 1
 fi
 rm -rf "${PIDFILE}"
-echo "Simulation has finished! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1
+END_TIME=$(date +%s)
+ELAPSED_TIME=$(( ${END_TIME} - ${START_TIME} ))
+ELAPSED_TIME_MINUTES=$(( ${ELAPSED_TIME} / 60 ))
+echo "All process have finished and it took ${ELAPSED_TIME_MINUTES} minutes! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1

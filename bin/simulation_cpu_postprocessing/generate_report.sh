@@ -53,15 +53,12 @@ fi
 PROGRESS=$((PROGRESS + 25)) # 25% for average feature.
 echo "DrugSimulation Report Progress: ${PROGRESS}%"
 
-#Generate report based on the pre-generated LaTEX file
+#Generate report using Perplexity API with another script.
 echo "Generate PDF from LaTEX"
-cd "${RESULT_FOLDER}"
-/opt/texlive/2025/bin/x86_64-linux/pdflatex -interaction=nonstopmode -halt-on-error  "${LATEX_FILE}"
+./exec_perplexity_report_generator.sh
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "LaTEX to PDF got some errors! Please check the logfile_report for more details." >> "logfile" 2>&1
-  rm -rf "${PIDFILE}"
-  exit 1
 fi
 PROGRESS=$((PROGRESS + 25)) # 25% for PDF generating.
 echo "DrugSimulation Report Progress: ${PROGRESS}%"

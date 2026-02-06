@@ -14,9 +14,8 @@ bin/drugsim_ORd-static_Land
 bin/drugsim_ORd-static_Land_postprocessing
 bin/drugsim_ToR-ORd_Land
 bin/drugsim_ToR-ORd_Land_postprocessing
-bin/perplexity_report_generator
 bin/simulation_cpu/requests/*filled*
-bin/simulation_cpu/responses/
+bin/simulation_cpu_postprocessing/requests/*filled*
 *.tex
 *.pdf
 *.aux
