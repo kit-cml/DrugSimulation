@@ -8,6 +8,54 @@ from pathlib import Path
 import re
 import sys
 
+# List of features to plot
+features = [
+     'qNet', 'qInward', 'INaLAUC', 'ICaLAUC',
+     'APD90', 'APD50', 'APDTri', 'VmMax', 'VmRest',
+     'dVmdtMax', 'dVmdtMaxRepol', 'CaTD90', 'CaTD50',
+     'CaTDTri', 'CaMax', 'CaRest'
+]
+
+
+# Dictionary for feature name formatting
+feature_format_ord = {
+    'qNet': 'Net Charge (uC/uF)',
+    'qInward': 'Inward Charge (uC/uF)',
+    'INaLAUC': 'AUC of L-type Sodium Current (nA)',
+    'ICaLAUC': 'AUC of L-type Calcium Current (nA)',
+    'APD90': 'AP Duration of 90% Repolarization (ms)',
+    'APD50': 'AP Duration of 50% Repolarization (ms)',
+    'APDTri': 'AP Duration Triangulation (ms)',
+    'VmMax': 'Membrane Potential at Maximum (mV)',
+    'VmRest': 'Membrane Potential at Resting (mV)',
+    'dVmdtMax': 'Rate of Membrane Potential at Maximum (mV/ms)',
+    'dVmdtMaxRepol': 'Maximum of Membrane Potential Rate at Repolarization (mV/ms)',
+    'CaTD90': 'Intracellular Calcium Transient Duration at 90% Repolarization (ms)',
+    'CaTD50': 'Intracellular Calcium Transient Duration at 50% Repolarization (ms)',
+    'CaTDTri': 'Intracellular Calcium Transient Duration Triangulation (ms)',
+    'CaMax': 'Intracellular Calcium at Maximum (nM)',
+    'CaRest': 'Intracellular Calcium at Resting (nM)'
+}
+feature_format_grandi = {
+    'qNet': 'Net Charge (C/F)',
+    'qInward': 'Inward Charge (C/F)',
+    'INaLAUC': 'AUC of L-type Sodium Current (mA)',
+    'ICaLAUC': 'AUC of L-type Calcium Current (mA)',
+    'APD90': 'AP Duration of 90% Repolarization (ms)',
+    'APD50': 'AP Duration of 50% Repolarization (ms)',
+    'APDTri': 'AP Duration Triangulation (ms)',
+    'VmMax': 'Membrane Potential at Maximum (mV)',
+    'VmRest': 'Membrane Potential at Resting (mV)',
+    'dVmdtMax': 'Rate of Membrane Potential at Maximum (mV/ms)',
+    'dVmdtMaxRepol': 'Maximum of Membrane Potential Rate at Repolarization (mV/ms)',
+    'CaTD90': 'Intracellular Calcium Transient Duration at 90% Repolarization (ms)',
+    'CaTD50': 'Intracellular Calcium Transient Duration at 50% Repolarization (ms)',
+    'CaTDTri': 'Intracellular Calcium Transient Duration Triangulation (ms)',
+    'CaMax': 'Intracellular Calcium at Maximum (nM)',
+    'CaRest': 'Intracellular Calcium at Resting (nM)'
+}
+
+
 # Helper function to check if a string can be converted to float
 def _is_valid_float(s):
     try:
@@ -56,44 +104,26 @@ def read_feature_data(base_path, drug_name, concentration):
     combined_df = pd.concat(dfs, ignore_index=True)
     return combined_df
 
-def create_feature_plots(all_data, drug_name, output_folder):
+def create_feature_plots(all_data, drug_name, output_folder, cell_model="ord"):
     """
     Create box plots for each feature showing all concentrations
     """
     # Make sure output folder exists
     os.makedirs(output_folder, exist_ok=True)
     
-    # List of features to plot
-    features = [
-        'qNet', 'qInward', 'INaLAUC', 'ICaLAUC',
-        'APD90', 'APD50', 'APDtri', 'Vmmax', 'Vmrest',
-        'dVmdtmax', 'dVmdtmaxrepol', 'CaTD90', 'CaTD50',
-        'CaTDtri', 'Camax', 'Carest'
-    ]
-    
-    # Dictionary for feature name formatting
-    feature_format = {
-        'qNet': 'qNet (uC/uF)',
-        'qInward': 'qInward (uC/uF)',
-        'INaLAUC': 'INaL_AUC (mA)',
-        'ICaLAUC': 'ICaL_AUC (mA)',
-        'APD0': 'APD90 (ms)',
-        'APD50': 'APD50 (ms)',
-        'APDtri': 'APD_tri (ms)',
-        'Vmmax': 'Vm_max (mV)',
-        'Vmrest': 'Vm_rest (mV)',
-        'dVmdtmax': 'dVm/dt_max (mV/ms)',
-        'dVmdtmaxrepol': 'dVm/dt_max_repol (mV/ms)',
-        'CaTD90': 'CaTD90 (ms)',
-        'CaTD50': 'CaTD50 (ms)',
-        'CaTDtri': 'CaTD_tri (ms)',
-        'Capeak': 'Ca_peak (nM)',
-        'Cavalley': 'Ca_valley (nM)'
-    }
+    # Choose which features dict to use
+    cell_model_lower = cell_model.lower();
+    if "grandi" in cell_model_lower:
+        feature_format = feature_format_grandi
+    else:
+        feature_format = feature_format_ord
+
     
     # Get unique concentrations
     concentrations = sorted(all_data['concentration'].unique(), key=float)
     
+    
+
     # Create a box plot for each feature
     for feature in features:
         fig, ax = plt.subplots(figsize=(8, 4))
@@ -138,7 +168,7 @@ def create_feature_plots(all_data, drug_name, output_folder):
         plt.tight_layout()
         
         # Save the plot
-        plt.savefig(os.path.join(output_folder, f'{feature}_boxplot.png'), 
+        plt.savefig(os.path.join(output_folder, f'{feature}-boxplot.png'), 
                    dpi=200, bbox_inches='tight')
         plt.close()
 

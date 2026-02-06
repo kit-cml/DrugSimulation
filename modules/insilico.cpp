@@ -1,6 +1,6 @@
 #include "insilico.hpp"
 
-#if defined CIPAORDV1_0
+#if defined CIPAORDV1
 #include <types/cellmodels/ohara_rudy_cipa_v1_2017.hpp>
 #elif defined TOR_ORD
 #include <types/cellmodels/Tomek_model.hpp>
@@ -8,6 +8,12 @@
 #include <types/cellmodels/Tomek_dynCl.hpp>
 #elif defined GRANDI
 #include <types/cellmodels/grandi_2011_atrial_with_meta.hpp>
+#elif defined ORD_STATIC_LAND
+#include <types/cellmodels/ORdstatic_Land.hpp>
+#elif defined CIPAORDV1_LAND
+#include <types/cellmodels/ORd_Land.hpp>
+#elif defined TOR_ORD_LAND
+#include <types/cellmodels/Tomek_Land.hpp>
 #else
 #include <types/cellmodels/Ohara_Rudy_2011.hpp>
 #endif
@@ -59,7 +65,7 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   else if( strstr(cell_model,"myo") != NULL ) cell_type = 2;
   else cell_type = 9;
   mpi_printf(cml::commons::MASTER_NODE,"Using %s cell model with cell_type=%hd\n", cell_model, cell_type);
-#if defined CIPAORDV1_0
+#if defined CIPAORDV1
   p_cell = new ohara_rudy_cipa_v1_2017();
   if (is_cvar && cvar) {
     p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data, cvar->data);
@@ -87,6 +93,27 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   } else {
     p_cell->initConsts(conc, hill.data);
   }
+#elif defined ORD_STATIC_LAND
+  p_cell = new ORdstatic_Land();
+  if (is_cvar && cvar) {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, true, cvar->data);
+  } else {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, true);
+  }
+#elif defined CIPAORDV1_LAND
+  p_cell = new ORd_Land();
+  if (is_cvar && cvar) {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data, cvar->data);
+  } else {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, herg.data);
+  }
+#elif defined TOR_ORD_LAND
+  p_cell = new Tomek_Land();
+  if (is_cvar && cvar) {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data, cvar->data);
+  } else {
+    p_cell->initConsts(static_cast<double>(cell_type), conc, hill.data);
+  }
 #else
   p_cell = new Ohara_Rudy_2011();
   if (is_cvar && cvar) {
@@ -112,8 +139,8 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Cannot create file %s. Make sure the directory is existed!!!\n",buffer);
     return 1;
   }
-  fprintf(fp_vmdebug, "%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
-          "dVmdt_repol_max","Qnet");
+  fprintf(fp_vmdebug, "%s,%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "TPeak", "VmPeak", "VmValley", "VmRepol30", "VmRepol50", "VmRepol90",
+          "dVmdtMaxRepol","qNet");
 
   snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_last_paces_smp%hd.csv", 
           cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
@@ -123,9 +150,9 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
     return 1;
   }
   fprintf(fp_last_paces, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", 
-          "Time(ms)", "Last_Vm(mV)", "Last_dVm/dt(mV/ms)", "Last_Cai(nM)",
-          "Last_INa(nA)", "Last_INaL(nA)", "Last_ICaL(nA)", "Last_Ito(nA)",
-          "Last_IKr(nA)", "Last_IKs(nA)", "Last_IK1(nA)", "Last_Inet(uA)", "Last_Inet_AUC(uC)" );
+          "Time(ms)", "LastVm(mV)", "LastdVm/dt(mV/ms)", "LastCai(nM)",
+          "LastINa(nA)", "LastINaL(nA)", "LastICaL(nA)", "LastIto(nA)",
+          "LastIKr(nA)", "LastIKs(nA)", "LastIK1(nA)", "LastInet(uA)", "LastInetAUC(uC)" );
 #endif
 
   snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_initial_values_smp%d.csv", 
@@ -248,8 +275,8 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
 
 #ifdef CMLDEBUG
   fprintf(fp_vmdebug, "Selected final pace: %hd\n", p_features.pace_target);
-  fprintf(fp_vmdebug, "Features saved: \n%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "T_Peak", "Vmpeak", "Vmvalley", "Vm_repol30", "Vm_repol50", "Vm_repol90",
-          "dVmdt_repol_max");
+  fprintf(fp_vmdebug, "Features saved: \n%s,%s,%s,%s,%s,%s,%s,%s\n", "Pace", "TPeak", "VmPeak", "VmValley", "VmRepol30", "VmRepol50", "VmRepol90",
+          "dVmdtMaxRepol");
   fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.8lf,%.8lf,%.8lf\n", p_features.pace_target, p_features.time_vm_peak, p_features.vm_peak,
           p_features.vm_valley, p_features.vm_amp30, p_features.vm_amp50, p_features.vm_amp90, p_features.dvmdt_repol_max);
   fprintf(fp_vmdebug, "States during the highest dVM/dt between 30%% and 90%% repolarization phase:\n");

@@ -60,19 +60,28 @@ rm -f "${PIDFILE}"
 
 
 # choose the binary based on the value of cell_model
-if [[ "${CELL_MODEL}" == *"CiPAORdv1.0"* ]]; then
+if [[ $CELL_MODEL == *"CiPAORdv1.0_Land"* ]]; then
+  BINARY_FILE="../drugsim_CiPAORdv1.0_Land_postprocessing"
+elif [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
   BINARY_FILE="../drugsim_CiPAORdv1.0_postprocessing"
-elif [[ "${CELL_MODEL}" == *"ORd-static"* ]]; then
-  BINARY_FILE="../drugsim_ORd-static_postprocessing"
-elif [[ "${CELL_MODEL}" == *"ToR-ORd"* ]]; then
+elif [[ $CELL_MODEL == *"ToR-ORd_Land"* ]]; then
+  BINARY_FILE="../drugsim_ToR-ORd_Land_postprocessing"
+elif [[ $CELL_MODEL == *"ToR-ORd"* ]]; then
   BINARY_FILE="../drugsim_ToR-ORd_postprocessing"
-elif [[ "${CELL_MODEL}" == *"ToR-ORd-dynCl"* ]]; then
+elif [[ $CELL_MODEL == *"ToR-ORd-dynCl"* ]]; then
   BINARY_FILE="../drugsim_ToR-ORd-dynCl_postprocessing"
+elif [[ $CELL_MODEL == *"ORd-static_Land"* ]]; then
+  BINARY_FILE="../drugsim_ORd-static_Land_postprocessing"
+elif [[ $CELL_MODEL == *"ORd-static"* ]]; then
+  BINARY_FILE="../drugsim_ORd-static_postprocessing"
+elif [[ "${CELL_MODEL}" == *"Grandi"* ]]; then
+  BINARY_FILE="../drugsim_Grandi_postprocessing"
 else
   echo "The cell model ${CELL_MODEL} is not specified to any simulations!!" >> "${RESULT_FOLDER}/logfile" 2>&1
   exit 1
 fi
 
+START_TIME=$(date +%s)
 echo "Unzipping files..." >> "${RESULT_FOLDER}/logfile" 2>&1
 unzip_files "${INITIAL_VALUES_ZIP_FILE}" "./" "${RESULT_FOLDER}" "${SAMPLE_SIZE}" "${drug_concentrations[@]}" >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
@@ -95,7 +104,7 @@ zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
 mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
 mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
 echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
-sh "./generate_report.sh" >> "${RESULT_FOLDER}/logfile_report" 2>&1
+bash "./generate_report.sh" >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Reporting program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1
@@ -103,4 +112,7 @@ if [ $EXIT_CODE -ne 0 ]; then
   exit 1
 fi
 rm -rf "${PIDFILE}"
-echo "Simulation has finished! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1
+END_TIME=$(date +%s)
+ELAPSED_TIME=$(( ${END_TIME} - ${START_TIME} ))
+ELAPSED_TIME_MINUTES=$(( ${ELAPSED_TIME} / 60 ))
+echo "All process have finished and it took ${ELAPSED_TIME_MINUTES} minutes! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1

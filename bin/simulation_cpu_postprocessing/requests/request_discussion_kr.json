@@ -1,0 +1,63 @@
+{
+  "model": "sonar-pro",
+  "max_tokens": 5000,
+  "temperature": 0.1,
+  "name": "TdP_Discussion_Generator",
+  "version": "1.0",
+  "description": "Generates SCI-level LaTeX Discussion sections for in silico TdP simulations, integrating interpretations from time-series and median-CI data.",
+  "messages": [
+    {
+      "role": "system",
+      "content": [
+        {
+          "type": "text",
+          "text": "You are a data analyst writing SCI-level LaTeX.\n\nIn THIS call, write ONLY the Discussion section in LaTeX, based on the methods and results already generated in earlier calls (you do not need to see that text; just be consistent conceptually). Do NOT write Methods or Results.\n\nThe Discussion must be at least two long paragraphs, use full sentences, and may refer to Figures conceptually (e.g., Figure 1, Figure 13), but must not introduce new figures or tables. Do not use citation commands.\n\nThe Discussion must synthesize insights from both the beat-level time-series simulations (control and multiple drug concentrations) and the feature-level summary statistics derived from median and 95\\% confidence interval data. Interpret how changes in membrane potential morphology, ionic currents, and calcium handling across concentrations relate to the aggregated distributions of qNet, qInward, APD metrics, and calcium transient durations, and discuss their implications for TdP risk classification within a CiPA-style in silico framework.\n\nSPACING RULES:\n- Between paragraphs: insert one blank line (which LaTeX interprets as \\par with default parskip).\n- Between sentences within the same paragraph: use a single space (no extra line breaks).\n- After each \\paragraph{Figure X.} heading (if used conceptually inside the Discussion): start the content on the next line (one line break after the closing brace).\n- Between figure-related paragraphs: insert two blank lines to create visual separation in the .tex source when appropriate.\n- If additional vertical space is needed for clarity, use \\vspace{0.5\\baselineskip} on its own line between paragraphs, but do NOT overuse this.\n- Do NOT use \\\\ for line breaks within running text; use it only inside tabular or align environments.\n\nUNDERSCORE AND URL RULES:\n- No underscore would be allowed in this section. If an identifier or token contains underscores in the source data, conceptually treat it as hyphen-separated in prose (e.g., convert is_cvar to is-cvar when rephrasing descriptively), and avoid reproducing raw identifiers unless absolutely necessary.\n- In URLs and file paths, always wrap the full string in \\url{...} or \\nolinkurl{...} (requires the url or hyperref package), and do not leave unmatched underscores inside those commands.\n- In \\label, \\ref, and similar keys that contain underscores (if they must appear in this section), escape each underscore: \\label{fig:qnet\\_apd}.\n- Never leave a bare underscore `_` outside math mode; either use math subscripts (e.g., \\( x_i \\)) or escaped \\_ in text.\n- Do not break strings with underscores across lines in a way that leaves a trailing underscore at line end.\n\nCRITICAL LATEX SAFETY RULES:\n1. Never emit a bare underscore character `_` in normal LaTeX text. Underscores are only allowed:\n   - As math subscripts in math mode, e.g. \\( x_i \\).\n   - Inside \\url{...}, \\nolinkurl{...}, \\verb|...|, or \\texttt{...}.\n2. When you copy any identifier, variable, or field name from parameter files (for example `is_cvar`, `g_Kr_factor`, `IC50_samples10`):\n   - If it must appear as plain text, either:\n     a) Escape each underscore as `\\_`, e.g. `is\\_cvar`, or\n     b) Wrap the whole token in \\texttt{...}, e.g. \\texttt{is_cvar}.\n   - Do NOT leave unescaped underscores in normal text.\n3. For file paths and URLs that contain underscores, always wrap them in \\url{...} or \\nolinkurl{...}, and do not escape the underscores inside those commands.\n\nSECTION HEADER REQUIREMENT:\n- The Discussion must begin with the LaTeX section header \\section*{Discussion} on its own line.\n\nCONTENT REQUIREMENTS:\n- Explain all key findings in the context of both the simulation methods and the quantitative results, including how the control versus drug time-series data informed the interpretation of ionic current changes, action potential morphology, and calcium dynamics.\n- Discuss how the distributions of qNet, qInward, APD90, APD50, APD triangulation, and calcium transient metrics (including CaTD90, CaTD50, and triangulation of the calcium transient), as summarized by median and 95\\% confidence intervals, reinforce or nuance the trends observed in single-beat or representative time-series.\n- Relate patterns across concentrations to mechanistic hypotheses about ion-channel block, repolarization reserve, and TdP risk, highlighting consistency or discrepancies with expectations from a CiPA-style in silico proarrhythmia assay.\n- Where appropriate, refer to specific figures conceptually (e.g., \"time-series figures\" such as Figure 1 or \"feature distribution figures\" such as Figure 13) without re-describing them in detail, and avoid introducing any new figures, tables, or equations.\n\nFORMAT RESTRICTIONS (IMPORTANT):\n- Output must be valid LaTeX only.\n- Do NOT use Markdown formatting: no `*` or `**` for emphasis, no backtick code fences, no headings like `#`.\n- Terms like qNet, qInward, TdP risk, APD90, and CaTD90 must appear as plain text without surrounding asterisks.\n\nOUTPUT FORMAT:\n- Return only valid LaTeX content (no Markdown, no explanations)."
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Please generate the Discussion section as specified."
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__TIME_SERIES_CONTROL_B64__"
+          },
+          "file_name": "TIME_SERIES_CONTROL_CSV_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__TIME_SERIES_CMAX4_B64__"
+          },
+          "file_name": "TIME_SERIES_CMAX4_CSV_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__FEATURES_MEDIAN_CI_B64__"
+          },
+          "file_name": "FEATURES_MEDIAN_CI_CSV_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__LATEX_B64__"
+          },
+          "file_name": "LATEX_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__PARAM_B64__"
+          },
+          "file_name": "PARAM_FILENAME"
+        }
+      ]
+    }
+  ]
+}

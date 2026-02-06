@@ -42,31 +42,21 @@ CC := mpicc
 #CXXFLAGS += -Wall -Wunused-variable
 CXXFLAGS += -Wall -Wunused-variable -std=c++11
 
-# Make sure ONLY ONE MACRO IS USED!!!
-# Use this if you want to use CiPAORdv1.0 cell model.
-# Otherwise, comment it
-#CXXFLAGS += -DCIPAORDV1_0
-# Use this if you want to use ToR-ORd cell model.
-# Otherwise, comment it
-#CXXFLAGS += -DTOR_ORD
-# Use this if you want to use ToR-ORd-dynCl cell model.
-# Otherwise, comment it
-#CXXFLAGS += -DTOR_ORD_DYNCL
-# Use this if you want to use Grandi 2011 cell model.
-# Otherwise, comment it
-#CXXFLAGS += -DGRANDI
-
-
 # Uncomment this part for the compilation of postprocessing binaries
 #CXXFLAGS += -DPOSTPROCESSING
 
 # Uncomment this part for enabling some files for debugging
 #CXXFLAGS += -DCMLDEBUG
 
-
 # The program name wiil depend on the set value above
 # Make sure ONLY ONE MACRO IS USED!!!
-ifeq ($(findstring -DCIPAORDV1_0,$(CXXFLAGS)), -DCIPAORDV1_0)
+ifeq ($(findstring -DTOR_ORD_LAND,$(CXXFLAGS)), -DTOR_ORD_LAND)
+    PROGNAME := $(BASE_PROGNAME)_ToR-ORd_Land
+else ifeq ($(findstring -DCIPAORDV1_LAND,$(CXXFLAGS)), -DCIPAORDV1_LAND)
+    PROGNAME := $(BASE_PROGNAME)_CiPAORdv1.0_Land
+else ifeq ($(findstring -DORD_STATIC_LAND,$(CXXFLAGS)), -DORD_STATIC_LAND)
+    PROGNAME := $(BASE_PROGNAME)_ORd-static_Land
+else ifeq ($(findstring -DCIPAORDV1,$(CXXFLAGS)), -DCIPAORDV1)
     PROGNAME := $(BASE_PROGNAME)_CiPAORdv1.0
 else ifeq ($(findstring -DTOR_ORD_DYNCL,$(CXXFLAGS)), -DTOR_ORD_DYNCL)
     PROGNAME := $(BASE_PROGNAME)_ToR-ORd-dynCl

@@ -12,9 +12,43 @@ from pathlib import Path
 random_sample = []
 fixed_sample = [1,2,3,4,5]
 
+# Dictionary of features and their labels
+features_ord = {
+        'Vm(mV)': 'Membrane Potential (mV)',
+        'dVmdt(mV/ms)': 'Rate of Membrane Potential (mV/ms)',
+        'Cai(nM)': 'Intracellular Calcium (nM)',
+        'INa(nA/uF)': 'Sodium Current (nA/uF)',
+        'INaL(nA/uF)': 'L-type Sodium Current (nA/uF)',
+        'ICaL(nA/uF)': 'L-type Calcium Current (nA/uF)',
+        'Ito(nA/uF)': 'Transient Outward Current (nA/uF)',
+        'IKr(nA/uF)': 'hERG Current (nA/uF)',
+        'IKs(nA/uF)': 'Slow Potassium Current (nA/uF)',
+        'IK1(nA/uF)': 'Inward Rectifier Potassium Current (nA/uF)',
+        'Inet(uA/uF)': 'Net Current (uA/uF)',
+        'InetAUC(uC/uF)': 'Net Charge (uC/uF)'
+}
+features_grandi = {
+        'Vm(mV)': 'Membrane Potential (mV)',
+        'dVmdt(mV/ms)': 'Rate of Membrane Potential (mV/ms)',
+        'Cai(nM)': 'Intracellular Calcium (nM)',
+        'INa(A/F)': 'Sodium Current (A/F)',
+        'INaL(mA/F)': 'L-type Sodium Current (mA/F)',
+        'ICaL(A/F)': 'L-type Calcium Current (A/F)',
+        'Ito(A/F)': 'Transient Outward Current (A/F)',
+        'IKr(mA/F)': 'hERG Current (mA/F)',
+        'IKs(mA/F)': 'Slow Potassium Current (mA/F)',
+        'IK1(A/F)': 'Inward Rectifier Potassium Current (A/F)',
+        'Inet(A/F)': 'Net Current (A/F)',
+        'InetAUC(C/F)': 'Net Charge (C/F)'
+}
+
+
 def generate_random_sample(number_of_data):
     global random_sample  # Declare the global variable
-    random_sample = random.sample(range(0, number_of_data), 5)
+    if (number_of_data >= 5):
+      random_sample = random.sample(range(0, number_of_data), 5)
+    else:
+      random_sample = random.sample(range(0, number_of_data), number_of_data)
 
 
 # Helper function to check if a string can be converted to float
@@ -127,7 +161,7 @@ def create_multi_panel_plot(base_path, drug_name, concentrations, feature_name, 
     plt.tight_layout()
     return fig
 
-def plot_all_features(base_path, drug_name, sample_size):
+def plot_all_features(base_path, drug_name, sample_size, cell_model="ord"):
     """
     Plot all features from the data files.
     """
@@ -147,27 +181,17 @@ def plot_all_features(base_path, drug_name, sample_size):
 
     print("Sorted concentrations:", sorted_concentrations)
 
-    
-    # Dictionary of features and their labels
-    features = {
-        'Vm(mV)': 'Voltage (mV)',
-        'dVm/dt(mV/ms)': 'dV/dt (mV/ms)',
-        'Cai(nM)': 'Cai (nM)',
-        'INa(nA/uF)': 'INa (nA/uF)',
-        'INaL(nA/uF)': 'INaL (nA/uF)',
-        'ICaL(nA/uF)': 'ICaL (nA/uF)',
-        'Ito(nA/uF)': 'Ito (nA/uF)',
-        'IKr(nA/uF)': 'IKr (nA/uF)',
-        'IKs(nA/uF)': 'IKs (nA/uF)',
-        'IK1(nA/uF)': 'IK1 (nA/uF)',
-        'Inet(uA/uF)': 'iNet (uA/uF)',
-        'Inet_AUC(uC/uF)': 'AUC of iNet (uC/uF)'
-    }
+    # Choose which features dict to use
+    cell_model_lower = cell_model.lower();
+    if "grandi" in cell_model_lower:
+        features = features_grandi
+    else:
+        features = features_ord
     
     # Create output directory if it doesn't exist
     print("TEST0  " + base_path)
     print("TEST1  " + drug_name)
-    output_folder_name = "./results/plots/time_series/"
+    output_folder_name = "./results/plots/time-series/"
     print("TEST2  " + output_folder_name)
     os.makedirs(output_folder_name, exist_ok=True)
     
@@ -176,7 +200,7 @@ def plot_all_features(base_path, drug_name, sample_size):
         fig = create_multi_panel_plot(base_path, drug_name, sorted_concentrations, feature, 
                                     ylabel, feature.split('(')[0], sample_size)
         if fig:
-            file_name = f"{feature.replace('/','_').split('(')[0]}_plot.png"
+            file_name = f"{feature.replace('/','_').split('(')[0]}-plot.png"
             plt_fullname = output_folder_name + file_name
             plt.savefig(plt_fullname, dpi=200, bbox_inches='tight')
             plt.close(fig)
@@ -184,9 +208,9 @@ def plot_all_features(base_path, drug_name, sample_size):
 # Example usage
 if __name__ == "__main__":
     # Replace with your actual base path
-    if len(sys.argv) < 4: print("Please provide the result folder path, drug name and number of sample!!!")
+    if len(sys.argv) < 5: print("Please provide the result folder path, drug name, number of sample, and the cell model name!!!")
     else:
       if (int(sys.argv[3]) <= 0): print("Incorrect data size --- {}!!".format(sys.argv[3]))
       else:
         generate_random_sample(int(sys.argv[3]))
-        plot_all_features(sys.argv[1], sys.argv[2], sys.argv[3])
+        plot_all_features(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
