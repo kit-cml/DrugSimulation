@@ -17,7 +17,7 @@ using std::multimap;
 using std::string;
 using std::vector;
 
-int generate_report_drug(const Parameter *p_param)
+int generate_report_drug(const Parameter *p_param, Drug_Block_Input &hill)
 {
   time_t time_data = time(NULL);
   struct tm *current_time = localtime(&time_data);
@@ -343,6 +343,21 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_latex,"\\end{table}\n\n");
   fprintf(fp_latex,"\\clearpage\n");
 
+  fprintf(fp_latex,"\n\\begin{table}[ht]\n");
+  fprintf(fp_latex,"\t\\centering\n");
+  fprintf(fp_latex,"\t\\caption{Number of depolarization cases of the \\textcolor{blue}{%s} model at \\textcolor{blue}{%d} \\textcolor{blue}{%s} concentrations (\\textcolor{blue}{%s} nM).}\n", CELL_MODEL_NAME, DRUG_CONCENTRATIONS_SIZE, DRUG_NAME, DRUG_CONCENTRATIONS );
+  fprintf(fp_latex,"\t\\label{tab:depol-failure-count}\n");
+  fprintf(fp_latex,"\t\\pgfplotstabletypeset[\n");
+  fprintf(fp_latex,"\t\tcol sep=comma,\n");
+  fprintf(fp_latex,"\t\theader=true,\n");
+  fprintf(fp_latex,"\t\tstring type,\n");
+  fprintf(fp_latex,"\t\tcolumns/.style={string type},\n");
+  fprintf(fp_latex,"\t\tevery head row/.style={before row=\\toprule, after row=\\midrule},\n");
+  fprintf(fp_latex,"\t\tevery last row/.style={after row=\\bottomrule},\n");
+  fprintf(fp_latex,"\t ]{./%s-depol-failure-count.csv}\n", DRUG_NAME);
+  fprintf(fp_latex,"\\end{table}\n\n");
+  fprintf(fp_latex,"\\clearpage\n");
+
 
   // end of LaTEX document
   fprintf(fp_latex,"\n\\end{document}\n");
@@ -596,6 +611,21 @@ int generate_report_drug(const Parameter *p_param)
   fprintf(fp_figures,"\t\tevery head row/.style={before row=\\toprule, after row=\\midrule},\n");
   fprintf(fp_figures,"\t\tevery last row/.style={after row=\\bottomrule},\n");
   fprintf(fp_figures,"\t ]{./%s-median-ci.csv}\n", DRUG_NAME);
+  fprintf(fp_figures,"\\end{table}\n\n");
+  fprintf(fp_figures,"\\clearpage\n");
+
+  fprintf(fp_figures,"\n\\begin{table}[ht]\n");
+  fprintf(fp_figures,"\t\\centering\n");
+  fprintf(fp_figures,"\t\\caption{Number of depolarization cases of the \\textcolor{blue}{%s} model at \\textcolor{blue}{%d} \\textcolor{blue}{%s} concentrations (\\textcolor{blue}{%s} nM) among \\textcolor{blue}{%d} samples.}\n", CELL_MODEL_NAME, DRUG_CONCENTRATIONS_SIZE, DRUG_NAME, DRUG_CONCENTRATIONS, hill.size() );
+  fprintf(fp_figures,"\t\\label{tab:depol-failure-count}\n");
+  fprintf(fp_figures,"\t\\pgfplotstabletypeset[\n");
+  fprintf(fp_figures,"\t\tcol sep=comma,\n");
+  fprintf(fp_figures,"\t\theader=true,\n");
+  fprintf(fp_figures,"\t\tstring type,\n");
+  fprintf(fp_figures,"\t\tcolumns/.style={string type},\n");
+  fprintf(fp_figures,"\t\tevery head row/.style={before row=\\toprule, after row=\\midrule},\n");
+  fprintf(fp_figures,"\t\tevery last row/.style={after row=\\bottomrule},\n");
+  fprintf(fp_figures,"\t ]{./%s-depol-failure-count.csv}\n", DRUG_NAME);
   fprintf(fp_figures,"\\end{table}\n\n");
   fprintf(fp_figures,"\\clearpage\n");
 

@@ -10,8 +10,24 @@ def combine_and_average(
     output_suffix: str = "-features-all.csv",        # suffix for combined files (hyphen style)
     sample_avg_filename: str = "sample-averages-across-concentrations.csv",
 ):
+
+    valid_concs = []
+    for d in os.listdir(base_dir):
+        dpath = os.path.join(base_dir, d)
+        if not os.path.isdir(dpath):
+            continue
+        try:
+            val = float(d)
+        except ValueError:
+            continue
+        if val == 0.0:   # exclude control folder
+            continue
+        valid_concs.append(d)
+
+    valid_concs.sort(key=lambda x: float(x))
+
     # 1) Combine all feature files within each concentration folder
-    for conc in os.listdir(base_dir):
+    for conc in valid_concs:
         conc_path = os.path.join(base_dir, conc)
         if not os.path.isdir(conc_path):
             continue
@@ -59,9 +75,11 @@ def combine_and_average(
         if not os.path.isdir(dpath):
             continue
         try:
-            float(d)
+            val = float(d)
             conc_dirs.append(d)
         except ValueError:
+            continue
+        if val == 0.0:  # skip control
             continue
 
     conc_dirs.sort(key=lambda x: float(x))
@@ -86,6 +104,8 @@ def combine_and_average(
     # 3) Compute per‑sample averages across concentrations
     if all_rows:
         all_df = pd.concat(all_rows, ignore_index=True)
+        if "Concentration" in all_df.columns:
+          all_df = all_df[all_df["Concentration"] != 0.0]
 
         # Ensure Sample exists
         if "Sample" not in all_df.columns:
@@ -104,6 +124,10 @@ def combine_and_average(
         )
         per_sample_avg = per_sample_avg.reset_index()
         per_sample_avg.sort_values("Sample", inplace=True)
+
+        # Remove Concentration column if present
+        if "Concentration" in per_sample_avg.columns:
+            per_sample_avg = per_sample_avg.drop(columns=["Concentration"])
 
         sample_avg_out = os.path.join(base_dir, sample_avg_filename)
         per_sample_avg.to_csv(sample_avg_out, index=False)

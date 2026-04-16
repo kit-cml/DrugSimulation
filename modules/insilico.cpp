@@ -239,14 +239,16 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
 
     // execute this code when entering new cycle.
     if (floor(tcurr / cycle_length) != pace_count) {
-      end_of_cycle_funct(&pace_count, &inet_auc, p_cell, p_param, p_features, temp_features, fp_vmdebug);
-      // mpi_printf(0,"Entering pace %hd at %lf msec.\n", pace_count, tcurr);
+      end_of_cycle_funct(&pace_count, tcurr, &inet_auc, p_cell, p_param, p_features, temp_features, fp_vmdebug);
+#ifdef CMLDEBUG
+      //mpi_printf(0,"Entering pace %hd at %lf msec.\n", pace_count, tcurr);
+#endif
     }
 
     // begin the last 250 paces operations.
     if (pace_count >= number_pacing - 250) {
       get_dvmdt_repol_max(p_cell, temp_features, p_param, tcurr, pace_count);
-    }  // end of the last 250 paces operations.
+    }  // end of the last 250 paces operations. 
 
 #ifdef CMLDEBUG
     // Output part.
@@ -269,8 +271,16 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   }  // end computation loop
 
   // write the last states into a file for further usage.
-  for (short idx = 0; idx < p_cell->states_size; idx++) {
-    fprintf(fp_initial_values, "%.16lf\n", p_features.initial_values[idx]);
+  // (only if the vm_peak is more than 0)
+  if( p_features.vm_peak >= 0 ){
+    for (short idx = 0; idx < p_cell->states_size; idx++) {
+      fprintf(fp_initial_values, "%.32lf\n", p_features.initial_values[idx]);
+    }
+  }
+  else{
+    for (short idx = 0; idx < p_cell->states_size; idx++) {
+      fprintf(fp_initial_values, "N/A\n");
+    }
   }
 
 #ifdef CMLDEBUG
@@ -279,10 +289,6 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
           "dVmdtMaxRepol");
   fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.8lf,%.8lf,%.8lf\n", p_features.pace_target, p_features.time_vm_peak, p_features.vm_peak,
           p_features.vm_valley, p_features.vm_amp30, p_features.vm_amp50, p_features.vm_amp90, p_features.dvmdt_repol_max);
-  fprintf(fp_vmdebug, "States during the highest dVM/dt between 30%% and 90%% repolarization phase:\n");
-  for (short idx = 0; idx < p_cell->states_size; idx++) {
-    fprintf(fp_vmdebug, "%.8lf\n", p_features.initial_values[idx]);
-  }
 #endif
 
   if( strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0 ){
@@ -297,30 +303,35 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   return 0;
 }
 
-void end_of_cycle_funct(short *pace_count, double *inet_auc, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,
+void end_of_cycle_funct(short *pace_count, double tcurr, double *inet_auc, Cellmodel *p_cell, const Parameter *p_param, Cipa_Features &p_features, Cipa_Features &temp_features,
                         FILE *fp_vmdebug) {
   *pace_count += 1;
-  if (*pace_count >= p_param->number_pacing - 250) {
-    double qnet = *inet_auc/1000.;
+
+  // set the biomarker values for references
+  if (*pace_count == p_param->number_pacing - 251) {
+    mpi_printf(cml::commons::MASTER_NODE, "Save reference feature at pace %hd\n", *pace_count);
+    p_features = temp_features;
+    p_features.pace_target = *pace_count;
+  }
+  if (*pace_count >= p_param->number_pacing - 252) {
+    double qnet = *inet_auc / 1000.;
 #ifdef CMLDEBUG
     fprintf(fp_vmdebug, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", *pace_count, temp_features.time_vm_peak, temp_features.vm_peak,
             temp_features.vm_valley, temp_features.vm_amp30, temp_features.vm_amp50, temp_features.vm_amp90, temp_features.dvmdt_repol_max, qnet);
     fflush(fp_vmdebug);
+
+    mpi_printf(cml::commons::MASTER_NODE,"Temp dvmdt_repol_max: %lf ---- current dvmdt_repol_max: %lf ---- Temp vm_peak:%lf\n", 
+                 temp_features.dvmdt_repol_max, p_features.dvmdt_repol_max, temp_features.vm_peak);
 #endif
+
     temp_features.initial_values.insert(temp_features.initial_values.begin(), p_cell->STATES, p_cell->STATES + p_cell->states_size);
-    /*
-        mpi_printf(cml::commons::MASTER_NODE, "Last states of pace %d:\n", *pace_count);
-        for(short idx = 0; idx < p_cell->states_size; idx++){
-          mpi_printf(cml::commons::MASTER_NODE, "%lf,", temp_features.initial_values[idx]);
-        }
-        mpi_printf(cml::commons::MASTER_NODE, "\n");
-    */
-    // mpi_printf(cml::commons::MASTER_NODE,"Temp dvmdt_repol_max: %lf ---- current dvmdt_repol_max: %lf\n", temp_features.dvmdt_repol_max,
-    // p_features.dvmdt_repol_max);
-    if (temp_features.dvmdt_repol_max > p_features.dvmdt_repol_max) {
+    // if vm_peak less than 0, then deny the result.
+    if (temp_features.dvmdt_repol_max > p_features.dvmdt_repol_max && temp_features.vm_peak >= 0. ) {
       temp_features.pace_target = *pace_count;
       p_features = temp_features;
-      // mpi_printf(cml::commons::MASTER_NODE,"Selected pace: %hd\n", p_features.pace_target);
+#ifdef CMLDEBUG
+      mpi_printf(cml::commons::MASTER_NODE,"Selected pace: %hd\n", p_features.pace_target);
+#endif
     }
   }
   *inet_auc = 0.;
@@ -354,8 +365,7 @@ void set_initial_condition(Cellmodel *p_cell, char *ic_file_name) {
   }
 }
 
-bool get_dvmdt_repol_max(Cellmodel *p_cell, Cipa_Features &p_features, const Parameter *p_param, const double tcurr, const short pace_count) {
-  bool is_eligible_AP = false;
+void get_dvmdt_repol_max(Cellmodel *p_cell, Cipa_Features &p_features, const Parameter *p_param, const double tcurr, const short pace_count) {
   static const double TIME_NORMALIZER = (p_param->cycle_length * (p_param->number_pacing - 250));
 
   // Find peak vm around 10 msecs and  30 msecs after stimulation
@@ -363,12 +373,16 @@ bool get_dvmdt_repol_max(Cellmodel *p_cell, Cipa_Features &p_features, const Par
       tcurr < ((p_cell->CONSTANTS[BCL] * pace_count) + (p_cell->CONSTANTS[stim_start] + 30))) {
     if (p_cell->STATES[V] > p_features.vm_peak) {
       p_features.vm_peak = p_cell->STATES[V];
-      if (p_features.vm_peak > 0) {
-        is_eligible_AP = true;
+      if (p_features.vm_peak >= 0) {
         p_features.vm_amp30 = p_features.vm_peak - (0.3 * (p_features.vm_peak - p_features.vm_valley));
         p_features.vm_amp50 = p_features.vm_peak - (0.5 * (p_features.vm_peak - p_features.vm_valley));
         p_features.vm_amp90 = p_features.vm_peak - (0.9 * (p_features.vm_peak - p_features.vm_valley));
         p_features.time_vm_peak = fmod((tcurr - TIME_NORMALIZER), p_param->cycle_length);
+      }
+      // I dunno why, we need to specify the opposite clearly.
+      // Really....dunno why.......
+      else if(p_features.vm_peak < 0) {
+        return;
       }
     }
   }
@@ -378,6 +392,4 @@ bool get_dvmdt_repol_max(Cellmodel *p_cell, Cipa_Features &p_features, const Par
       p_features.dvmdt_repol_max = p_cell->RATES[V];
     }
   }
-
-  return true;
 }

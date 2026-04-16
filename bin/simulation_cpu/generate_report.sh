@@ -54,11 +54,11 @@ PROGRESS=$((PROGRESS + 25)) # 25% for average feature.
 echo "DrugSimulation Report Progress: ${PROGRESS}%"
 
 #Generate report using Perplexity API with another script.
-echo "Generate PDF from LaTEX"
-./exec_perplexity_report_generator.sh
-EXIT_CODE=$?
-if [ $EXIT_CODE -ne 0 ]; then
-  echo "LaTEX to PDF got some errors! Please check the logfile_report for more details." >> "logfile" 2>&1
-fi
-PROGRESS=$((PROGRESS + 25)) # 25% for PDF generating.
-echo "DrugSimulation Report Progress: ${PROGRESS}%"
+#echo "Generate PDF from LaTEX"
+#./exec_perplexity_report_generator.sh
+#EXIT_CODE=$?
+#if [ $EXIT_CODE -ne 0 ]; then
+#  echo "LaTEX to PDF got some errors! Please check the logfile_report for more details." >> "logfile" 2>&1
+#fi
+#PROGRESS=$((PROGRESS + 25)) # 25% for PDF generating.
+#echo "DrugSimulation Report Progress: ${PROGRESS}%"

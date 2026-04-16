@@ -15,12 +15,12 @@ variants=(
 
 # for the full binary
 for flag in "${variants[@]}"; do
-  make CXXFLAGS="$flag" clean
-  make all CXXFLAGS="-std=c++11 $flag"
+  make EXTRA_CXXFLAGS+="$flag" clean
+  make all EXTRA_CXXFLAGS+="-std=c++11 $flag"
 done
 
 # for the postprocessing
 for flag in "${variants[@]}"; do
-  make CXXFLAGS="-DPOSTPROCESSING $flag" clean
-  make all CXXFLAGS="-std=c++11 -DPOSTPROCESSING $flag"
+  make EXTRA_CXXFLAGS+="-DPOSTPROCESSING $flag" clean
+  make all EXTRA_CXXFLAGS+="-std=c++11 -DPOSTPROCESSING $flag"
 done

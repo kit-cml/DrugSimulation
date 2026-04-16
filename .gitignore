@@ -8,6 +8,7 @@ bin/drugsim_ToR-ORd_postprocessing
 bin/drugsim_ToR-ORd-dynCl_postprocessing
 bin/drugsim_Grandi
 bin/drugsim_Grandi_postprocessing
+bin/perplexity_report_generator
 bin/drugsim_CiPAORdv1.0_Land
 bin/drugsim_CiPAORdv1.0_Land_postprocessing
 bin/drugsim_ORd-static_Land
@@ -15,7 +16,10 @@ bin/drugsim_ORd-static_Land_postprocessing
 bin/drugsim_ToR-ORd_Land
 bin/drugsim_ToR-ORd_Land_postprocessing
 bin/simulation_cpu/requests/*filled*
+bin/simulation_cpu/responses/*.json
+bin/simulation_cpu_postprocessing/initial_values_zip
 bin/simulation_cpu_postprocessing/requests/*filled*
+bin/simulation_cpu_postprocessing/responses/*.json
 *.tex
 *.pdf
 *.aux

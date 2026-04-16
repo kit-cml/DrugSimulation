@@ -36,7 +36,7 @@ using std::copy;
 using std::vector;
 
 int postprocessing(double conc, double inal_auc_control, double ical_auc_control, const Drug_Row &hill, const Drug_Row &herg,
-                    const Parameter *p_param, Cipa_Features &p_features, short sample_id, short group_id, const Cvar_Row *cvar) {
+                    const Parameter *p_param, Cipa_Features &p_features, short sample_id, const Cvar_Row *cvar) {
   bool is_ead = false;
   // simulation parameters.
   // Assigned to the constant variables for
@@ -132,45 +132,48 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   char buffer[900];
   FILE *fp_time_series;
 
-  // replace the initial condition
-  // with the last state value from
-  // the in-silico simulation
-  mpi_printf(cml::commons::MASTER_NODE, "STATES before:\n");
-  for (short idx = 0; idx < 20; idx++) {
-    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
-  }
-  mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from initial_values vector:\n");
-  for (short idx = 0; idx < 20; idx++) {
-    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.initial_values[idx]);
-  }
-  mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
 
-  if( p_features.initial_values.size() != p_cell->states_size ){
-    mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!! Init_Size: %d States_Size_: %d\n", p_features.initial_values.size(), p_cell->states_size);
-    mpi_printf(0, "INITIAL CONDITIONS:\n");
-    for (int idx = 0; idx < p_features.initial_values.size() ; idx++) {
-      mpi_printf(0, "%lf ", p_features.initial_values[idx]);
+  if( p_features.vm_peak < 0  ){
+    printf("WARNING: DRUG %s SAMPLE %hd CONCENTRATION %.0lf IS NOT DEPOLARIZED PROPERLY DURING INSILICO!! USE INITIAL VALUES FROM CELLMODEL...\n", drug_name, sample_id, conc);
+  }
+  else{
+    // replace the initial condition
+    // with the last state value from
+    // the in-silico simulation
+    mpi_printf(cml::commons::MASTER_NODE, "STATES before:\n");
+    for (short idx = 0; idx < 20; idx++) {
+      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
     }
-    mpi_printf(0, "\nSTATES:\n");
-    for (int idx = 0; idx < p_cell->states_size ; idx++) {
-      mpi_printf(0, "%lf ", p_cell->STATES[idx]);
+    mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from initial_values vector:\n");
+    for (short idx = 0; idx < 20; idx++) {
+      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.initial_values[idx]);
     }
-    return 1;    
-  }
-  else {
-    copy(p_features.initial_values.begin(), p_features.initial_values.end(), p_cell->STATES);
+    mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
+
+    if( p_features.initial_values.size() != p_cell->states_size ){
+      mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!! Init_Size: %d States_Size_: %d\n", p_features.initial_values.size(), p_cell->states_size);
+      mpi_printf(0, "INITIAL CONDITIONS:\n");
+      for (int idx = 0; idx < p_features.initial_values.size() ; idx++) {
+        mpi_printf(0, "%lf ", p_features.initial_values[idx]);
+      }
+      mpi_printf(0, "\nSTATES:\n");
+      for (int idx = 0; idx < p_cell->states_size ; idx++) {
+        mpi_printf(0, "%lf ", p_cell->STATES[idx]);
+      }
+      return 1;    
+    }
+    else{
+      for( int idx = 0; idx < p_cell->states_size; idx++ )p_cell->STATES[idx] = p_features.initial_values[idx];
+    }
+
+    mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
+    for (short idx = 0; idx < 20; idx++) {
+      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
+    }
+    mpi_printf(cml::commons::MASTER_NODE, "\n");
+
   }
 
-  for( int idx = 0; idx < p_cell->states_size; idx++ ){
-    p_cell->STATES[idx] = p_features.initial_values[idx];
-  }
-  //set_initial_condition_postprocessing(p_cell, buffer);
-
-  mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
-  for (short idx = 0; idx < 10; idx++) {
-    mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
-  }
-  mpi_printf(cml::commons::MASTER_NODE, "\n");
 
   snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_time_series_smp%d.csv", 
           cml::commons::RESULT_FOLDER, conc, drug_name, conc, sample_id);
@@ -301,8 +304,11 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
   snprintf(buffer, sizeof(buffer), "%s/%.2lf/%s_%.2lf_features_core%d.csv", 
           cml::commons::RESULT_FOLDER, conc, drug_name, conc,
           MPI_Profile::rank);
+  if( p_features.vm_peak < 0 ){
+    printf("WARNING: DRUG %s SAMPLE %hd CONCENTRATION %.0lf IS NOT DEPOLARIZED PROPERLY DURING POSTPROCESSING!! FEATURES WILL NOT BE PROCESSED!!\n", drug_name, sample_id, conc);
+  }
   collect_features(p_features, p_param, p_cell, conc, inet_auc, inet_apd_auc, inal_auc, ical_auc, inal_auc_control, ical_auc_control, buffer,
-                   sample_id, group_id);
+                   sample_id);
 
   if (strncasecmp(solver_type, "CVode", sizeof(solver_type)) == 0) {
     clean_cvode(p_cvode);
@@ -317,11 +323,15 @@ void get_vm_features_postprocessing(Cellmodel *p_cell, Cipa_Features &p_features
   if (tcurr > (p_cell->CONSTANTS[stim_start] + 10) && tcurr < (p_cell->CONSTANTS[stim_start] + 30)) {
     if (p_cell->STATES[V] > p_features.vm_peak) {
       p_features.vm_peak = p_cell->STATES[V];
-      if (p_features.vm_peak > 0) {
+      if (p_features.vm_peak >= 0) {
         p_features.vm_amp30 = p_features.vm_peak - (0.3 * (p_features.vm_peak - p_features.vm_valley));
         p_features.vm_amp50 = p_features.vm_peak - (0.5 * (p_features.vm_peak - p_features.vm_valley));
         p_features.vm_amp90 = p_features.vm_peak - (0.9 * (p_features.vm_peak - p_features.vm_valley));
         p_features.time_vm_peak = tcurr;
+      }
+      // skip calcultaing if vm_peak not even reach 0
+      else if(p_features.vm_peak < 0) {
+        return;
       }
     }
   }
@@ -372,7 +382,7 @@ void get_duration_postprocessing(Cipa_Features &p_features) {
 
 void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellmodel *p_cell, double conc, double inet_auc, double inet_apd_auc,
                       double inal_auc, double ical_auc, double inal_auc_control, double ical_auc_control, char *features_file_name, 
-                      short sample_id, short group_id) 
+                      short sample_id) 
 {
 
   bool file_exists_and_not_empty = false;
@@ -410,10 +420,17 @@ void collect_features(Cipa_Features &p_features, const Parameter *p_param, Cellm
             "APD90", "APD50", "APDTri", "VmMax", "VmRest", "dVmdtMax", "dVmdtMaxRepol", "CaTD90", "CaTD50", "CaTDTri", "CaMax",
             "CaRest");
   }
-  fprintf(fp_features, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", sample_id,
+  
+  // in case the depolarization failed...
+  if( p_features.vm_peak < 0 ){
+    fprintf(fp_features, "%hd,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A,N/A\n", sample_id);
+  }
+  else{
+    fprintf(fp_features, "%hd,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf,%.4lf\n", sample_id,
           p_features.qnet, p_features.qnet_apd, p_features.qinward, p_features.inal_auc, p_features.ical_auc, p_features.apd90, p_features.apd50,
           p_features.apd_triangulation, p_features.vm_peak, p_features.vm_valley, p_features.dvmdt_peak, p_features.dvmdt_repol_max, p_features.cad90,
           p_features.cad50, p_features.cad_triangulation, p_features.ca_peak, p_features.ca_valley);
+  }
 
   fclose(fp_features);
 }

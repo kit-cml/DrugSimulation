@@ -77,6 +77,8 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
   bool is_ead;
   double inal_auc_control = 0.0;
   double ical_auc_control = 0.0;
+  short depol_failure_count = 0;
+  short depol_failure_global_count = 0;
 
 #if defined POSTPROCESSING
   // Will be used in the postprocessing only.
@@ -100,16 +102,13 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
     if(error_code != 0) return error_code;
 #endif
     mpi_printf(0, "Running control postprocessing simulation...\n");
-    error_code = postprocessing(0., inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id, group_id);
+    error_code = postprocessing(0., inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id);
     if(error_code != 0) return error_code;
     inal_auc_control = p_features.inal_auc;
     ical_auc_control = p_features.ical_auc;
 
     // Update and report progress for control simulation
     tasks_completed++;
-    double local_progress = (double)tasks_completed / local_tasks * 100.0;
-    mpi_printf(0, "Rank 0: %.0f%% complete (%d/%d tasks, control simulation done)\n", 
-               local_progress, tasks_completed, local_tasks);
 
   }
   MPI_Barrier(MPI_COMM_WORLD);
@@ -122,31 +121,45 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
   printf("After ICaL at rank %d: %lf\n", MPI_Profile::rank, ical_auc_control);
 
 
+  FILE *fp_depol_failure_count;
+  snprintf(buffer, sizeof(buffer), "results/%s-depol-failure-count.csv", p_param->drug_name);
+  fp_depol_failure_count = fopen(buffer, "w");
+  // local counts on every rank
+  int depol_failure_total_arr[5] = {0};
+  // now reduce once over all ranks
+  int global_depol_failure_total_arr[5];  // only meaningful on root
+  int conc_idx;
+
   for (sample_id = MPI_Profile::rank; sample_id < hill.size(); sample_id += MPI_Profile::size) {
     if (sample_id >= hill.size()) break;  // Ensure no out-of-bounds access
 
-    for (short idx = 1; idx < drug_concentrations.size(); idx++) {
+    for (conc_idx = 1; conc_idx < drug_concentrations.size(); conc_idx++) {
       // postprocessing only read initial states at repolarization.
       // if the certain file cannot be read, skip to the next iteration.
 #if defined POSTPROCESSING
         vec_initial_values.clear();
         mpi_printf(0, "Postprocessing simulation started. Skipped the insilico process and read the steady state values....\n");
         snprintf(initial_values_file, sizeof(initial_values_file), "%s/%.2lf/%s_%.2lf_initial_values_smp%d.csv",
-                cml::commons::RESULT_FOLDER, drug_concentrations[idx], p_param->drug_name, drug_concentrations[idx], sample_id);
+                cml::commons::RESULT_FOLDER, drug_concentrations[conc_idx], p_param->drug_name, drug_concentrations[conc_idx], sample_id);
         error_code = set_initial_condition_postprocessing(initial_values_file, vec_initial_values);
-        if(error_code != 0) continue;
-        p_features.initial_values.clear();
-        p_features.initial_values.insert(p_features.initial_values.begin(), vec_initial_values.begin(), vec_initial_values.end());
+        if(error_code != 0){
+          if(error_code == 1) continue;
+          // force trigger the depolarization error.
+          else if(error_code == 2) p_features.vm_peak = -999.999;
+        }
+        else{
+          p_features.initial_values.clear();
+          p_features.initial_values.insert(p_features.initial_values.begin(), vec_initial_values.begin(), vec_initial_values.end());
+        }
 #else
         // until we decide a good parallelization for conductanve variability,
         // we only use the first row of conductance variability at the moment.
         // Hence why we use cvar[0].
         mpi_printf(0, "insilico simulation started. After that, followed by postprocessing...\n");
-        error_code = insilico(drug_concentrations[idx], hill[sample_id], herg[sample_id], p_param, p_features, sample_id, &cvar[0]);
+        error_code = insilico(drug_concentrations[conc_idx], hill[sample_id], herg[sample_id], p_param, p_features, sample_id);
         if(error_code != 0) return error_code;
 #endif
-        error_code = postprocessing(drug_concentrations[idx], inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id,
-                            group_id, &cvar[0]);
+        error_code = postprocessing(drug_concentrations[conc_idx], inal_auc_control, ical_auc_control, hill[sample_id], herg[sample_id], p_param, p_features, sample_id);
         if(error_code != 0) return error_code;
 
         // Update and report local progress
@@ -168,13 +181,60 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
         // Rank 0 computes and displays total progress
         if (MPI_Profile::rank == 0) {
           global_progress = (global_progress / MPI_Profile::size) * 100.0;
-          mpi_printf(0, "DrugSimulation Global progress: %.0f%%\n", global_progress);
+          printf("DrugSimulation Global progress: %.0f%%\n", global_progress);
         }
-    }
+
+        if( p_features.vm_peak < 0.) depol_failure_total_arr[conc_idx]++;
+    } // end of concentration loop
     
-  }
+  } // end of sample loop
   MPI_Barrier(MPI_COMM_WORLD);
 
+  // combine the number of cases from each CPU into the master node.
+  MPI_Reduce(
+    depol_failure_total_arr,            // sendbuf (local)
+    global_depol_failure_total_arr,     // recvbuf (only valid at root)
+    5,                                  // count (number of ints)
+    MPI_INT,                            // datatype
+    MPI_SUM,                            // op: sum element-wise
+    0,                          // root
+    MPI_COMM_WORLD                      // communicator
+  );
+
+  
+  if (MPI_Profile::rank == 0) {
+    // calculate percentage of depol failure cases.
+    double global_depol_failure_percentage_arr[5];
+    for(conc_idx = 1; conc_idx < drug_concentrations.size(); conc_idx++){
+      global_depol_failure_percentage_arr[conc_idx] = (double)(global_depol_failure_total_arr[conc_idx]*100.0)/(double)hill.size();
+    }
+
+    // write header.
+    fprintf(fp_depol_failure_count,"Concentrations (nM),");
+    for(conc_idx = 1; conc_idx < drug_concentrations.size(); conc_idx++){
+      fprintf(fp_depol_failure_count,"%.2lf", drug_concentrations[conc_idx]);
+      if(conc_idx != drug_concentrations.size()-1) fprintf(fp_depol_failure_count,",");
+    }
+    fprintf(fp_depol_failure_count,"\n");
+
+    // write total case
+    fprintf(fp_depol_failure_count,"Total Depol Failure Cases,");
+    for(conc_idx = 1; conc_idx < drug_concentrations.size(); conc_idx++){
+      fprintf(fp_depol_failure_count,"%d", global_depol_failure_total_arr[conc_idx]);
+      if(conc_idx != drug_concentrations.size()-1) fprintf(fp_depol_failure_count,",");
+    }
+    fprintf(fp_depol_failure_count,"\n");
+    
+    // write percentage
+    fprintf(fp_depol_failure_count,"Failure Percentages,");
+    for(conc_idx = 1; conc_idx < drug_concentrations.size(); conc_idx++){
+      fprintf(fp_depol_failure_count,"%.2lf", global_depol_failure_percentage_arr[conc_idx]);
+      if(conc_idx != drug_concentrations.size()-1) fprintf(fp_depol_failure_count,",");
+    }
+    fprintf(fp_depol_failure_count,"\n");    
+  }
+
+  fclose(fp_depol_failure_count);
   return 0;
 }
 
@@ -186,12 +246,17 @@ int set_initial_condition_postprocessing(const char *initial_values_file, vector
 
   fp_initial_values = fopen(initial_values_file, "r");
   if (fp_initial_values == NULL) {
-    mpi_printf(cml::commons::MASTER_NODE, "File %s not found! Make sure the name is correct!\n", initial_values_file);
+    printf("File %s at rank %d is not found! Make sure the name is correct!\n", initial_values_file, MPI_Profile::rank);
     return 1;
   }
   mpi_printf(cml::commons::MASTER_NODE, "Using states from repolarization phase from previous simulations\n");
   while (fgets(buffer, sizeof(buffer), fp_initial_values) != NULL) {
-    vec_initial_values.push_back(strtod(buffer, NULL));
+    if (strncmp (buffer,"N/A",4) == 0) {
+      printf("Failure of initial condition detected at rank %d! Set the peak value to be most negative numbers....\n", MPI_Profile::rank);
+      fclose(fp_initial_values);
+      return 2;
+    }
+    else vec_initial_values.push_back(strtod(buffer, NULL));
   }
   fclose(fp_initial_values); 
 

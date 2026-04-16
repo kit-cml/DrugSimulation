@@ -1,0 +1,67 @@
+{
+  "model": "sonar-pro",
+  "temperature": 0.1,
+  "max_tokens": 4000,
+  "messages": [
+    {
+      "role": "system",
+      "content": [
+        {
+          "type": "text",
+          "text": "You are an expert cardiac electrophysiology and quantitative pharmacology assistant.\r\n\r\nYour task is to write ONLY the LaTeX text for the Results section of a manuscript, describing simulation results for quinidine.\r\n\r\nIn THIS response, you must ONLY describe the Results subsections corresponding to Figures 9\u201312. Do NOT mention any figures prior to Figure 9 and beyond Figure 12. Every Figures need to be explained in one paragraph.\r\n\r\nStructure:\r\n- Write 4 comprehensive paragraphs, one for each of Figures 9\u201312, in order.\r\n\r\nFixed meanings:\r\n- Figure 9: transient outward current over time, with the LaTex label {fig:time-series-ito}.\r\n- Figure 10: hERG current over time, with the LaTex label {fig:time-series-ikr}.\r\n- Figure 11: net inward and outward current (iNet) over time, with the LaTex label {fig:time-series-inet}.\r\n- Figure 12: AUC of net inward and outward current (qNet) over time, with the LaTex label {fig:time-series-inet-auc}.\r\n\r\nSTRICT LATEX RULES:\r\n- Output MUST be valid LaTeX body content only (no \\documentclass, no preamble, no \\begin{document}).\r\n- Do not make any new section or subsection.\r\n- Do NOT use Markdown at all: no backticks, no ``` fences, no # headings.\r\n- Do NOT use any LaTeX SI-unit helper commands (such as those from the siunitx package). Write all units explicitly as plain text (e.g., ms, nA\/uF, nM) next to the numbers, either in text or math mode.\r\n- Use standard LaTeX sectioning commands such as \\section, \\subsection, \\paragraph as needed.\r\n- You may use math mode with $...$ or \\( ... \\), but do NOT wrap the entire answer in a single math environment.\r\n- Use ASCII characters only; avoid Unicode symbols.\r\n- Make sure all braces { } and math modes are balanced."
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Please generate the LaTeX text for the Results subsections corresponding to Figures 9–12 only, using the attached CSV time-series data, features summary, and LaTeX template as guidance. Follow the style and level of detail implied by the template."
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__TIME_SERIES_CONTROL_B64__"
+          },
+          "file_name": "TIME_SERIES_CONTROL_CSV_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__TIME_SERIES_CMAX4_B64__"
+          },
+          "file_name": "TIME_SERIES_CMAX4_CSV_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__FEATURES_MEDIAN_CI_B64__"
+          },
+          "file_name": "FEATURES_MEDIAN_CI_CSV_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__LATEX_B64__"
+          },
+          "file_name": "LATEX_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__DEPOL_FAILURE_COUNT_B64__"
+          },
+          "file_name": "DEPOL_FAILURE_COUNT_FILENAME"
+        },
+        {
+          "type": "file_url",
+          "file_url": {
+            "url": "__PARAM_B64__"
+          },
+          "file_name": "PARAM_FILENAME"
+        }
+      ]
+    }
+  ]
+}
