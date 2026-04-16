@@ -15,6 +15,7 @@ PARAM_CAMEL_FILE="param-camel.txt"
 PARAM_CAMEL_ESCAPED_FILE="param-camel-escaped.txt"
 PARAM_CAMEL_ESCAPED_B64="param-camel-escaped.b64"
 
+
 CELL_MODEL=$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
 DRUG_NAME=$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
 DRUG_CONCENTRATIONS=$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)
@@ -36,6 +37,10 @@ TIME_SERIES_DRUG_ESCAPED_B64="${RESULT_FOLDER}/${CONC_FORMAT}/${DRUG_NAME}_${CON
 LATEX_TEMPLATE_FILE="${RESULT_FOLDER}/report_template.tex"
 LATEX_TEMPLATE_ESCAPED_FILE="${RESULT_FOLDER}/report_template-escaped.tex"
 LATEX_TEMPLATE_ESCAPED_B64="${RESULT_FOLDER}/report_template-escaped.b64"
+
+DEPOL_FAILURE_COUNT_FILE="${RESULT_FOLDER}/${DRUG_NAME}-depol-failure-count.csv"
+DEPOL_FAILURE_COUNT_ESCAPED_FILE="${RESULT_FOLDER}/${DRUG_NAME}-depol-failure-count-escaped.csv"
+DEPOL_FAILURE_COUNT_ESCAPED_B64="${RESULT_FOLDER}/${DRUG_NAME}-depol-failure-count-escaped.b64"
 
 LATEX_FILE="report_drug_${DRUG_NAME}_${CELL_MODEL}.tex"
 
@@ -72,6 +77,12 @@ create_escaped_b64_file \
   "${LATEX_TEMPLATE_FILE}" \
   "${LATEX_TEMPLATE_ESCAPED_FILE}" \
   "${LATEX_TEMPLATE_ESCAPED_B64}"
+
+create_escaped_b64_file \
+  "${DEPOL_FAILURE_COUNT_FILE}" \
+  "${DEPOL_FAILURE_COUNT_ESCAPED_FILE}" \
+  "${DEPOL_FAILURE_COUNT_ESCAPED_B64}"
+
 
 # main loop for creating the AI report
 while [[ "${RETURN_CODE}" -ne 0  ]] && [[ "${NUMBER_OF_LOOPS}" -lt 4 ]]

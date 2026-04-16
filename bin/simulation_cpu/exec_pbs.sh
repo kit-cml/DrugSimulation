@@ -12,6 +12,12 @@ cd "${PBS_O_WORKDIR}"
 NPROCS="$(wc -l < $PBS_NODEFILE)"
 echo "This job has allocated ${NPROCS} nodes"
 
+# Source the function script
+# Need to be invoked after the
+# cd $PBS_O_WORKDIR command
+source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/create_concs_directories.sh"
+source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/zip_files.sh"
+
 # Use this to export the library path.
 # Please change the directory according to your library's location.
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}":/opt/prog/sundials/sundials-5.7.0/lib:/usr/local/lib64:/usr/lib64
@@ -19,11 +25,11 @@ echo "${LD_LIBRARY_PATH}"
 export PATH="${PATH}"
 echo "${PATH}"
 
-# Source the function script
-# Need to be invoked after the
-# cd $PBS_O_WORKDIR command
-source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/create_concs_directories.sh"
-source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/zip_files.sh"
+RESULT_FOLDER="./results"
+
+# Clear any old PID file
+PIDFILE="mpiexec.pid"
+rm -f "${PIDFILE}"
 
 # to grab cell_model value from parameter file (thanks, ChatGPT).
 # grep "^user_name": looks for the line starting with user_name
@@ -31,9 +37,6 @@ source "/home/cml/marcell/MetaHeart/DrugSimulation/bin/scripts/zip_files.sh"
 # sed 's/\/\/.*//': removes any inline comment starting with //
 # xargs: trims leading and trailing whitespace
 CELL_MODEL="$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
-
-RESULT_FOLDER="./results"
-PLOT_FOLDER="./plots"
 USER_NAME="$(grep "^user_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 DRUG_NAME="$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 DRUG_CONCENTRATIONS="$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
@@ -50,18 +53,6 @@ FEATURES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_features.zip"
 
 # Split the string into an array
 IFS=',' read -r -a drug_concentrations <<< "${DRUG_CONCENTRATIONS}"
-
-# Logging starts from here
-RESULT_FOLDER="./results"
-echo "Cleaning ${RESULT_FOLDER}"
-rm -rf "${RESULT_FOLDER}"
-echo "Cleaning successful!"
-create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
-echo "DrugSimulation Log Start..." >& "${RESULT_FOLDER}/logfile"
-
-# Clear any old PID file
-PIDFILE="mpiexec.pid"
-rm -f "${PIDFILE}"
 
 # choose the binary based on the value of cell_model
 if [[ $CELL_MODEL == *"CiPAORdv1.0_Land"* ]]; then
@@ -89,7 +80,11 @@ echo "Cleaning ${RESULT_FOLDER}"
 rm -rf "${RESULT_FOLDER}"
 echo "Cleaning successful!"
 create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
-mpiexec -machinefile ${PBS_NODEFILE} -np ${NPROCS} ~/marcell/MetaHeart/DrugSimulation/bin/$BINARY_FILE -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1
+# Logging starts from here
+echo "DrugSimulation Log Start..." >& "${RESULT_FOLDER}/logfile" 2>&1
+START_TIME=$(date +%s)
+echo "Start time: $(date)" >> "${RESULT_FOLDER}/logfile" 2>&1
+mpiexec -machinefile ${PBS_NODEFILE} -np ${NPROCS} "/home/cml/marcell/MetaHeart/DrugSimulation/bin/$BINARY_FILE" -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Simulation program got some problems!!! Exiting..."
@@ -105,4 +100,9 @@ mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
 mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
 #mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
 echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
-echo "Simulation has finished! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1
+
+END_TIME=$(date +%s)
+echo "End time: $(date)" >> "${RESULT_FOLDER}/logfile" 2>&1
+ELAPSED_TIME=$(( ${END_TIME} - ${START_TIME} ))
+ELAPSED_TIME_MINUTES=$(( ${ELAPSED_TIME} / 60 ))
+echo "All process have finished and it took ${ELAPSED_TIME_MINUTES} minutes! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1

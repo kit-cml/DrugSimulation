@@ -1,6 +1,6 @@
 {
   "model": "sonar-pro",
-  "max_tokens": 5000,
+  "max_tokens": 8000,
   "temperature": 0.1,
   "name": "TdP_Discussion_Generator",
   "version": "1.0",
@@ -20,7 +20,7 @@
       "content": [
         {
           "type": "text",
-          "text": "Please generate the Discussion section as specified."
+          "text": "Please generate the Discussion section as specified, using academic Korean language."
         },
         {
           "type": "file_url",

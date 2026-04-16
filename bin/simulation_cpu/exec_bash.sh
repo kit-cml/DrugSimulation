@@ -11,14 +11,11 @@ echo "${LD_LIBRARY_PATH}"
 export PATH="${PATH}"
 echo "${PATH}"
 
-# Logging starts from here
 RESULT_FOLDER="./results"
-echo "DrugSimulation Log Start..." >& "${RESULT_FOLDER}/logfile"
 
 # Clear any old PID file
 PIDFILE="mpiexec.pid"
 rm -f "${PIDFILE}"
-
 
 NUMBER_OF_CPU="$(grep "^number_of_cpu" param.txt | cut -d'=' -f2 | sed 's/\/\/.*//' | xargs)"
 MAX_CPU="$(nproc --all)"
@@ -50,60 +47,63 @@ FEATURES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_features.zip"
 # Split the string into an array
 IFS=',' read -r -a drug_concentrations <<< "${DRUG_CONCENTRATIONS}"
 
-# Logging starts from here
-RESULT_FOLDER="./results"
-echo "Cleaning ${RESULT_FOLDER}"
-rm -rf "${RESULT_FOLDER}"
-echo "Cleaning successful!"
-create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
-echo "DrugSimulation Log Start..." >& "${RESULT_FOLDER}/logfile"
-
-# Clear any old PID file
-PIDFILE="mpiexec.pid"
-rm -f "${PIDFILE}"
-
-
 # choose the binary based on the value of cell_model
 if [[ $CELL_MODEL == *"CiPAORdv1.0_Land"* ]]; then
-  BINARY_FILE="../drugsim_CiPAORdv1.0_Land"
+  BINARY_FILE="drugsim_CiPAORdv1.0_Land"
 elif [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
-  BINARY_FILE="../drugsim_CiPAORdv1.0"
+  BINARY_FILE="drugsim_CiPAORdv1.0"
 elif [[ $CELL_MODEL == *"ToR-ORd_Land"* ]]; then
-  BINARY_FILE="../drugsim_ToR-ORd_Land"
+  BINARY_FILE="drugsim_ToR-ORd_Land"
 elif [[ $CELL_MODEL == *"ToR-ORd"* ]]; then
-  BINARY_FILE="../drugsim_ToR-ORd"
+  BINARY_FILE="drugsim_ToR-ORd"
 elif [[ $CELL_MODEL == *"ToR-ORd-dynCl"* ]]; then
-  BINARY_FILE="../drugsim_ToR-ORd-dynCl"
+  BINARY_FILE="drugsim_ToR-ORd-dynCl"
 elif [[ $CELL_MODEL == *"ORd-static_Land"* ]]; then
-  BINARY_FILE="../drugsim_ORd-static_Land"
+  BINARY_FILE="drugsim_ORd-static_Land"
 elif [[ $CELL_MODEL == *"ORd-static"* ]]; then
-  BINARY_FILE="../drugsim_ORd-static"
+  BINARY_FILE="drugsim_ORd-static"
 elif [[ "${CELL_MODEL}" == *"Grandi"* ]]; then
-  BINARY_FILE="../drugsim_Grandi"
+  BINARY_FILE="drugsim_Grandi"
 else
   echo "The cell model ${CELL_MODEL} is not specified to any simulations!!" >> "${RESULT_FOLDER}/logfile" 2>&1
   exit 1
 fi
 
+echo "Cleaning previous results and logs..." 2>&1
+rm -rf "${RESULT_FOLDER}" "${PIDFILE}" "${DEPOL_FAILED_FILE}"
+echo "Cleaning successful!"
+create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
+
+
+# Logging starts from here
+echo "DrugSimulation Log Start..." >& "${RESULT_FOLDER}/logfile" 2>&1
 START_TIME=$(date +%s)
-echo "Run ${CELL_MODEL} cell model simulation with ${NUMBER_OF_CPU} cores."
-( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" "${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1 )
+echo "Run ${CELL_MODEL} cell model simulation with ${NUMBER_OF_CPU} cores." >> "${RESULT_FOLDER}/logfile" 2>&1
+echo "Start time: $(date)" >> "${RESULT_FOLDER}/logfile" 2>&1
+( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" ../${BINARY_FILE} -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1 )
+# Uncomment this for debugging, and comment the original one above.
+#set -x
+#exec mpiexec -np 1 gdb --args "../${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
  echo "Simulation program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1
   rm -rf "${PIDFILE}"
   exit 1
 fi
-echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
-zip_files "${RESULT_FOLDER}" "${INITIAL_VALUES_SUBSTRING}" "${INITIAL_VALUES_ZIPNAME}"
-zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
-zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
-#zip_files "${RESULT_FOLDER}" "${LAST_PACES_SUBSTRING}" "${LAST_PACES_ZIPNAME}"
-mv "${INITIAL_VALUES_ZIPNAME}" "${RESULT_FOLDER}/."
-mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
-mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
-#mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
-echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
+if [ -e "${DEPOL_FAILED_FILE}" ]; then
+  echo "WARNING: DEPOLARIZATION FAILURE DETECTED! NO STEADY STATE VALUE AVAILABLE!!!" >> "${RESULT_FOLDER}/logfile" 2>&1
+else
+  echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
+  zip_files "${RESULT_FOLDER}" "${INITIAL_VALUES_SUBSTRING}" "${INITIAL_VALUES_ZIPNAME}"
+  zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
+  zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
+  #zip_files "${RESULT_FOLDER}" "${LAST_PACES_SUBSTRING}" "${LAST_PACES_ZIPNAME}"
+  mv "${INITIAL_VALUES_ZIPNAME}" "${RESULT_FOLDER}/."
+  mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
+  mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
+  #mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
+  echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
+fi
 echo "Generate Report using AI...." >> "${RESULT_FOLDER}/logfile" 2>&1
 bash "./generate_report.sh" >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
@@ -114,6 +114,7 @@ if [ $EXIT_CODE -ne 0 ]; then
 fi
 rm -rf "${PIDFILE}"
 END_TIME=$(date +%s)
+echo "End time: $(date)" >> "${RESULT_FOLDER}/logfile" 2>&1
 ELAPSED_TIME=$(( ${END_TIME} - ${START_TIME} ))
 ELAPSED_TIME_MINUTES=$(( ${ELAPSED_TIME} / 60 ))
 echo "All process have finished and it took ${ELAPSED_TIME_MINUTES} minutes! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1

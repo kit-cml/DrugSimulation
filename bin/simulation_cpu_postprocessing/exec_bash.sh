@@ -12,7 +12,11 @@ echo "${LD_LIBRARY_PATH}"
 export PATH="${PATH}"
 echo "${PATH}"
 
+RESULT_FOLDER="./results"
 
+# Clear any old PID file
+PIDFILE="mpiexec.pid"
+rm -f "${PIDFILE}"
 
 NUMBER_OF_CPU="$(grep "^number_of_cpu" param.txt | cut -d'=' -f2 | sed 's/\/\/.*//' | xargs)"
 MAX_CPU="$(nproc --all)"
@@ -27,7 +31,6 @@ fi
 # sed 's/\/\/.*//': removes any inline comment starting with //
 # xargs: trims leading and trailing whitespace
 CELL_MODEL="$(grep "^cell_model" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
-
 USER_NAME="$(grep "^user_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 DRUG_NAME="$(grep "^drug_name" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
 DRUG_CONCENTRATIONS="$(grep "^drug_concentrations" param.txt | cut -d'=' -f2 | cut -d'/' -f1 | cut -d'/' -f1 | sed 's/\/\/.*//' | xargs)"
@@ -46,40 +49,36 @@ FEATURES_ZIPNAME="${DRUG_NAME}_${CELL_MODEL}_features.zip"
 # Split the string into an array
 IFS=',' read -r -a drug_concentrations <<< "${DRUG_CONCENTRATIONS}"
 
+
+# choose the binary based on the value of cell_model
+if [[ $CELL_MODEL == *"CiPAORdv1.0_Land"* ]]; then
+  BINARY_FILE=".drugsim_CiPAORdv1.0_Land_postprocessing"
+elif [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
+  BINARY_FILE="drugsim_CiPAORdv1.0_postprocessing"
+elif [[ $CELL_MODEL == *"ToR-ORd_Land"* ]]; then
+  BINARY_FILE="drugsim_ToR-ORd_Land_postprocessing"
+elif [[ $CELL_MODEL == *"ToR-ORd"* ]]; then
+  BINARY_FILE="drugsim_ToR-ORd_postprocessing"
+elif [[ $CELL_MODEL == *"ToR-ORd-dynCl"* ]]; then
+  BINARY_FILE="drugsim_ToR-ORd-dynCl_postprocessing"
+elif [[ $CELL_MODEL == *"ORd-static_Land"* ]]; then
+  BINARY_FILE="drugsim_ORd-static_Land_postprocessing"
+elif [[ $CELL_MODEL == *"ORd-static"* ]]; then
+  BINARY_FILE="drugsim_ORd-static_postprocessing"
+elif [[ "${CELL_MODEL}" == *"Grandi"* ]]; then
+  BINARY_FILE="drugsim_Grandi_postprocessing"
+else
+  echo "The cell model ${CELL_MODEL} is not specified to any simulations!!" >> "${RESULT_FOLDER}/logfile" 2>&1
+  exit 1
+fi
+
 # Logging starts from here
-RESULT_FOLDER="./results"
 echo "Cleaning ${RESULT_FOLDER}"
 rm -rf "${RESULT_FOLDER}"
 echo "Cleaning successful!"
 create_drug_concentration_directories "${RESULT_FOLDER}" "${DRUG_NAME}" "${CELL_MODEL}" "${drug_concentrations[@]}"
 echo "DrugSimulationPostprocessing Log Start..." >& "${RESULT_FOLDER}/logfile"
 
-# Clear any old PID file
-PIDFILE="mpiexec.pid"
-rm -f "${PIDFILE}"
-
-
-# choose the binary based on the value of cell_model
-if [[ $CELL_MODEL == *"CiPAORdv1.0_Land"* ]]; then
-  BINARY_FILE="../drugsim_CiPAORdv1.0_Land_postprocessing"
-elif [[ $CELL_MODEL == *"CiPAORdv1.0"* ]]; then
-  BINARY_FILE="../drugsim_CiPAORdv1.0_postprocessing"
-elif [[ $CELL_MODEL == *"ToR-ORd_Land"* ]]; then
-  BINARY_FILE="../drugsim_ToR-ORd_Land_postprocessing"
-elif [[ $CELL_MODEL == *"ToR-ORd"* ]]; then
-  BINARY_FILE="../drugsim_ToR-ORd_postprocessing"
-elif [[ $CELL_MODEL == *"ToR-ORd-dynCl"* ]]; then
-  BINARY_FILE="../drugsim_ToR-ORd-dynCl_postprocessing"
-elif [[ $CELL_MODEL == *"ORd-static_Land"* ]]; then
-  BINARY_FILE="../drugsim_ORd-static_Land_postprocessing"
-elif [[ $CELL_MODEL == *"ORd-static"* ]]; then
-  BINARY_FILE="../drugsim_ORd-static_postprocessing"
-elif [[ "${CELL_MODEL}" == *"Grandi"* ]]; then
-  BINARY_FILE="../drugsim_Grandi_postprocessing"
-else
-  echo "The cell model ${CELL_MODEL} is not specified to any simulations!!" >> "${RESULT_FOLDER}/logfile" 2>&1
-  exit 1
-fi
 
 START_TIME=$(date +%s)
 echo "Unzipping files..." >> "${RESULT_FOLDER}/logfile" 2>&1
@@ -91,7 +90,7 @@ if [ $EXIT_CODE -ne 0 ]; then
 fi
 echo "Unzipping successful!!!" >> "${RESULT_FOLDER}/logfile" 2>&1
 echo "Run ${CELL_MODEL} cell model postprocessing simulation with ${NUMBER_OF_CPU} cores."
-( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" "${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1)
+( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" "../${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1)
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Simulation program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1

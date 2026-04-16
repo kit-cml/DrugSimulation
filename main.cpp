@@ -76,7 +76,7 @@ int main(int argc, char **argv)
   double t_end = MPI_Wtime();
 
   // move to other post-processing app
-  if(MPI_Profile::rank == 0) err_code = generate_report_drug(p_param);
+  if(MPI_Profile::rank == 0) err_code = generate_report_drug(p_param,hill);
   //MPI_Barrier(MPI_COMM_WORLD);
 
   if(err_code != 0) MPI_Abort(MPI_COMM_WORLD, err_code);

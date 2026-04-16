@@ -37,16 +37,15 @@ CC := mpicc
 
 
 # CXXFLAGS is used for C++ compilation options.
-#CXXFLAGS += -Wall -O0 -fpermissive -std=c++11
-#CXXFLAGS += -Wall -O2 -fno-alias -fpermissive
-#CXXFLAGS += -Wall -Wunused-variable
-CXXFLAGS += -Wall -Wunused-variable -std=c++11
+BASE_CXXFLAGS := -std=c++11 -g -O0
+#BASE_CXXFLAGS := -Wall -Wunused-variable
+#BASE_CXXFLAGS += -fpermissive
+# Enable this if you need debugging
+#BASE_CXXFLAGS += -DCMLDEBUG
 
-# Uncomment this part for the compilation of postprocessing binaries
-#CXXFLAGS += -DPOSTPROCESSING
-
-# Uncomment this part for enabling some files for debugging
-#CXXFLAGS += -DCMLDEBUG
+# Base CXXFLAGS is the default ones.
+# Extra CXXFLAGS is the one from external settings.
+CXXFLAGS := $(BASE_CXXFLAGS) $(EXTRA_CXXFLAGS)
 
 # The program name wiil depend on the set value above
 # Make sure ONLY ONE MACRO IS USED!!!

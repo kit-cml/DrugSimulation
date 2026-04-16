@@ -64,6 +64,10 @@ def main():
         print("Error: input CSV has no rows.", file=sys.stderr)
         sys.exit(1)
 
+    # Optional: exclude concentration == 0.00 as control
+    if "concentration" in df.columns:
+        df = df[df["concentration"] != 0.0]
+
     # Treat 'sample' as index if present
     if "sample" in df.columns:
         df = df.set_index("sample")
