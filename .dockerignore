@@ -1,0 +1,8 @@
+.git
+.venv
+bin/results
+bin/simulation_cpu/results
+bin/simulation_cpu_postprocessing/results
+**/*.o
+**/__pycache__
+*.pyc
