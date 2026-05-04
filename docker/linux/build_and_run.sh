@@ -58,9 +58,7 @@ echo "[2/3] Building DrugSimulation binary for variant: $BIN_SUFFIX"
 cd /workspace/DrugSimulation
 make clean || true
 make all \
-  EXTRA_CXXFLAGS+="-std=c++11 $VARIANT_FLAG" \
-  SUNDIALS_LIB_DIR="../libCML/libs/sundials-5.7.0/lib64" \
-  EXTRA_LINK_DIRS=""
+  EXTRA_CXXFLAGS+="-std=c++11 $VARIANT_FLAG"
 
 if [[ "$RUN_SIM" != "1" ]]; then
   echo "RUN_SIM=$RUN_SIM, skipping simulation run."
