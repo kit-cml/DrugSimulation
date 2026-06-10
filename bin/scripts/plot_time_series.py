@@ -106,9 +106,10 @@ def create_multi_panel_plot(base_path, drug_name, concentrations, feature_name, 
     n_cols = 2
     
     # Create figure
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(8, 6))
+    fig_height = 3 if n_panels <= 2 else 6
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(8, fig_height))
     #fig.suptitle(f'{title} across different concentrations')
-    
+     
     # Flatten axes array for easier iteration
     axes_flat = axes.flatten()
     
