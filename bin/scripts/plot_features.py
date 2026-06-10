@@ -126,7 +126,9 @@ def create_feature_plots(all_data, drug_name, output_folder, cell_model="ord"):
 
     # Create a box plot for each feature
     for feature in features:
-        fig, ax = plt.subplots(figsize=(8, 4))
+            # Create figure
+        fig_height = 4
+        fig, ax = plt.subplots(figsize=(8, fig_height))
         
         # Prepare data for boxplot
         data_to_plot = [all_data[all_data['concentration'] == conc][feature].values 

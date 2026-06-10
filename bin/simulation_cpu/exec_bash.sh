@@ -1,8 +1,10 @@
 #!/bin/bash
+source ../../../../../../venv/myenv/bin/activate
 
 # Source the function script
 source "../scripts/create_concs_directories.sh"
 source "../scripts/zip_files.sh"
+source "../scripts/progress_percentage.sh"
 
 # Use this to export the library path.
 # Please change the directory according to your library's location.
@@ -80,41 +82,62 @@ echo "DrugSimulation Log Start..." >& "${RESULT_FOLDER}/logfile" 2>&1
 START_TIME=$(date +%s)
 echo "Run ${CELL_MODEL} cell model simulation with ${NUMBER_OF_CPU} cores." >> "${RESULT_FOLDER}/logfile" 2>&1
 echo "Start time: $(date)" >> "${RESULT_FOLDER}/logfile" 2>&1
+
+# Setup the percentage watcher.
+LOG_FILE="${RESULT_FOLDER}/logfile"
+PERCENTAGE_FILE="${RESULT_FOLDER}/percentage.txt"
+echo 0 > ${PERCENTAGE_FILE}
+watch_progress_percentage "$LOG_FILE" "$PERCENTAGE_FILE" &
+PROGRESS_WATCHER_PID=$!
+
+# Execute the simulation
 ( echo $$ > "${PIDFILE}"; exec mpiexec -np "${NUMBER_OF_CPU}" ../${BINARY_FILE} -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1 )
+
 # Uncomment this for debugging, and comment the original one above.
 #set -x
 #exec mpiexec -np 1 gdb --args "../${BINARY_FILE}" -input_deck param.txt >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
- echo "Simulation program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1
+  echo "Simulation program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1
   rm -rf "${PIDFILE}"
   exit 1
 fi
-if [ -e "${DEPOL_FAILED_FILE}" ]; then
-  echo "WARNING: DEPOLARIZATION FAILURE DETECTED! NO STEADY STATE VALUE AVAILABLE!!!" >> "${RESULT_FOLDER}/logfile" 2>&1
-else
-  echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
-  zip_files "${RESULT_FOLDER}" "${INITIAL_VALUES_SUBSTRING}" "${INITIAL_VALUES_ZIPNAME}"
-  zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
-  zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
-  #zip_files "${RESULT_FOLDER}" "${LAST_PACES_SUBSTRING}" "${LAST_PACES_ZIPNAME}"
-  mv "${INITIAL_VALUES_ZIPNAME}" "${RESULT_FOLDER}/."
-  mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
-  mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
-  #mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
-  echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
-fi
+
+echo "Zipping folder..." >> "${RESULT_FOLDER}/logfile" 2>&1
+emit_progress_percentage 75 "${LOG_FILE}"
+zip_files "${RESULT_FOLDER}" "${INITIAL_VALUES_SUBSTRING}" "${INITIAL_VALUES_ZIPNAME}"
+zip_files "${RESULT_FOLDER}" "${TIME_SERIES_SUBSTRING}" "${TIME_SERIES_ZIPNAME}"
+zip_files "${RESULT_FOLDER}" "${FEATURES_SUBSTRING}" "${FEATURES_ZIPNAME}"
+#zip_files "${RESULT_FOLDER}" "${LAST_PACES_SUBSTRING}" "${LAST_PACES_ZIPNAME}"
+mv "${INITIAL_VALUES_ZIPNAME}" "${RESULT_FOLDER}/."
+mv "${TIME_SERIES_ZIPNAME}" "${RESULT_FOLDER}/."
+mv "${FEATURES_ZIPNAME}" "${RESULT_FOLDER}/."
+#mv "${LAST_PACES_ZIPNAME}" "${RESULT_FOLDER}/."
+echo "Zipping finished" >> "${RESULT_FOLDER}/logfile" 2>&1
+
+
 echo "Generate Report using AI...." >> "${RESULT_FOLDER}/logfile" 2>&1
+emit_progress_percentage 80 "${LOG_FILE}"
 bash "./generate_report.sh" >> "${RESULT_FOLDER}/logfile" 2>&1
 EXIT_CODE=$?
 if [ $EXIT_CODE -ne 0 ]; then
   echo "Reporting program got some problems!!! Exiting..." >> "${RESULT_FOLDER}/logfile" 2>&1
   rm -rf "${PIDFILE}"
-  exit 1
 fi
 rm -rf "${PIDFILE}"
 END_TIME=$(date +%s)
 echo "End time: $(date)" >> "${RESULT_FOLDER}/logfile" 2>&1
 ELAPSED_TIME=$(( ${END_TIME} - ${START_TIME} ))
 ELAPSED_TIME_MINUTES=$(( ${ELAPSED_TIME} / 60 ))
+
+
+emit_progress_percentage 100 "${LOG_FILE}"
 echo "All process have finished and it took ${ELAPSED_TIME_MINUTES} minutes! Check the logfile for more details." >> "${RESULT_FOLDER}/logfile" 2>&1
+
+kill "$PROGRESS_WATCHER_PID" 2>/dev/null
+wait "$PROGRESS_WATCHER_PID" 2>/dev/null
+
+
+exit 0;
+
+deactivate
