@@ -41,14 +41,15 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
   Cvar_Input cvar;
   if (p_param->is_cvar == 1) get_data_from_file<Cvar_Row, Cvar_Input>(p_param->cvar_file, cvar);
 
-#if defined CIPAORDV1_0
-  error_code = check_drug_data_content(herg, p_param);
-  if (error_code > 0) return 1;
-  if (herg.size() != hill.size()) {
-    mpi_printf(0, "Data size not equal. Hill: %d hERG %d\n", hill.size(), herg.size());
-    return 1;
+
+  if(strstr(p_param->cell_model,"CiPAORd") != NULL ){
+    error_code = check_drug_data_content(herg, p_param);
+    if (error_code > 0) return 1;
+    if (herg.size() != hill.size()) {
+      mpi_printf(0, "Data size not equal. Hill: %d hERG %d\n", hill.size(), herg.size());
+      return 1;
+    }
   }
-#endif
 
   // get concentration values from input
   // and append control concentration before the input.
@@ -180,7 +181,10 @@ int drug_simulation_bench(const Parameter *p_param, multimap<double, string> &ma
 
         // Rank 0 computes and displays total progress
         if (MPI_Profile::rank == 0) {
-          global_progress = (global_progress / MPI_Profile::size) * 100.0;
+        // The reason to use 70 percent for global_progres is
+        // considering the other processes outside the simulations
+        // (zipping, plotting, and AI reporting).
+          global_progress = (global_progress / MPI_Profile::size) * 70.0;
           printf("DrugSimulation Global progress: %.0f%%\n", global_progress);
         }
 

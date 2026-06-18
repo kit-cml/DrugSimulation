@@ -46,9 +46,9 @@
         {
           "type": "file_url",
           "file_url": {
-            "url": "__LATEX_B64__"
+            "url": "__LATEX_FIGURES_B64__"
           },
-          "file_name": "LATEX_FILENAME"
+          "file_name": "LATEX_FIGURES_FILENAME"
         },
         {
           "type": "file_url",
