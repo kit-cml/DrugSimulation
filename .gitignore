@@ -21,6 +21,7 @@ bin/simulation_cpu_postprocessing/initial_values_zip
 bin/simulation_cpu_postprocessing/requests/*filled*
 bin/simulation_cpu_postprocessing/responses/*.json
 .DS_Store
+bin/simulation_cpu/.docker-test-param.txt
 *.tex
 *.pdf
 *.aux
@@ -82,4 +83,3 @@ bin/simulation_cpu_postprocessing/chantest_herg/ranolazine/
 bin/simulation_cpu_postprocessing/chantest_herg/sotalol/
 bin/simulation_cpu_postprocessing/chantest_herg/terfenadine/
 bin/simulation_cpu_postprocessing/chantest_herg/verapamil/
-
