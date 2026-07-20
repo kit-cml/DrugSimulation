@@ -11,6 +11,8 @@ PACING_OVERRIDE="${PACING_OVERRIDE:-}"
 PACING_WRITE_OVERRIDE="${PACING_WRITE_OVERRIDE:-}"
 SOLVER_OVERRIDE="${SOLVER_OVERRIDE:-}"
 TIME_STEP_MIN_OVERRIDE="${TIME_STEP_MIN_OVERRIDE:-}"
+HILL_FILE_OVERRIDE="${HILL_FILE_OVERRIDE:-}"
+CONC_OVERRIDE="${CONC_OVERRIDE:-}"
 
 variant_suffix_from_flag() {
   case "$1" in
@@ -72,7 +74,7 @@ cd "/workspace/DrugSimulation/$SIM_DIR"
 PARAM_TO_USE="$PARAM_FILE"
 TEMP_PARAM_FILE=""
 
-if [[ -n "$PACING_OVERRIDE" || -n "$PACING_WRITE_OVERRIDE" || -n "$SOLVER_OVERRIDE" || -n "$TIME_STEP_MIN_OVERRIDE" ]]; then
+if [[ -n "$PACING_OVERRIDE" || -n "$PACING_WRITE_OVERRIDE" || -n "$SOLVER_OVERRIDE" || -n "$TIME_STEP_MIN_OVERRIDE" || -n "$HILL_FILE_OVERRIDE" || -n "$CONC_OVERRIDE" ]]; then
   TEMP_PARAM_FILE=".docker-test-param.txt"
   cp "$PARAM_FILE" "$TEMP_PARAM_FILE"
 
@@ -94,6 +96,14 @@ if [[ -n "$PACING_OVERRIDE" || -n "$PACING_WRITE_OVERRIDE" || -n "$SOLVER_OVERRI
     # Euler uses this as a fixed integration step for the whole run (time_step_max is ignored
     # by the Euler branch), so this needs to be small (e.g. 0.005) to stay numerically stable.
     sed -E -i "s#^(time_step_min[[:space:]]*=[[:space:]]*)[0-9.]+#\1${TIME_STEP_MIN_OVERRIDE}#" "$TEMP_PARAM_FILE"
+  fi
+
+  if [[ -n "$HILL_FILE_OVERRIDE" ]]; then
+    sed -E -i "s#^(hill_file[[:space:]]*=[[:space:]]*)\S+#\1${HILL_FILE_OVERRIDE}#" "$TEMP_PARAM_FILE"
+  fi
+
+  if [[ -n "$CONC_OVERRIDE" ]]; then
+    sed -E -i "s#^(drug_concentrations[[:space:]]*=[[:space:]]*)\S+#\1${CONC_OVERRIDE}#" "$TEMP_PARAM_FILE"
   fi
 
   PARAM_TO_USE="$TEMP_PARAM_FILE"

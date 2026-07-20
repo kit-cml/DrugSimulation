@@ -87,6 +87,8 @@ pip install -r bin/scripts/requirements.txt
 
 ## Building
 
+Native builds are intended for Linux environments that have matching `libCML` and SUNDIALS static archives. On macOS, use the Dockerized Linux workflow below because the bundled archives under `../libCML/libs/sundials-5.7.0/lib64` are Linux target files and will not link natively on macOS.
+
 ### Build all variants at once
 
 ```bash
@@ -303,7 +305,7 @@ Open the generated plots (`.png` / `.pdf`) in the concentration directories, or 
 
 ## Running in Dockerized Linux (Recommended for macOS)
 
-This repository now includes a Linux container workflow that preserves the expected original layout where `libCML` is a sibling directory.
+This repository includes a Linux container workflow that preserves the expected original layout where `libCML` is a sibling directory.
 
 The Docker service is pinned to `linux/amd64` so it matches the bundled SUNDIALS archives under `../libCML/libs/sundials-5.7.0/lib64`.
 
@@ -320,18 +322,14 @@ Expected host layout:
 From the repository root:
 
 ```bash
-docker compose build drugsim-linux
+docker compose up -d --build
 ```
 
 ### 2. Build and run simulation in one command (inside container)
 
 ```bash
-docker compose run --rm \
-   -e VARIANT_FLAG=-DCIPAORDV1 \
-   -e NP=10 \
-   -e SIM_DIR=bin/simulation_cpu \
-   drugsim-linux \
-   bash -lc "./docker/linux/build_and_run.sh"
+docker compose exec -T drugsim-linux env VARIANT_FLAG=-DCIPAORDV1 NP=10 RUN_SIM=1 \
+   bash docker/linux/build_and_run.sh
 ```
 
 What this does:
@@ -343,24 +341,15 @@ What this does:
 ### 3. Build only (skip simulation)
 
 ```bash
-docker compose run --rm \
-   -e VARIANT_FLAG=-DCIPAORDV1 \
-   -e RUN_SIM=0 \
-   drugsim-linux \
-   bash -lc "./docker/linux/build_and_run.sh"
+docker compose exec -T drugsim-linux env RUN_SIM=0 VARIANT_FLAG=-DCIPAORDV1 \
+   bash docker/linux/build_and_run.sh
 ```
 
-### 3a. Run a short pacing test without editing `param.txt`
+### 3a. Run a short pacing test (smoke test) without editing `param.txt`
 
 ```bash
-docker compose run --rm \
-   -e VARIANT_FLAG=-DCIPAORDV1 \
-   -e NP=2 \
-   -e PACING_OVERRIDE=5 \
-   -e PACING_WRITE_OVERRIDE=5 \
-   -e SOLVER_OVERRIDE=Euler \
-   drugsim-linux \
-   bash -lc "./docker/linux/build_and_run.sh"
+docker compose exec -T drugsim-linux env VARIANT_FLAG=-DCIPAORDV1 NP=1 PACING_OVERRIDE=5 PACING_WRITE_OVERRIDE=5 TIME_STEP_MIN_OVERRIDE=0.001 SOLVER_OVERRIDE=Euler \
+   RUN_SIM=1 bash docker/linux/build_and_run.sh
 ```
 
 This creates a temporary parameter file inside the container run, leaves your checked-in `bin/simulation_cpu/param.txt` unchanged, and runs the full simulation flow with only 5 paces using the Euler solver.
