@@ -390,6 +390,116 @@ git restore --source=HEAD --staged --worktree -- Makefile README.md docker-compo
 
 ---
 
+## NEW: Run a Hardware Performance Benchmark
+
+Use `docker/linux/benchmark.sh` to run a reproducible timing sweep inside the Linux container.
+
+The benchmark auto-discovers drugs from `bin/simulation_cpu/chantest_hill/`, then sweeps:
+
+- drug
+- solver (`CVode` and `Euler` by default)
+- MPI process count (`NP_LIST`)
+- repeat index (`REPEATS`)
+
+Each run calls `docker/linux/run_only.sh`, times the full simulation wall-clock duration, and appends one row to a benchmark CSV.
+
+### Default benchmark profile
+
+To keep the benchmark fast and comparable, the script uses short simulation overrides unless you change them:
+
+- `PACING=5`
+- `PACING_WRITE=5`
+- `TIME_STEP_MIN=0.001`
+- `SOLVERS="CVode,Euler"`
+- `NP_LIST="1"`
+- `REPEATS=1`
+- `VARIANT_FLAG=-DCIPAORDV1`
+
+It also builds the selected variant once before the sweep unless `SKIP_BUILD=1` is set.
+
+### Basic usage
+
+From the repository root, ready to run, just copy and paste to your terminal:
+
+```bash
+bash docker/linux/benchmark.sh
+```
+
+**The script will start `drugsim-linux` automatically if needed!**
+
+### Common examples
+
+Single-process baseline:
+
+```bash
+bash docker/linux/benchmark.sh
+```
+
+Compare 1, 2, 4, and 8 MPI ranks:
+
+```bash
+NP_LIST="1,2,4,8" REPEATS=3 bash docker/linux/benchmark.sh
+```
+
+Benchmark only selected drugs:
+
+```bash
+DRUGS="quinidine,bepridil" NP_LIST="1,4" REPEATS=2 bash docker/linux/benchmark.sh
+```
+
+Benchmark only one solver:
+
+```bash
+SOLVERS="Euler" NP_LIST="1,4" bash docker/linux/benchmark.sh
+```
+
+Reuse an already-built binary:
+
+```bash
+SKIP_BUILD=1 NP_LIST="1,4" bash docker/linux/benchmark.sh
+```
+
+Preview the sweep without running it:
+
+```bash
+DRY_RUN=1 NP_LIST="1,4" bash docker/linux/benchmark.sh
+```
+
+### Useful environment variables
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DRUGS` | auto-discovered | Comma- or space-separated drug list |
+| `SOLVERS` | `CVode,Euler` | Solvers to benchmark |
+| `NP_LIST` | `1` | MPI process counts to test |
+| `REPEATS` | `1` | Repeats per combination |
+| `VARIANT_FLAG` | `-DCIPAORDV1` | Cell-model variant built once for the sweep |
+| `PACING` | `5` | Override for `number_pacing` |
+| `PACING_WRITE` | `5` | Override for `number_pacing_write` |
+| `TIME_STEP_MIN` | `0.001` | Override for `time_step_min` |
+| `CONC` | unset | Override `drug_concentrations` for every run |
+| `HILL_SAMPLES` | `30` | Uses `chantest_hill/<drug>/IC50_samples<HILL_SAMPLES>.csv` |
+| `HERG_SAMPLES` | `10` | Uses `chantest_herg/<drug>/boot_pars<HERG_SAMPLES>.csv` |
+| `SKIP_BUILD` | `0` | Set to `1` to skip the one-time build step |
+| `FAIL_FAST` | `0` | Set to `1` to stop on the first failed run |
+| `OUT_DIR` | `benchmark_results/<timestamp>` | Output directory for this sweep |
+| `DRY_RUN` | `0` | Set to `1` to print commands only |
+
+Run `bash docker/linux/benchmark.sh --help` to print the full built-in usage text.
+
+### Output files
+
+Each sweep writes a new directory under `benchmark_results/<timestamp>/` containing:
+
+- `results.csv` — one row per run with elapsed time, exit code, selected parameters, and hardware metadata
+- `summary.txt` — mean and standard deviation of elapsed time grouped by `drug`, `solver`, and `np`
+- `environment.txt` — host and container details captured once per sweep
+- `logs/<drug>_<solver>_np<N>_rep<M>.log` — stdout/stderr for each individual run
+
+The benchmark stamps every CSV row with host OS, CPU model, visible RAM, container architecture, and whether Docker is running under CPU emulation. This is especially important on Apple Silicon hosts because the Docker service is intentionally pinned to `linux/amd64`; emulated timings should not be compared against native Linux runs.
+
+---
+
 ## Running a Simulation on an HPC Cluster (PBS/Torque)
 
 1. Navigate to the working directory:

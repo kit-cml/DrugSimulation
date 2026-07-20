@@ -3,7 +3,10 @@
 #
 # Sweeps the drugsim container across drugs x solvers x MPI process counts,
 # holding every other hyperparameter fixed, and records wall-clock elapsed
-# time for each run to a CSV so runs are comparable across hardware.
+# time for each run to a CSV so runs are comparable across hardware. Every
+# row is tagged with host + container hardware info (CPU, RAM, arch, whether
+# Docker is emulating a foreign architecture) so CSVs from different machines
+# can be compared or concatenated without losing track of what ran where.
 #
 # Run from the repository root (or anywhere; it cd's to the repo root itself):
 #   bash docker/linux/benchmark.sh
@@ -39,6 +42,12 @@ Environment variables (defaults shown):
   OUT_DIR              benchmark_results/<timestamp>            where results.csv/summary.txt/logs/ are written
   DRY_RUN                0                                       set 1 to print the commands without running them
 
+Hardware/environment info (host OS/arch/CPU/RAM, container OS/arch/CPU/RAM,
+whether Docker is running inside a VM, whether the container is CPU-emulated)
+is auto-detected once per sweep, printed up front, written to
+OUT_DIR/environment.txt, and appended as extra columns on every results.csv
+row -- no configuration needed.
+
 Example - sweep all drugs across both solvers at 1 and 4 MPI ranks, 3 repeats:
   NP_LIST="1,4" REPEATS=3 bash docker/linux/benchmark.sh
 
@@ -71,6 +80,83 @@ FAIL_FAST="${FAIL_FAST:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 OUT_DIR="${OUT_DIR:-benchmark_results/$(date +%Y%m%d_%H%M%S)}"
 
+# --- Hardware / environment detection --------------------------------------
+# Captured once per sweep (hardware doesn't change mid-run) and stamped onto
+# every CSV row, so results from different machines stay self-describing.
+norm_arch() {
+  case "$1" in
+    arm64 | aarch64) echo "arm64" ;;
+    x86_64 | amd64) echo "x86_64" ;;
+    *) echo "$1" ;;
+  esac
+}
+
+gather_host_info() {
+  HOST_OS="$(uname -s)"
+  HOST_ARCH="$(uname -m)"
+  case "$HOST_OS" in
+    Darwin)
+      HOST_CPU_MODEL="$(sysctl -n machdep.cpu.brand_string 2>/dev/null)"
+      HOST_CPU_CORES="$(sysctl -n hw.logicalcpu 2>/dev/null)"
+      local ram_bytes
+      ram_bytes="$(sysctl -n hw.memsize 2>/dev/null)"
+      HOST_RAM_GB="$(awk -v b="${ram_bytes:-0}" 'BEGIN { printf "%.1f", b / 1024 / 1024 / 1024 }')"
+      ;;
+    Linux)
+      HOST_CPU_MODEL="$(awk -F: '/model name/ { gsub(/^ /, "", $2); print $2; exit }' /proc/cpuinfo 2>/dev/null)"
+      HOST_CPU_CORES="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null)"
+      local ram_kb
+      ram_kb="$(awk '/MemTotal/ { print $2 }' /proc/meminfo 2>/dev/null)"
+      HOST_RAM_GB="$(awk -v kb="${ram_kb:-0}" 'BEGIN { printf "%.1f", kb / 1024 / 1024 }')"
+      ;;
+    *)
+      HOST_CPU_MODEL="unknown"
+      HOST_CPU_CORES="unknown"
+      HOST_RAM_GB="unknown"
+      ;;
+  esac
+  HOST_CPU_MODEL="${HOST_CPU_MODEL:-unknown}"
+  HOST_CPU_MODEL="${HOST_CPU_MODEL//,/}" # keep CSV columns intact
+  HOST_CPU_CORES="${HOST_CPU_CORES:-unknown}"
+  HOST_RAM_GB="${HOST_RAM_GB:-unknown}"
+}
+
+# Requires the drugsim-linux container to already be running.
+gather_container_info() {
+  DOCKER_OS="$(docker info --format '{{.OperatingSystem}}' 2>/dev/null)"
+  if [[ "$DOCKER_OS" == *"Docker Desktop"* ]]; then
+    DOCKER_RUNTIME="docker-desktop-vm"
+  else
+    DOCKER_RUNTIME="linux-native"
+  fi
+
+  CONTAINER_ARCH="$(docker compose exec -T drugsim-linux uname -m 2>/dev/null | tr -d '\r\n')"
+  CONTAINER_CPU_CORES="$(docker compose exec -T drugsim-linux nproc 2>/dev/null | tr -d '\r\n')"
+  local mem_kb
+  mem_kb="$(docker compose exec -T drugsim-linux awk '/MemTotal/ { print $2 }' /proc/meminfo 2>/dev/null | tr -d '\r\n')"
+  CONTAINER_RAM_GB="$(awk -v kb="${mem_kb:-0}" 'BEGIN { printf "%.1f", kb / 1024 / 1024 }')"
+
+  if [[ -n "$CONTAINER_ARCH" && "$(norm_arch "$HOST_ARCH")" != "$(norm_arch "$CONTAINER_ARCH")" ]]; then
+    EMULATED="yes"
+  else
+    EMULATED="no"
+  fi
+
+  CONTAINER_ARCH="${CONTAINER_ARCH:-unknown}"
+  CONTAINER_CPU_CORES="${CONTAINER_CPU_CORES:-unknown}"
+  CONTAINER_RAM_GB="${CONTAINER_RAM_GB:-unknown}"
+}
+
+# Placeholders so results.csv columns line up even in DRY_RUN mode, where the
+# container is never contacted.
+DOCKER_RUNTIME="n/a (dry run)"
+CONTAINER_ARCH="n/a"
+CONTAINER_CPU_CORES="n/a"
+CONTAINER_RAM_GB="n/a"
+EMULATED="n/a"
+
+gather_host_info
+
 if [[ -z "${DRUGS:-}" ]]; then
   DRUGS="$(find "$SIM_DIR/chantest_hill" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort | tr '\n' ',')"
 fi
@@ -88,7 +174,7 @@ fi
 
 mkdir -p "$OUT_DIR/logs"
 CSV_FILE="$OUT_DIR/results.csv"
-echo "timestamp_utc,variant_flag,drug,solver,np,repeat,pacing,pacing_write,time_step_min,concentrations,hill_file,herg_file,elapsed_seconds,exit_code,log_file" > "$CSV_FILE"
+echo "timestamp_utc,variant_flag,drug,solver,np,repeat,pacing,pacing_write,time_step_min,concentrations,hill_file,herg_file,elapsed_seconds,exit_code,log_file,host_os,host_arch,host_cpu_model,host_cpu_cores,host_ram_gb,docker_runtime,container_arch,container_cpu_cores,container_ram_gb,emulated" > "$CSV_FILE"
 
 echo "Output directory: $OUT_DIR"
 echo "Drugs:   ${DRUG_ARR[*]}"
@@ -103,6 +189,8 @@ if [[ "$DRY_RUN" != "1" ]]; then
     docker compose up -d
   fi
 
+  gather_container_info
+
   if [[ "$SKIP_BUILD" != "1" ]]; then
     echo "Building binary for VARIANT_FLAG=$VARIANT_FLAG once before the sweep (RUN_SIM=0)..."
     docker compose exec -T drugsim-linux env \
@@ -116,6 +204,28 @@ if [[ "$DRY_RUN" != "1" ]]; then
     echo
   fi
 fi
+
+echo "Hardware / environment:"
+echo "  Host:      ${HOST_OS} ${HOST_ARCH} | ${HOST_CPU_MODEL} | ${HOST_CPU_CORES} logical cores | ${HOST_RAM_GB} GB RAM"
+echo "  Container: ${DOCKER_RUNTIME} | arch=${CONTAINER_ARCH} (emulated=${EMULATED}) | ${CONTAINER_CPU_CORES} cores visible | ${CONTAINER_RAM_GB} GB RAM visible"
+if [[ "$EMULATED" == "yes" ]]; then
+  echo "  WARNING: container arch differs from host arch -- this run is CPU-emulated (e.g. Rosetta/QEMU)."
+  echo "           Timings will NOT reflect native hardware performance; do not compare them against native runs."
+fi
+echo
+
+{
+  echo "host_os=${HOST_OS}"
+  echo "host_arch=${HOST_ARCH}"
+  echo "host_cpu_model=${HOST_CPU_MODEL}"
+  echo "host_cpu_cores=${HOST_CPU_CORES}"
+  echo "host_ram_gb=${HOST_RAM_GB}"
+  echo "docker_runtime=${DOCKER_RUNTIME}"
+  echo "container_arch=${CONTAINER_ARCH}"
+  echo "container_cpu_cores=${CONTAINER_CPU_CORES}"
+  echo "container_ram_gb=${CONTAINER_RAM_GB}"
+  echo "emulated=${EMULATED}"
+} > "$OUT_DIR/environment.txt"
 
 total=$(( ${#DRUG_ARR[@]} * ${#SOLVER_ARR[@]} * ${#NP_ARR[@]} * REPEATS ))
 count=0
@@ -162,7 +272,7 @@ for drug in "${DRUG_ARR[@]}"; do
         rm -f "$time_file"
 
         conc_used="${CONC:-<param.txt default>}"
-        echo "${timestamp},${VARIANT_FLAG},${drug},${solver},${np},${rep},${PACING},${PACING_WRITE},${TIME_STEP_MIN},${conc_used},${hill_file},${herg_file},${elapsed},${exit_code},${log_file}" >> "$CSV_FILE"
+        echo "${timestamp},${VARIANT_FLAG},${drug},${solver},${np},${rep},${PACING},${PACING_WRITE},${TIME_STEP_MIN},${conc_used},${hill_file},${herg_file},${elapsed},${exit_code},${log_file},${HOST_OS},${HOST_ARCH},${HOST_CPU_MODEL},${HOST_CPU_CORES},${HOST_RAM_GB},${DOCKER_RUNTIME},${CONTAINER_ARCH},${CONTAINER_CPU_CORES},${CONTAINER_RAM_GB},${EMULATED}" >> "$CSV_FILE"
 
         if [[ $exit_code -ne 0 ]]; then
           failures=$((failures + 1))
@@ -187,6 +297,7 @@ fi
 echo
 echo "Sweep complete: $((count - failures))/$total runs succeeded ($failures failed)."
 echo "Raw results: $CSV_FILE"
+echo "Environment: $OUT_DIR/environment.txt"
 
 summary_file="$OUT_DIR/summary.txt"
 awk -F',' '
