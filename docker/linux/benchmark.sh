@@ -33,7 +33,9 @@ Environment variables (defaults shown):
   PACING                5                                       number_pacing override
   PACING_WRITE          5                                       number_pacing_write override
   TIME_STEP_MIN         0.001                                   time_step_min override
-  CONC                (unset -> use param.txt's own concentrations for every drug)
+  CONC_LEVELS           1x,4x                                   which columns of CMAX_TABLE to use as drug_concentrations (or "all" for 1x,2x,3x,4x)
+  CMAX_TABLE           <SIM_DIR>/chantest_hill/CiPA_drug_concentrations.csv   per-drug Cmax table (drug,therapeutic_Cmax_nM,conc_1x..conc_4x,CiPA_risk_category)
+  CONC                (unset -> look up each drug's own concentrations in CMAX_TABLE; set to force the SAME concentrations for every drug instead)
   HILL_SAMPLES          30                                      -> chantest_hill/<drug>/IC50_samples<HILL_SAMPLES>.csv
   HERG_SAMPLES          10                                      -> chantest_herg/<drug>/boot_pars<HERG_SAMPLES>.csv
   SIM_DIR              bin/simulation_cpu
@@ -72,6 +74,8 @@ REPEATS="${REPEATS:-1}"
 PACING="${PACING:-5}"
 PACING_WRITE="${PACING_WRITE:-5}"
 TIME_STEP_MIN="${TIME_STEP_MIN:-0.001}"
+CONC_LEVELS="${CONC_LEVELS:-1x,4x}"
+CMAX_TABLE="${CMAX_TABLE:-$SIM_DIR/chantest_hill/CiPA_drug_concentrations.csv}"
 CONC="${CONC:-}"
 HILL_SAMPLES="${HILL_SAMPLES:-30}"
 HERG_SAMPLES="${HERG_SAMPLES:-10}"
@@ -157,6 +161,45 @@ EMULATED="n/a"
 
 gather_host_info
 
+# --- Per-drug concentration lookup ------------------------------------------
+# Each drug has its own Cmax, so reusing one drug's concentrations for every
+# drug in the sweep understates/overstates the real workload. CMAX_TABLE maps
+# drug -> conc_1x..conc_4x (uM); CONC_LEVELS picks which of those columns to
+# combine into drug_concentrations for each run.
+resolve_conc_levels() {
+  if [[ "$CONC_LEVELS" == "all" ]]; then
+    echo "1x 2x 3x 4x"
+  else
+    split_list "$CONC_LEVELS"
+  fi
+}
+
+lookup_drug_conc() {
+  local drug="$1"
+  local levels
+  levels="$(resolve_conc_levels)"
+  [[ -f "$CMAX_TABLE" ]] || return 1
+  awk -F',' -v drug="$drug" -v levels="$levels" '
+    NR == 1 {
+      for (i = 1; i <= NF; i++) col[$i] = i
+      next
+    }
+    $1 == drug {
+      n = split(levels, lv, " ")
+      out = ""
+      ok = 1
+      for (j = 1; j <= n; j++) {
+        idx = col["conc_" lv[j]]
+        val = (idx != "") ? $(idx) : ""
+        if (val == "") { ok = 0; break }
+        out = (out == "") ? val : out "," val
+      }
+      if (ok) { print out; found = 1 }
+    }
+    END { exit (found ? 0 : 1) }
+  ' "$CMAX_TABLE"
+}
+
 if [[ -z "${DRUGS:-}" ]]; then
   DRUGS="$(find "$SIM_DIR/chantest_hill" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort | tr '\n' ',')"
 fi
@@ -181,6 +224,11 @@ echo "Drugs:   ${DRUG_ARR[*]}"
 echo "Solvers: ${SOLVER_ARR[*]}"
 echo "NP:      ${NP_ARR[*]}"
 echo "Repeats: $REPEATS"
+if [[ -n "$CONC" ]]; then
+  echo "Conc:    fixed for all drugs: $CONC"
+else
+  echo "Conc:    per-drug, levels=${CONC_LEVELS} from ${CMAX_TABLE}"
+fi
 echo
 
 if [[ "$DRY_RUN" != "1" ]]; then
@@ -235,6 +283,15 @@ for drug in "${DRUG_ARR[@]}"; do
   hill_file="./chantest_hill/${drug}/IC50_samples${HILL_SAMPLES}.csv"
   herg_file="./chantest_herg/${drug}/boot_pars${HERG_SAMPLES}.csv"
 
+  if [[ -n "$CONC" ]]; then
+    conc_override="$CONC"
+  elif conc_override="$(lookup_drug_conc "$drug")"; then
+    :
+  else
+    conc_override=""
+    echo "WARNING: no concentrations for drug=${drug} (levels=${CONC_LEVELS}) in ${CMAX_TABLE}; falling back to param.txt's own concentrations for this drug." >&2
+  fi
+
   for solver in "${SOLVER_ARR[@]}"; do
     for np in "${NP_ARR[@]}"; do
       for ((rep = 1; rep <= REPEATS; rep++)); do
@@ -255,7 +312,7 @@ for drug in "${DRUG_ARR[@]}"; do
           "DRUG_NAME_OVERRIDE=${drug}"
           "HILL_FILE_OVERRIDE=${hill_file}"
           "HERG_FILE_OVERRIDE=${herg_file}")
-        [[ -n "$CONC" ]] && cmd+=("CONC_OVERRIDE=${CONC}")
+        [[ -n "$conc_override" ]] && cmd+=("CONC_OVERRIDE=${conc_override}")
         cmd+=(bash docker/linux/run_only.sh)
 
         if [[ "$DRY_RUN" == "1" ]]; then
@@ -271,7 +328,7 @@ for drug in "${DRUG_ARR[@]}"; do
         elapsed="$(cat "$time_file")"
         rm -f "$time_file"
 
-        conc_used="${CONC:-<param.txt default>}"
+        conc_used="${conc_override:-<param.txt default>}"
         echo "${timestamp},${VARIANT_FLAG},${drug},${solver},${np},${rep},${PACING},${PACING_WRITE},${TIME_STEP_MIN},${conc_used},${hill_file},${herg_file},${elapsed},${exit_code},${log_file},${HOST_OS},${HOST_ARCH},${HOST_CPU_MODEL},${HOST_CPU_CORES},${HOST_RAM_GB},${DOCKER_RUNTIME},${CONTAINER_ARCH},${CONTAINER_CPU_CORES},${CONTAINER_RAM_GB},${EMULATED}" >> "$CSV_FILE"
 
         if [[ $exit_code -ne 0 ]]; then

@@ -49,6 +49,7 @@ bin/simulation_cpu/chantest_hill/sotalol/
 bin/simulation_cpu/chantest_hill/terfenadine/
 bin/simulation_cpu/chantest_hill/verapamil/
 bin/simulation_cpu/chantest_hill/CiPA_training_drugs_Cmax.csv
+bin/simulation_cpu/chantest_hill/CiPA_drug_concentrations.csv
 bin/simulation_cpu/chantest_herg/bepridil/
 bin/simulation_cpu/chantest_herg/chlorpromazine/
 bin/simulation_cpu/chantest_herg/cisapride/
@@ -72,6 +73,7 @@ bin/simulation_cpu_postprocessing/chantest_hill/sotalol/
 bin/simulation_cpu_postprocessing/chantest_hill/terfenadine/
 bin/simulation_cpu_postprocessing/chantest_hill/verapamil/
 bin/simulation_cpu_postprocessing/chantest_hill/CiPA_training_drugs_Cmax.csv
+bin/simulation_cpu_postprocessing/chantest_hill/CiPA_drug_concentrations.csv
 bin/simulation_cpu_postprocessing/chantest_herg/bepridil/
 bin/simulation_cpu_postprocessing/chantest_herg/chlorpromazine/
 bin/simulation_cpu_postprocessing/chantest_herg/cisapride/
