@@ -38,6 +38,13 @@ Environment variables (defaults shown):
   CONC                (unset -> look up each drug's own concentrations in CMAX_TABLE; set to force the SAME concentrations for every drug instead)
   HILL_SAMPLES          30                                      -> chantest_hill/<drug>/IC50_samples<HILL_SAMPLES>.csv
   HERG_SAMPLES          10                                      -> chantest_herg/<drug>/boot_pars<HERG_SAMPLES>.csv
+  SAMPLES                1                                       rows of hill/herg to actually use per run (truncated from the
+                                                                   HILL_SAMPLES/HERG_SAMPLES files above); "all" disables truncation.
+                                                                   MPI distributes samples round-robin across NP ranks, so with the
+                                                                   default SAMPLES=1 only rank 0 does simulation work regardless of
+                                                                   NP -- that isolates a single-core, hardware-only timing free of
+                                                                   virtual-population noise. To measure multi-core scaling instead,
+                                                                   set SAMPLES to match each NP value (one sample per core).
   SIM_DIR              bin/simulation_cpu
   SKIP_BUILD             0                                       set 1 to reuse an already-built binary
   FAIL_FAST              0                                       set 1 to stop the sweep on first failure
@@ -79,6 +86,7 @@ CMAX_TABLE="${CMAX_TABLE:-$SIM_DIR/chantest_hill/CiPA_drug_concentrations.csv}"
 CONC="${CONC:-}"
 HILL_SAMPLES="${HILL_SAMPLES:-30}"
 HERG_SAMPLES="${HERG_SAMPLES:-10}"
+SAMPLES="${SAMPLES:-1}"
 SKIP_BUILD="${SKIP_BUILD:-0}"
 FAIL_FAST="${FAIL_FAST:-0}"
 DRY_RUN="${DRY_RUN:-0}"
@@ -217,13 +225,23 @@ fi
 
 mkdir -p "$OUT_DIR/logs"
 CSV_FILE="$OUT_DIR/results.csv"
-echo "timestamp_utc,variant_flag,drug,solver,np,repeat,pacing,pacing_write,time_step_min,concentrations,hill_file,herg_file,elapsed_seconds,exit_code,log_file,host_os,host_arch,host_cpu_model,host_cpu_cores,host_ram_gb,docker_runtime,container_arch,container_cpu_cores,container_ram_gb,emulated" > "$CSV_FILE"
+echo "timestamp_utc,variant_flag,drug,solver,np,repeat,pacing,pacing_write,time_step_min,concentrations,hill_file,herg_file,samples,elapsed_seconds,exit_code,log_file,host_os,host_arch,host_cpu_model,host_cpu_cores,host_ram_gb,docker_runtime,container_arch,container_cpu_cores,container_ram_gb,emulated" > "$CSV_FILE"
+
+# Truncated hill/herg files live here when SAMPLES limits the population size
+# (see the per-drug loop below); gitignored, regenerated fresh each run.
+SAMPLES_TMP_DIR="$SIM_DIR/.bench_samples"
+mkdir -p "$SAMPLES_TMP_DIR"
 
 echo "Output directory: $OUT_DIR"
 echo "Drugs:   ${DRUG_ARR[*]}"
 echo "Solvers: ${SOLVER_ARR[*]}"
 echo "NP:      ${NP_ARR[*]}"
 echo "Repeats: $REPEATS"
+if [[ "$SAMPLES" == "all" ]]; then
+  echo "Samples: all (untruncated, HILL_SAMPLES=${HILL_SAMPLES}/HERG_SAMPLES=${HERG_SAMPLES})"
+else
+  echo "Samples: ${SAMPLES} row(s) per drug (truncated from HILL_SAMPLES=${HILL_SAMPLES}/HERG_SAMPLES=${HERG_SAMPLES})"
+fi
 if [[ -n "$CONC" ]]; then
   echo "Conc:    fixed for all drugs: $CONC"
 else
@@ -282,6 +300,25 @@ failures=0
 for drug in "${DRUG_ARR[@]}"; do
   hill_file="./chantest_hill/${drug}/IC50_samples${HILL_SAMPLES}.csv"
   herg_file="./chantest_herg/${drug}/boot_pars${HERG_SAMPLES}.csv"
+  samples_used="all"
+
+  if [[ "$SAMPLES" != "all" && "$SAMPLES" != "0" ]]; then
+    src_hill="$SIM_DIR/chantest_hill/${drug}/IC50_samples${HILL_SAMPLES}.csv"
+    src_herg="$SIM_DIR/chantest_herg/${drug}/boot_pars${HERG_SAMPLES}.csv"
+    avail_hill=$(($(wc -l < "$src_hill") - 1))
+    avail_herg=$(($(wc -l < "$src_herg") - 1))
+    samples_used=$((avail_hill < avail_herg ? avail_hill : avail_herg))
+    if ((SAMPLES < samples_used)); then
+      samples_used=$SAMPLES
+    elif ((SAMPLES > samples_used)); then
+      echo "WARNING: SAMPLES=${SAMPLES} exceeds available rows for ${drug} (hill=${avail_hill}, herg=${avail_herg}); using ${samples_used} instead. Bump HILL_SAMPLES/HERG_SAMPLES to unlock more." >&2
+    fi
+
+    hill_file="./.bench_samples/${drug}_hill_n${samples_used}.csv"
+    herg_file="./.bench_samples/${drug}_herg_n${samples_used}.csv"
+    head -n "$((samples_used + 1))" "$src_hill" > "$SAMPLES_TMP_DIR/${drug}_hill_n${samples_used}.csv"
+    head -n "$((samples_used + 1))" "$src_herg" > "$SAMPLES_TMP_DIR/${drug}_herg_n${samples_used}.csv"
+  fi
 
   if [[ -n "$CONC" ]]; then
     conc_override="$CONC"
@@ -329,7 +366,8 @@ for drug in "${DRUG_ARR[@]}"; do
         rm -f "$time_file"
 
         conc_used="${conc_override:-<param.txt default>}"
-        echo "${timestamp},${VARIANT_FLAG},${drug},${solver},${np},${rep},${PACING},${PACING_WRITE},${TIME_STEP_MIN},${conc_used},${hill_file},${herg_file},${elapsed},${exit_code},${log_file},${HOST_OS},${HOST_ARCH},${HOST_CPU_MODEL},${HOST_CPU_CORES},${HOST_RAM_GB},${DOCKER_RUNTIME},${CONTAINER_ARCH},${CONTAINER_CPU_CORES},${CONTAINER_RAM_GB},${EMULATED}" >> "$CSV_FILE"
+        conc_used_csv="${conc_used//,/;}" # concentrations are comma-joined; swap to ';' so they don't split into extra CSV fields
+        echo "${timestamp},${VARIANT_FLAG},${drug},${solver},${np},${rep},${PACING},${PACING_WRITE},${TIME_STEP_MIN},${conc_used_csv},${hill_file},${herg_file},${samples_used},${elapsed},${exit_code},${log_file},${HOST_OS},${HOST_ARCH},${HOST_CPU_MODEL},${HOST_CPU_CORES},${HOST_RAM_GB},${DOCKER_RUNTIME},${CONTAINER_ARCH},${CONTAINER_CPU_CORES},${CONTAINER_RAM_GB},${EMULATED}" >> "$CSV_FILE"
 
         if [[ $exit_code -ne 0 ]]; then
           failures=$((failures + 1))
@@ -361,10 +399,10 @@ awk -F',' '
   NR == 1 { next }
   {
     key = $3 "|" $4 "|" $5
-    if ($14 == "0") {
+    if ($15 == "0") {
       n[key]++
-      sum[key] += $13
-      sumsq[key] += $13 * $13
+      sum[key] += $14
+      sumsq[key] += $14 * $14
     } else {
       fail[key]++
     }
