@@ -15,6 +15,7 @@ A high-performance, MPI-parallel in-silico cardiac drug safety simulation framew
 - [Input Files](#input-files)
 - [Running a Simulation Locally on Your Machine](#running-a-simulation-locally-on-your-machine)
 - [Running in Dockerized Linux (Recommended for macOS)](#running-in-dockerized-linux-recommended-for-macos)
+- [Run a Hardware Performance Benchmark](#run-a-hardware-performance-benchmark)
 - [Running a Simulation on an HPC Cluster (PBS/Torque)](#running-a-simulation-on-an-hpc-cluster-pbstorque)
 - [Post-processing & Reporting](#post-processing--reporting)
 - [Output Files](#output-files)
@@ -205,6 +206,17 @@ CSV file with bootstrapped hERG kinetic parameters for the CiPAORdv1.0 model.
 
 CSV file providing per-sample scaling factors for ionic conductances (e.g., `GNa_fast`, `GKr`, `PCa`, …). Enables virtual population simulations.
 
+### Per-drug Cmax table (`chantest_hill/CiPA_drug_concentrations.csv`)
+
+CSV file mapping each drug to its therapeutic Cmax and the concentrations to simulate at 1×–4× that Cmax:
+
+```
+drug,therapeutic_Cmax_nM,conc_1x,conc_2x,conc_3x,conc_4x,CiPA_risk_category
+quinidine,3237,3237,6474,9711,12948,2
+```
+
+Used by `docker/linux/benchmark.sh` to look up each drug's own `drug_concentrations` instead of reusing one drug's values for every drug in a sweep (see [Run a Hardware Performance Benchmark](#run-a-hardware-performance-benchmark)).
+
 ---
 
 ## Running a Simulation Locally on Your Machine
@@ -354,6 +366,28 @@ docker compose exec -T drugsim-linux env VARIANT_FLAG=-DCIPAORDV1 NP=1 PACING_OV
 
 This creates a temporary parameter file inside the container run, leaves your checked-in `bin/simulation_cpu/param.txt` unchanged, and runs the full simulation flow with only 5 paces using the Euler solver.
 
+Both `build_and_run.sh` and `run_only.sh` (skip the build, just run — see below) accept the same set of `*_OVERRIDE` environment variables to patch `param.txt` on the fly without touching the checked-in file:
+
+| Override | Patches |
+|---|---|
+| `PACING_OVERRIDE` | `number_pacing` |
+| `PACING_WRITE_OVERRIDE` | `number_pacing_write` |
+| `SOLVER_OVERRIDE` | `solver_type` |
+| `TIME_STEP_MIN_OVERRIDE` | `time_step_min` |
+| `HILL_FILE_OVERRIDE` | `hill_file` |
+| `HERG_FILE_OVERRIDE` | `herg_file` |
+| `DRUG_NAME_OVERRIDE` | `drug_name` |
+| `CONC_OVERRIDE` | `drug_concentrations` |
+
+`docker/linux/run_only.sh` runs the same simulation step without rebuilding first (useful once a binary already exists, e.g. for repeated timing runs):
+
+```bash
+docker compose exec -T drugsim-linux env NP=1 DRUG_NAME_OVERRIDE=bepridil \
+   HILL_FILE_OVERRIDE=./chantest_hill/bepridil/IC50_samples30.csv \
+   HERG_FILE_OVERRIDE=./chantest_herg/bepridil/boot_pars10.csv \
+   bash docker/linux/run_only.sh
+```
+
 ### 4. Supported variant flags
 
 - `-DCIPAORDV1`
@@ -390,32 +424,43 @@ git restore --source=HEAD --staged --worktree -- Makefile README.md docker-compo
 
 ---
 
-## NEW: Run a Hardware Performance Benchmark
+## Run a Hardware Performance Benchmark
 
-Use `docker/linux/benchmark.sh` to run a reproducible timing sweep inside the Linux container.
+Use `docker/linux/benchmark.sh` to run a reproducible timing sweep inside the Linux container, for comparing raw solver/hardware speed across drugs, solvers, and CPU core counts.
 
 The benchmark auto-discovers drugs from `bin/simulation_cpu/chantest_hill/`, then sweeps:
 
-- drug
+- drug (each using its own `drug_concentrations`, looked up from [`CiPA_drug_concentrations.csv`](#per-drug-cmax-table-chantest_hillcipa_drug_concentrationscsv))
 - solver (`CVode` and `Euler` by default)
 - MPI process count (`NP_LIST`)
 - repeat index (`REPEATS`)
 
-Each run calls `docker/linux/run_only.sh`, times the full simulation wall-clock duration, and appends one row to a benchmark CSV.
+Each run calls `docker/linux/run_only.sh` (no rebuild), times the full simulation wall-clock duration, and appends one row to a benchmark CSV.
 
 ### Default benchmark profile
 
-To keep the benchmark fast and comparable, the script uses short simulation overrides unless you change them:
+To keep the benchmark fast, comparable, and focused on hardware rather than population-sampling noise, the script uses these overrides unless you change them:
 
-- `PACING=5`
-- `PACING_WRITE=5`
-- `TIME_STEP_MIN=0.001`
-- `SOLVERS="CVode,Euler"`
-- `NP_LIST="1"`
-- `REPEATS=1`
+- `PACING=5`, `PACING_WRITE=5`, `TIME_STEP_MIN=0.001`
+- `SOLVERS="CVode,Euler"`, `NP_LIST="1"`, `REPEATS=1`
 - `VARIANT_FLAG=-DCIPAORDV1`
+- `SAMPLES=1` — only 1 hill/herg row is used per drug (see below)
+- `CONC_LEVELS=1x,4x` — each drug's own Cmax1×/Cmax4× concentrations, looked up per drug
 
 It also builds the selected variant once before the sweep unless `SKIP_BUILD=1` is set.
+
+### `SAMPLES`: isolating hardware timing from population size
+
+MPI distributes hill/herg rows ("samples") round-robin across ranks. With the default `SAMPLES=1`, only rank 0 ever does simulation work, regardless of `NP` — giving a clean single-core, hardware-only timing per drug/solver combination, with no MPI load-balancing noise.
+
+To measure single-core vs multi-core scaling instead, set `SAMPLES` to match `NP` so every core gets exactly one sample:
+
+```bash
+# 4 samples split across 1 core vs 4 cores -- compares wall time directly
+NP_LIST="1,4" SAMPLES=4 bash docker/linux/benchmark.sh
+```
+
+If wall time stays roughly flat between `NP=1` and `NP=4`, scaling is close to linear; if it grows, there's contention/overhead. `SAMPLES=all` disables truncation and uses the full `HILL_SAMPLES`/`HERG_SAMPLES` file instead (the original, non-benchmark-tuned behavior).
 
 ### Basic usage
 
@@ -429,16 +474,16 @@ bash docker/linux/benchmark.sh
 
 ### Common examples
 
-Single-process baseline:
+Single-process baseline (default profile, all drugs, both solvers):
 
 ```bash
 bash docker/linux/benchmark.sh
 ```
 
-Compare 1, 2, 4, and 8 MPI ranks:
+Single-core vs multi-core scaling, one sample per core:
 
 ```bash
-NP_LIST="1,2,4,8" REPEATS=3 bash docker/linux/benchmark.sh
+NP_LIST="1,2,4,8" SAMPLES=8 REPEATS=3 bash docker/linux/benchmark.sh
 ```
 
 Benchmark only selected drugs:
@@ -451,6 +496,18 @@ Benchmark only one solver:
 
 ```bash
 SOLVERS="Euler" NP_LIST="1,4" bash docker/linux/benchmark.sh
+```
+
+Use all four Cmax multiples (1x–4x) instead of just 1x/4x:
+
+```bash
+CONC_LEVELS=all bash docker/linux/benchmark.sh
+```
+
+Force the same concentrations across every drug (bypasses the per-drug Cmax table):
+
+```bash
+CONC="100,200" bash docker/linux/benchmark.sh
 ```
 
 Reuse an already-built binary:
@@ -477,9 +534,12 @@ DRY_RUN=1 NP_LIST="1,4" bash docker/linux/benchmark.sh
 | `PACING` | `5` | Override for `number_pacing` |
 | `PACING_WRITE` | `5` | Override for `number_pacing_write` |
 | `TIME_STEP_MIN` | `0.001` | Override for `time_step_min` |
-| `CONC` | unset | Override `drug_concentrations` for every run |
-| `HILL_SAMPLES` | `30` | Uses `chantest_hill/<drug>/IC50_samples<HILL_SAMPLES>.csv` |
-| `HERG_SAMPLES` | `10` | Uses `chantest_herg/<drug>/boot_pars<HERG_SAMPLES>.csv` |
+| `SAMPLES` | `1` | Hill/herg rows used per run (truncated); `all` disables truncation |
+| `HILL_SAMPLES` | `30` | Source file: `chantest_hill/<drug>/IC50_samples<HILL_SAMPLES>.csv` |
+| `HERG_SAMPLES` | `10` | Source file: `chantest_herg/<drug>/boot_pars<HERG_SAMPLES>.csv` |
+| `CONC_LEVELS` | `1x,4x` | Which `CMAX_TABLE` columns to combine into `drug_concentrations` per drug (or `all` for `1x,2x,3x,4x`) |
+| `CMAX_TABLE` | `<SIM_DIR>/chantest_hill/CiPA_drug_concentrations.csv` | Per-drug Cmax table used for the lookup above |
+| `CONC` | unset | Force the SAME `drug_concentrations` for every drug, bypassing `CMAX_TABLE` |
 | `SKIP_BUILD` | `0` | Set to `1` to skip the one-time build step |
 | `FAIL_FAST` | `0` | Set to `1` to stop on the first failed run |
 | `OUT_DIR` | `benchmark_results/<timestamp>` | Output directory for this sweep |
@@ -487,16 +547,17 @@ DRY_RUN=1 NP_LIST="1,4" bash docker/linux/benchmark.sh
 
 Run `bash docker/linux/benchmark.sh --help` to print the full built-in usage text.
 
-### Output files
+### Benchmark output files
 
 Each sweep writes a new directory under `benchmark_results/<timestamp>/` containing:
 
-- `results.csv` — one row per run with elapsed time, exit code, selected parameters, and hardware metadata
+- `results.csv` — one row per run:
+  `timestamp_utc, variant_flag, drug, solver, np, repeat, pacing, pacing_write, time_step_min, concentrations, hill_file, herg_file, samples, elapsed_seconds, exit_code, log_file, host_os, host_arch, host_cpu_model, host_cpu_cores, host_ram_gb, docker_runtime, container_arch, container_cpu_cores, container_ram_gb, emulated`
 - `summary.txt` — mean and standard deviation of elapsed time grouped by `drug`, `solver`, and `np`
-- `environment.txt` — host and container details captured once per sweep
+- `environment.txt` — host and container hardware details captured once per sweep, as `key=value` lines
 - `logs/<drug>_<solver>_np<N>_rep<M>.log` — stdout/stderr for each individual run
 
-The benchmark stamps every CSV row with host OS, CPU model, visible RAM, container architecture, and whether Docker is running under CPU emulation. This is especially important on Apple Silicon hosts because the Docker service is intentionally pinned to `linux/amd64`; emulated timings should not be compared against native Linux runs.
+The benchmark stamps every CSV row with host OS, CPU model, visible RAM, container architecture, and whether Docker is running under CPU emulation. This is especially important on Apple Silicon hosts because the Docker service is intentionally pinned to `linux/amd64`; emulated timings should not be compared against native Linux runs. If `container_arch` differs from `host_arch` (`emulated=yes`), the script prints a warning up front.
 
 ---
 
