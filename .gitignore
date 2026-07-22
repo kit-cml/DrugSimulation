@@ -23,6 +23,7 @@ bin/simulation_cpu_postprocessing/responses/*.json
 .DS_Store
 bin/simulation_cpu/.docker-test-param.txt
 .bench_samples/
+benchmark_results/
 *.tex
 *.pdf
 *.aux

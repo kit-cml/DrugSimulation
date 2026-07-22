@@ -77,7 +77,11 @@ PARAM_TO_USE="$PARAM_FILE"
 TEMP_PARAM_FILE=""
 
 if [[ -n "$PACING_OVERRIDE" || -n "$PACING_WRITE_OVERRIDE" || -n "$SOLVER_OVERRIDE" || -n "$TIME_STEP_MIN_OVERRIDE" || -n "$HILL_FILE_OVERRIDE" || -n "$HERG_FILE_OVERRIDE" || -n "$DRUG_NAME_OVERRIDE" || -n "$CONC_OVERRIDE" ]]; then
-  TEMP_PARAM_FILE=".docker-test-param.txt"
+  # PID-suffixed so concurrent invocations (e.g. multiple `docker compose exec`
+  # calls running different drugs in parallel against this same bind-mounted
+  # SIM_DIR) never race on the same file -- a fixed name here previously let
+  # one invocation's sed edits clobber another's mid-write.
+  TEMP_PARAM_FILE=".docker-test-param.$$.txt"
   cp "$PARAM_FILE" "$TEMP_PARAM_FILE"
 
   if [[ -n "$PACING_OVERRIDE" ]]; then
