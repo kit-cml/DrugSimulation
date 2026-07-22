@@ -1,0 +1,13 @@
+services:
+  drugsim-linux:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: docker/linux/Dockerfile
+    container_name: drugsim-linux
+    working_dir: /workspace/DrugSimulation
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/workspace/DrugSimulation
+      - ../libCML:/workspace/libCML
