@@ -271,8 +271,8 @@ int insilico(double conc, const Drug_Row &hill, const Drug_Row &herg, const Para
   }  // end computation loop
 
   // write the last states into a file for further usage.
-  // (only if the vm_peak is more than 0)
-  if( p_features.vm_peak >= 0 ){
+  // (only if the vm_peak is more than 0 and size matches)
+  if( p_features.vm_peak >= 0 && p_features.initial_values.size() == p_cell->states_size ){
     for (short idx = 0; idx < p_cell->states_size; idx++) {
       fprintf(fp_initial_values, "%.32lf\n", p_features.initial_values[idx]);
     }
@@ -307,6 +307,10 @@ void end_of_cycle_funct(short *pace_count, double tcurr, double *inet_auc, Cellm
                         FILE *fp_vmdebug) {
   *pace_count += 1;
 
+  if (*pace_count >= p_param->number_pacing - 252) {
+    temp_features.initial_values.insert(temp_features.initial_values.begin(), p_cell->STATES, p_cell->STATES + p_cell->states_size);
+  }
+
   // set the biomarker values for references
   if (*pace_count == p_param->number_pacing - 251) {
     mpi_printf(cml::commons::MASTER_NODE, "Save reference feature at pace %hd\n", *pace_count);
@@ -324,7 +328,6 @@ void end_of_cycle_funct(short *pace_count, double tcurr, double *inet_auc, Cellm
                  temp_features.dvmdt_repol_max, p_features.dvmdt_repol_max, temp_features.vm_peak);
 #endif
 
-    temp_features.initial_values.insert(temp_features.initial_values.begin(), p_cell->STATES, p_cell->STATES + p_cell->states_size);
     // if vm_peak less than 0, then deny the result.
     if (temp_features.dvmdt_repol_max > p_features.dvmdt_repol_max && temp_features.vm_peak >= 0. ) {
       temp_features.pace_target = *pace_count;

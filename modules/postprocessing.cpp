@@ -137,23 +137,10 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
     printf("WARNING: DRUG %s SAMPLE %hd CONCENTRATION %.0lf IS NOT DEPOLARIZED PROPERLY DURING INSILICO!! USE INITIAL VALUES FROM CELLMODEL...\n", drug_name, sample_id, conc);
   }
   else{
-    // replace the initial condition
-    // with the last state value from
-    // the in-silico simulation
-    mpi_printf(cml::commons::MASTER_NODE, "STATES before:\n");
-    for (short idx = 0; idx < 20; idx++) {
-      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
-    }
-    mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from initial_values vector:\n");
-    for (short idx = 0; idx < 20; idx++) {
-      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.initial_values[idx]);
-    }
-    mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
-
     if( p_features.initial_values.size() != p_cell->states_size ){
-      mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!! Init_Size: %d States_Size_: %d\n", p_features.initial_values.size(), p_cell->states_size);
+      mpi_fprintf(cml::commons::MASTER_NODE, stderr, "Data mismatch between cell model and initial values file!! Init_Size: %zu States_Size_: %d\n", p_features.initial_values.size(), p_cell->states_size);
       mpi_printf(0, "INITIAL CONDITIONS:\n");
-      for (int idx = 0; idx < p_features.initial_values.size() ; idx++) {
+      for (size_t idx = 0; idx < p_features.initial_values.size() ; idx++) {
         mpi_printf(0, "%lf ", p_features.initial_values[idx]);
       }
       mpi_printf(0, "\nSTATES:\n");
@@ -162,12 +149,24 @@ int postprocessing(double conc, double inal_auc_control, double ical_auc_control
       }
       return 1;    
     }
-    else{
-      for( int idx = 0; idx < p_cell->states_size; idx++ )p_cell->STATES[idx] = p_features.initial_values[idx];
+
+    // replace the initial condition
+    // with the last state value from
+    // the in-silico simulation
+    mpi_printf(cml::commons::MASTER_NODE, "STATES before:\n");
+    for (size_t idx = 0; idx < p_cell->states_size && idx < 20; idx++) {
+      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
     }
+    mpi_printf(cml::commons::MASTER_NODE, "\nSTATES from initial_values vector:\n");
+    for (size_t idx = 0; idx < p_features.initial_values.size() && idx < 20; idx++) {
+      mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_features.initial_values[idx]);
+    }
+    mpi_printf(cml::commons::MASTER_NODE, "\nUsing initial values from the in-silico simulation.\n");
+
+    for( int idx = 0; idx < p_cell->states_size; idx++ ) p_cell->STATES[idx] = p_features.initial_values[idx];
 
     mpi_printf(cml::commons::MASTER_NODE, "STATES after:\n");
-    for (short idx = 0; idx < 20; idx++) {
+    for (size_t idx = 0; idx < p_cell->states_size && idx < 20; idx++) {
       mpi_printf(cml::commons::MASTER_NODE, "%lf ", p_cell->STATES[idx]);
     }
     mpi_printf(cml::commons::MASTER_NODE, "\n");
