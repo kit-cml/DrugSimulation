@@ -24,7 +24,7 @@ BASE_PROGNAME := drugsim
 
 
 # Pre-processor flags to be used for includes (-I) and defines (-D) 
-CPPFLAGS := -I./ -I$(LIBCML_INC_DIR) -I$(LIBCML_EXTERNAL_LIB_DIR)/sundials-5.7.0/include
+CPPFLAGS := -I./ -I$(LIBCML_INC_DIR) -I$(LIBCML_EXTERNAL_LIB_DIR)/sundials-5.7.0/include -I/opt/homebrew/include -I/opt/homebrew/opt/json-c/include
 
 # CXX to set the compiler
 CXX := mpicxx
@@ -72,7 +72,7 @@ ifeq ($(findstring -DPOSTPROCESSING,$(CXXFLAGS)), -DPOSTPROCESSING)
 endif
 
 # LDFLAGS is used for linker (-g enables debug symbols)
-LDFLAGS  += -g  $(LIBCML_LIB_DIR)/libcml.a $(LIBCML_EXTERNAL_LIB_DIR)/sundials-5.7.0/lib64/libsundials_cvode.a $(LIBCML_EXTERNAL_LIB_DIR)/sundials-5.7.0/lib64/libsundials_nvecserial.a -L/usr/lib64 -lcurl -ljson-c 
+LDFLAGS  += -g  $(LIBCML_LIB_DIR)/libcml.a $(LIBCML_EXTERNAL_LIB_DIR)/sundials-5.7.0/lib64/libsundials_cvode.a $(LIBCML_EXTERNAL_LIB_DIR)/sundials-5.7.0/lib64/libsundials_nvecserial.a -L/usr/lib64 -L/opt/homebrew/lib -lcurl -ljson-c
 
 # List the project' sources to compile or let the Makefile recognize
 # them for you using 'wildcard' function.

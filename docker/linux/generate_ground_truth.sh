@@ -39,6 +39,11 @@ Environment variables (defaults shown):
   HERG_SAMPLES          10                                      -> chantest_herg/<drug>/boot_pars<HERG_SAMPLES>.csv
   SIM_DIR              bin/simulation_cpu
   SKIP_BUILD             0                                       set 1 to reuse an already-built binary
+  BUILD_OPT_FLAGS      -O2 -DNDEBUG -g0                        compiler flags appended after the Makefile's debug
+                                                                   defaults (-g -O0); this is what makes ground-truth
+                                                                   runs use an optimized binary instead of an
+                                                                   unoptimized debug build. Set empty to go back to
+                                                                   a debug build for comparison.
   FAIL_FAST              0                                       set 1 to stop launching further batches after any failure
   OUT_DIR              ground_truth_results/<timestamp>         where results.csv/logs/ are written
   DRY_RUN                0                                       set 1 to print the per-drug commands without running them
@@ -83,6 +88,7 @@ CMAX_TABLE="${CMAX_TABLE:-$SIM_DIR/chantest_hill/CiPA_drug_concentrations.csv}"
 SAMPLES="${SAMPLES:-all}"
 HILL_SAMPLES="${HILL_SAMPLES:-30}"
 HERG_SAMPLES="${HERG_SAMPLES:-10}"
+BUILD_OPT_FLAGS="${BUILD_OPT_FLAGS:--O2 -DNDEBUG -g0}"
 SKIP_BUILD="${SKIP_BUILD:-0}"
 FAIL_FAST="${FAIL_FAST:-0}"
 DRY_RUN="${DRY_RUN:-0}"
@@ -137,7 +143,7 @@ lookup_drug_conc() {
 
 mkdir -p "$OUT_DIR/logs" "$OUT_DIR/.results"
 CSV_FILE="$OUT_DIR/results.csv"
-echo "drug,solver,np,concentrations,hill_file,herg_file,samples,elapsed_seconds,exit_code,log_file" > "$CSV_FILE"
+echo "drug,solver,np,concentrations,hill_file,herg_file,samples,elapsed_seconds,exit_code,log_file,build_opt_flags" > "$CSV_FILE"
 
 SAMPLES_TMP_DIR="$SIM_DIR/.bench_samples"
 mkdir -p "$SAMPLES_TMP_DIR"
@@ -161,9 +167,9 @@ if [[ "$DRY_RUN" != "1" ]]; then
   fi
 
   if [[ "$SKIP_BUILD" != "1" ]]; then
-    echo "Building binary for VARIANT_FLAG=$VARIANT_FLAG once before the batch (RUN_SIM=0)..."
+    echo "Building binary for VARIANT_FLAG=$VARIANT_FLAG once before the batch (RUN_SIM=0, BUILD_OPT_FLAGS=${BUILD_OPT_FLAGS})..."
     docker compose exec -T drugsim-linux env \
-      "VARIANT_FLAG=${VARIANT_FLAG}" "RUN_SIM=0" \
+      "VARIANT_FLAG=${VARIANT_FLAG}" "RUN_SIM=0" "BUILD_OPT_FLAGS=${BUILD_OPT_FLAGS}" \
       bash docker/linux/build_and_run.sh
     build_status=$?
     if [[ $build_status -ne 0 ]]; then
@@ -240,7 +246,7 @@ run_drug() {
     printf '  DRY RUN [%s]: %s\n' "$drug" "${cmd[*]}"
     local dry_conc_csv="${conc_override:-<param.txt default>}"
     dry_conc_csv="${dry_conc_csv//,/;}"
-    echo "${drug},${SOLVER},${NP},${dry_conc_csv},${hill_file},${herg_file},${samples_used},0,0,${log_file}" > "$result_file"
+    echo "${drug},${SOLVER},${NP},${dry_conc_csv},${hill_file},${herg_file},${samples_used},0,0,${log_file},${BUILD_OPT_FLAGS:-<debug build>}" > "$result_file"
     return 0
   fi
 
@@ -260,7 +266,7 @@ run_drug() {
 
   local conc_csv="${conc_override:-<param.txt default>}"
   conc_csv="${conc_csv//,/;}"
-  echo "${drug},${SOLVER},${NP},${conc_csv},${hill_file},${herg_file},${samples_used},${elapsed},${exit_code},${log_file}" > "$result_file"
+  echo "${drug},${SOLVER},${NP},${conc_csv},${hill_file},${herg_file},${samples_used},${elapsed},${exit_code},${log_file},${BUILD_OPT_FLAGS:-<debug build>}" > "$result_file"
 }
 
 batch_start_epoch="$(date +%s)"

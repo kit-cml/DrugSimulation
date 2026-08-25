@@ -47,6 +47,11 @@ Environment variables (defaults shown):
                                                                    set SAMPLES to match each NP value (one sample per core).
   SIM_DIR              bin/simulation_cpu
   SKIP_BUILD             0                                       set 1 to reuse an already-built binary
+  BUILD_OPT_FLAGS      -O2 -DNDEBUG -g0                        compiler flags appended after the Makefile's debug
+                                                                   defaults (-g -O0); this is what makes benchmark
+                                                                   timings reflect an optimized binary instead of an
+                                                                   unoptimized debug build. Set empty to go back to
+                                                                   a debug build for comparison.
   FAIL_FAST              0                                       set 1 to stop the sweep on first failure
   OUT_DIR              benchmark_results/<timestamp>            where results.csv/summary.txt/logs/ are written
   DRY_RUN                0                                       set 1 to print the commands without running them
@@ -87,6 +92,7 @@ CONC="${CONC:-}"
 HILL_SAMPLES="${HILL_SAMPLES:-30}"
 HERG_SAMPLES="${HERG_SAMPLES:-10}"
 SAMPLES="${SAMPLES:-1}"
+BUILD_OPT_FLAGS="${BUILD_OPT_FLAGS:--O2 -DNDEBUG -g0}"
 SKIP_BUILD="${SKIP_BUILD:-0}"
 FAIL_FAST="${FAIL_FAST:-0}"
 DRY_RUN="${DRY_RUN:-0}"
@@ -225,7 +231,7 @@ fi
 
 mkdir -p "$OUT_DIR/logs"
 CSV_FILE="$OUT_DIR/results.csv"
-echo "timestamp_utc,variant_flag,drug,solver,np,repeat,pacing,pacing_write,time_step_min,concentrations,hill_file,herg_file,samples,elapsed_seconds,exit_code,log_file,host_os,host_arch,host_cpu_model,host_cpu_cores,host_ram_gb,docker_runtime,container_arch,container_cpu_cores,container_ram_gb,emulated" > "$CSV_FILE"
+echo "timestamp_utc,variant_flag,drug,solver,np,repeat,pacing,pacing_write,time_step_min,concentrations,hill_file,herg_file,samples,elapsed_seconds,exit_code,log_file,host_os,host_arch,host_cpu_model,host_cpu_cores,host_ram_gb,docker_runtime,container_arch,container_cpu_cores,container_ram_gb,emulated,build_opt_flags" > "$CSV_FILE"
 
 # Truncated hill/herg files live here when SAMPLES limits the population size
 # (see the per-drug loop below); gitignored, regenerated fresh each run.
@@ -258,9 +264,9 @@ if [[ "$DRY_RUN" != "1" ]]; then
   gather_container_info
 
   if [[ "$SKIP_BUILD" != "1" ]]; then
-    echo "Building binary for VARIANT_FLAG=$VARIANT_FLAG once before the sweep (RUN_SIM=0)..."
+    echo "Building binary for VARIANT_FLAG=$VARIANT_FLAG once before the sweep (RUN_SIM=0, BUILD_OPT_FLAGS=${BUILD_OPT_FLAGS})..."
     docker compose exec -T drugsim-linux env \
-      "VARIANT_FLAG=${VARIANT_FLAG}" "RUN_SIM=0" \
+      "VARIANT_FLAG=${VARIANT_FLAG}" "RUN_SIM=0" "BUILD_OPT_FLAGS=${BUILD_OPT_FLAGS}" \
       bash docker/linux/build_and_run.sh
     build_status=$?
     if [[ $build_status -ne 0 ]]; then
@@ -291,6 +297,7 @@ echo
   echo "container_cpu_cores=${CONTAINER_CPU_CORES}"
   echo "container_ram_gb=${CONTAINER_RAM_GB}"
   echo "emulated=${EMULATED}"
+  echo "build_opt_flags=${BUILD_OPT_FLAGS}"
 } > "$OUT_DIR/environment.txt"
 
 total=$(( ${#DRUG_ARR[@]} * ${#SOLVER_ARR[@]} * ${#NP_ARR[@]} * REPEATS ))
@@ -367,7 +374,8 @@ for drug in "${DRUG_ARR[@]}"; do
 
         conc_used="${conc_override:-<param.txt default>}"
         conc_used_csv="${conc_used//,/;}" # concentrations are comma-joined; swap to ';' so they don't split into extra CSV fields
-        echo "${timestamp},${VARIANT_FLAG},${drug},${solver},${np},${rep},${PACING},${PACING_WRITE},${TIME_STEP_MIN},${conc_used_csv},${hill_file},${herg_file},${samples_used},${elapsed},${exit_code},${log_file},${HOST_OS},${HOST_ARCH},${HOST_CPU_MODEL},${HOST_CPU_CORES},${HOST_RAM_GB},${DOCKER_RUNTIME},${CONTAINER_ARCH},${CONTAINER_CPU_CORES},${CONTAINER_RAM_GB},${EMULATED}" >> "$CSV_FILE"
+        build_opt_flags_csv="${BUILD_OPT_FLAGS//,/;}"
+        echo "${timestamp},${VARIANT_FLAG},${drug},${solver},${np},${rep},${PACING},${PACING_WRITE},${TIME_STEP_MIN},${conc_used_csv},${hill_file},${herg_file},${samples_used},${elapsed},${exit_code},${log_file},${HOST_OS},${HOST_ARCH},${HOST_CPU_MODEL},${HOST_CPU_CORES},${HOST_RAM_GB},${DOCKER_RUNTIME},${CONTAINER_ARCH},${CONTAINER_CPU_CORES},${CONTAINER_RAM_GB},${EMULATED},${build_opt_flags_csv:-<debug build>}" >> "$CSV_FILE"
 
         if [[ $exit_code -ne 0 ]]; then
           failures=$((failures + 1))

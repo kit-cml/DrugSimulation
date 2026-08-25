@@ -16,6 +16,7 @@ A high-performance, MPI-parallel in-silico cardiac drug safety simulation framew
 - [Running a Simulation Locally on Your Machine](#running-a-simulation-locally-on-your-machine)
 - [Running in Dockerized Linux (Recommended for macOS)](#running-in-dockerized-linux-recommended-for-macos)
 - [Run a Hardware Performance Benchmark](#run-a-hardware-performance-benchmark)
+- [Generate Ground Truth (Full Runs, Parallel Across Drugs)](#generate-ground-truth-full-runs-parallel-across-drugs)
 - [Running a Simulation on an HPC Cluster (PBS/Torque)](#running-a-simulation-on-an-hpc-cluster-pbstorque)
 - [Post-processing & Reporting](#post-processing--reporting)
 - [Output Files](#output-files)
@@ -446,21 +447,43 @@ To keep the benchmark fast, comparable, and focused on hardware rather than popu
 - `VARIANT_FLAG=-DCIPAORDV1`
 - `SAMPLES=1` — only 1 hill/herg row is used per drug (see below)
 - `CONC_LEVELS=1x,4x` — each drug's own Cmax1×/Cmax4× concentrations, looked up per drug
+- `BUILD_OPT_FLAGS="-O2 -DNDEBUG -g0"` — compiled optimized, not a debug build (see below)
 
 It also builds the selected variant once before the sweep unless `SKIP_BUILD=1` is set.
 
-### `SAMPLES`: isolating hardware timing from population size
+### Build optimized, not debug — `BUILD_OPT_FLAGS`
 
-MPI distributes hill/herg rows ("samples") round-robin across ranks. With the default `SAMPLES=1`, only rank 0 ever does simulation work, regardless of `NP` — giving a clean single-core, hardware-only timing per drug/solver combination, with no MPI load-balancing noise.
+The Makefile's own defaults (`BASE_CXXFLAGS := -std=c++11 -g -O0`) are an **unoptimized debug build** — no compiler optimization at all. For an ODE solver loop executed potentially billions of times per run, `-O0` vs `-O2` is easily a 10-30x difference, so benchmarking against a debug binary gives you hardware numbers that don't reflect real performance.
 
-To measure single-core vs multi-core scaling instead, set `SAMPLES` to match `NP` so every core gets exactly one sample:
+`benchmark.sh` (and `generate_ground_truth.sh`) now default `BUILD_OPT_FLAGS` to `-O2 -DNDEBUG -g0`, appended after the Makefile's own flags on the `make` command line. Since gcc/clang honor the *last* `-O`/`-g` flag seen, this cleanly overrides `-O0 -g` without touching the Makefile itself — direct/manual builds via `docker/linux/build_and_run.sh` are unaffected unless you set `BUILD_OPT_FLAGS` yourself.
 
 ```bash
-# 4 samples split across 1 core vs 4 cores -- compares wall time directly
+# Go back to a debug build, e.g. to quantify the optimization's impact:
+BUILD_OPT_FLAGS="" NP_LIST="1" bash docker/linux/benchmark.sh
+```
+
+Every `results.csv` row records the `build_opt_flags` used, so debug and optimized runs never get silently mixed together in your results.
+
+### `SAMPLES`: isolating hardware timing from population size, and why `NP` can't exceed it
+
+MPI distributes hill/herg rows ("samples") round-robin across ranks — **that is the only axis of parallelism this codebase has.** A single sample's simulation is a sequential time-stepping loop (each step depends on the previous one's state), so it cannot be split across cores; more `NP` only helps by giving *other, independent* samples to the idle ranks. Requesting more MPI ranks than there are samples to hand out is a hard error, not a graceful no-op:
+
+```
+Overflow of MPI Process!
+Make sure MPI Size is less than or equal the number of sample
+```
+
+**Rule: `NP` (and every value in `NP_LIST`) must be ≤ `SAMPLES`.** With the default `SAMPLES=1`, only rank 0 ever does simulation work regardless of `NP` — giving a clean single-core, hardware-only timing per drug/solver combination, with no MPI load-balancing noise. Any `NP_LIST` value above `1` will abort immediately (in ~1s) unless you also raise `SAMPLES` to match:
+
+```bash
+# WRONG -- aborts immediately: SAMPLES defaults to 1, but NP=4 needs 4 samples to hand out
+NP_LIST="4" bash docker/linux/benchmark.sh
+
+# RIGHT -- 4 samples split across 1 core vs 4 cores, one sample per rank, compares wall time directly
 NP_LIST="1,4" SAMPLES=4 bash docker/linux/benchmark.sh
 ```
 
-If wall time stays roughly flat between `NP=1` and `NP=4`, scaling is close to linear; if it grows, there's contention/overhead. `SAMPLES=all` disables truncation and uses the full `HILL_SAMPLES`/`HERG_SAMPLES` file instead (the original, non-benchmark-tuned behavior).
+If wall time stays roughly flat between `NP=1` and `NP=4` (4 samples each way), scaling is close to linear; if it grows, there's contention/overhead. `SAMPLES=all` disables truncation and uses the full `HILL_SAMPLES`/`HERG_SAMPLES` file instead (the original, non-benchmark-tuned behavior) — make sure the population is at least as large as the biggest `NP_LIST` value in that case too.
 
 ### Basic usage
 
@@ -480,7 +503,7 @@ Single-process baseline (default profile, all drugs, both solvers):
 bash docker/linux/benchmark.sh
 ```
 
-Single-core vs multi-core scaling, one sample per core:
+Single-core vs multi-core scaling, one sample per core (`SAMPLES` must be ≥ the largest `NP_LIST` value, or the run aborts — see above):
 
 ```bash
 NP_LIST="1,2,4,8" SAMPLES=8 REPEATS=3 bash docker/linux/benchmark.sh
@@ -540,6 +563,7 @@ DRY_RUN=1 NP_LIST="1,4" bash docker/linux/benchmark.sh
 | `CONC_LEVELS` | `1x,4x` | Which `CMAX_TABLE` columns to combine into `drug_concentrations` per drug (or `all` for `1x,2x,3x,4x`) |
 | `CMAX_TABLE` | `<SIM_DIR>/chantest_hill/CiPA_drug_concentrations.csv` | Per-drug Cmax table used for the lookup above |
 | `CONC` | unset | Force the SAME `drug_concentrations` for every drug, bypassing `CMAX_TABLE` |
+| `BUILD_OPT_FLAGS` | `-O2 -DNDEBUG -g0` | Compiler flags appended after the Makefile's debug defaults (`-g -O0`); set empty for a debug build |
 | `SKIP_BUILD` | `0` | Set to `1` to skip the one-time build step |
 | `FAIL_FAST` | `0` | Set to `1` to stop on the first failed run |
 | `OUT_DIR` | `benchmark_results/<timestamp>` | Output directory for this sweep |
@@ -552,12 +576,100 @@ Run `bash docker/linux/benchmark.sh --help` to print the full built-in usage tex
 Each sweep writes a new directory under `benchmark_results/<timestamp>/` containing:
 
 - `results.csv` — one row per run:
-  `timestamp_utc, variant_flag, drug, solver, np, repeat, pacing, pacing_write, time_step_min, concentrations, hill_file, herg_file, samples, elapsed_seconds, exit_code, log_file, host_os, host_arch, host_cpu_model, host_cpu_cores, host_ram_gb, docker_runtime, container_arch, container_cpu_cores, container_ram_gb, emulated`
+  `timestamp_utc, variant_flag, drug, solver, np, repeat, pacing, pacing_write, time_step_min, concentrations, hill_file, herg_file, samples, elapsed_seconds, exit_code, log_file, host_os, host_arch, host_cpu_model, host_cpu_cores, host_ram_gb, docker_runtime, container_arch, container_cpu_cores, container_ram_gb, emulated, build_opt_flags`
 - `summary.txt` — mean and standard deviation of elapsed time grouped by `drug`, `solver`, and `np`
 - `environment.txt` — host and container hardware details captured once per sweep, as `key=value` lines
 - `logs/<drug>_<solver>_np<N>_rep<M>.log` — stdout/stderr for each individual run
 
 The benchmark stamps every CSV row with host OS, CPU model, visible RAM, container architecture, and whether Docker is running under CPU emulation. This is especially important on Apple Silicon hosts because the Docker service is intentionally pinned to `linux/amd64`; emulated timings should not be compared against native Linux runs. If `container_arch` differs from `host_arch` (`emulated=yes`), the script prints a warning up front.
+
+---
+
+## Generate Ground Truth (Full Runs, Parallel Across Drugs)
+
+Use `docker/linux/generate_ground_truth.sh` when you need trusted, real output — full `number_pacing` (e.g. 1000 paces), the full hill/herg population, and each drug's real concentrations — rather than the cut-down workload `benchmark.sh` uses to measure hardware speed.
+
+It gets a full batch of drugs done faster not by shrinking the workload, but by running several **drugs concurrently** (`PARALLEL_DRUGS` at a time), since MPI ranks *within* one drug (`NP`) hit diminishing returns (and the same `NP` ≤ samples limit described above) long before the container's CPU budget is exhausted. Each drug still gets `NP` MPI ranks internally, same as any other run.
+
+### Basic usage
+
+```bash
+# All drugs auto-discovered from chantest_hill/*, real pacing, Euler, full population
+bash docker/linux/generate_ground_truth.sh
+```
+
+**The script will start `drugsim-linux` automatically if needed**, same as `benchmark.sh`.
+
+### Optimizing a ground-truth batch
+
+- **Build optimized, not debug.** Like `benchmark.sh`, this script defaults `BUILD_OPT_FLAGS` to `-O2 -DNDEBUG -g0`, overriding the Makefile's `-O0 -g` debug build. Don't set `BUILD_OPT_FLAGS=""` here unless you specifically want to reproduce debug-build timings — a debug build turns a real full-population run from hours into potentially days.
+- **Prefer more `PARALLEL_DRUGS` over more `NP`.** Since a single sample's ODE integration is inherently sequential (see the `SAMPLES`/`NP` note above), pushing `NP` up per drug hits diminishing returns fast. Spreading the container's cores across more *concurrent drugs* instead is the effective way to use extra cores for a full batch. Left unset, `PARALLEL_DRUGS` auto-detects as `container cores / NP`.
+- **`NP` still can't exceed the sample count being used.** With the default `SAMPLES=all` (the full `HILL_SAMPLES`/`HERG_SAMPLES` population, typically 30/10), this is rarely an issue — but if you lower `SAMPLES`, keep `NP` ≤ `SAMPLES` or you'll hit the same `Overflow of MPI Process` abort described above.
+- **Smoke-test the plumbing before committing to a real (hours-long) run:**
+
+  ```bash
+  # NOT real ground truth -- just confirms drugs/build/paths work, in seconds
+  PACING=5 PACING_WRITE=5 DRUGS="quinidine,bepridil" bash docker/linux/generate_ground_truth.sh
+  ```
+
+### Common examples
+
+Bump per-drug parallelism to 4 ranks, 3 drugs at a time:
+
+```bash
+NP=4 PARALLEL_DRUGS=3 bash docker/linux/generate_ground_truth.sh
+```
+
+Only specific drugs, with 4 samples per drug (matching `NP` per the rule above):
+
+```bash
+DRUGS="quinidine,bepridil" NP=4 SAMPLES=4 bash docker/linux/generate_ground_truth.sh
+```
+
+Reuse an already-built binary:
+
+```bash
+SKIP_BUILD=1 bash docker/linux/generate_ground_truth.sh
+```
+
+Preview the batch without running it:
+
+```bash
+DRY_RUN=1 bash docker/linux/generate_ground_truth.sh
+```
+
+### Useful environment variables
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DRUGS` | auto-discovered | Comma- or space-separated drug list |
+| `VARIANT_FLAG` | `-DCIPAORDV1` | Cell-model variant built once for the batch |
+| `SOLVER` | `Euler` | Solver override — ground truth uses the trusted Euler solver |
+| `TIME_STEP_MIN` | `0.005` | Fixed Euler step (must stay small for numerical stability) |
+| `PACING` / `PACING_WRITE` | unset (real `param.txt` values, e.g. `1000`) | Set only for smoke tests — a real run should NOT override these |
+| `NP` | `2` | MPI ranks **per drug** |
+| `PARALLEL_DRUGS` | auto (`container cores / NP`, min 1) | How many drugs run concurrently |
+| `SAMPLES` | `all` | Hill/herg rows per drug; `all` = full `HILL_SAMPLES`/`HERG_SAMPLES` file |
+| `HILL_SAMPLES` / `HERG_SAMPLES` | `30` / `10` | Source population size when `SAMPLES` truncates it |
+| `CONC_LEVELS` | `all` (1x–4x) | Which `CMAX_TABLE` columns per drug |
+| `CMAX_TABLE` | `<SIM_DIR>/chantest_hill/CiPA_drug_concentrations.csv` | Per-drug Cmax table |
+| `BUILD_OPT_FLAGS` | `-O2 -DNDEBUG -g0` | Compiler flags appended after the Makefile's debug defaults; set empty for a debug build |
+| `SKIP_BUILD` | `0` | Set to `1` to skip the one-time build step |
+| `FAIL_FAST` | `0` | Set to `1` to stop launching further batches after any failure |
+| `OUT_DIR` | `ground_truth_results/<timestamp>` | Output directory for this batch |
+| `DRY_RUN` | `0` | Set to `1` to print the per-drug commands only |
+
+Run `bash docker/linux/generate_ground_truth.sh --help` to print the full built-in usage text.
+
+### Ground truth output files
+
+Each batch writes a new directory under `ground_truth_results/<timestamp>/` containing:
+
+- `results.csv` — one row per drug:
+  `drug, solver, np, concentrations, hill_file, herg_file, samples, elapsed_seconds, exit_code, log_file, build_opt_flags`
+- `logs/<drug>.log` — stdout/stderr for each drug's run
+
+Real simulation output (time-series/feature CSVs) still lands in the shared `bin/simulation_cpu/results/<concentration>/` tree, same as any other run — filenames are drug-name-prefixed so concurrent drugs don't clobber each other's data. The one shared, non-prefixed file, `results/logfile.docker`, will interleave across concurrent drugs; use `OUT_DIR/logs/` instead.
 
 ---
 

@@ -87,3 +87,6 @@ bin/simulation_cpu_postprocessing/chantest_herg/ranolazine/
 bin/simulation_cpu_postprocessing/chantest_herg/sotalol/
 bin/simulation_cpu_postprocessing/chantest_herg/terfenadine/
 bin/simulation_cpu_postprocessing/chantest_herg/verapamil/
+bin/simulation_cpu/.docker-test-param.*
+*.result
+results.csv

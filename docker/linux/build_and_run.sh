@@ -15,6 +15,13 @@ HILL_FILE_OVERRIDE="${HILL_FILE_OVERRIDE:-}"
 HERG_FILE_OVERRIDE="${HERG_FILE_OVERRIDE:-}"
 DRUG_NAME_OVERRIDE="${DRUG_NAME_OVERRIDE:-}"
 CONC_OVERRIDE="${CONC_OVERRIDE:-}"
+# Extra compiler flags appended after the Makefile's own BASE_CXXFLAGS
+# (-std=c++11 -g -O0). Empty by default so plain/manual builds keep that
+# debug build unchanged; callers that want an optimized binary (e.g. the
+# benchmark scripts) set this to something like "-O2 -DNDEBUG -g0" -- since
+# gcc/clang use the last -O/-g flag seen on the command line, this cleanly
+# overrides the debug build's -O0 -g.
+BUILD_OPT_FLAGS="${BUILD_OPT_FLAGS:-}"
 
 variant_suffix_from_flag() {
   case "$1" in
@@ -63,7 +70,7 @@ echo "[2/3] Building DrugSimulation binary for variant: $BIN_SUFFIX"
 cd /workspace/DrugSimulation
 make clean || true
 make all \
-  EXTRA_CXXFLAGS+="-std=c++11 $VARIANT_FLAG"
+  EXTRA_CXXFLAGS+="-std=c++11 $VARIANT_FLAG $BUILD_OPT_FLAGS"
 
 if [[ "$RUN_SIM" != "1" ]]; then
   echo "RUN_SIM=$RUN_SIM, skipping simulation run."
